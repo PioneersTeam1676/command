@@ -26,6 +26,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
   if (!event) notFound();
   const settings = await getSettings();
   const staff = roleAtLeast(user.role, "lead");
+  const admin = roleAtLeast(user.role, "admin");
   const [mine, lists] = await Promise.all([getRsvp(user.id, event.id), staff ? rsvpLists(event.id) : null]);
   const over = isOver(event);
   const open = !event.cancelledAt && !over;
@@ -56,19 +57,19 @@ export default async function EventPage({ params, searchParams }: { params: Prom
               fields={{ id: event.id }}
             />
           ) : null}
-          <ConfirmAction
+          {admin ? <ConfirmAction
             label="Delete event"
             size="md"
             danger
             title={`Delete “${event.title}”?`}
-            description="This removes the event and its RSVPs for good, with no notification. It can't be undone. If people have checked in, cancel it instead."
+            description="This removes the event and its RSVPs for good, with no notification. It can't be undone. Any check-ins recorded for it, and the hours they earned, are removed too. Cancel it instead if you want to keep them."
             confirmLabel="Delete event"
             action={deleteEventAction}
             fields={{ id: event.id }}
-          />
+          /> : null}
         </div>
       ) : null}
-      {staff && deleteError ? <p role="alert" className="rounded-[8px] bg-error-subtle p-3 text-sm text-error">{deleteError}</p> : null}
+      {admin && deleteError ? <p role="alert" className="rounded-[8px] bg-error-subtle p-3 text-sm text-error">{deleteError}</p> : null}
 
       {open ? (
         <Card>

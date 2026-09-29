@@ -65,7 +65,7 @@ export async function rsvpQuickAction(formData: FormData): Promise<void> {
 
 /** Permanent delete from the event page. Returns to the calendar on success; the page shows why when it's refused. */
 export async function deleteEventAction(formData: FormData) {
-  const user = await requireActionUser("lead");
+  const user = await requireActionUser("admin");
   const id = uuidSchema.safeParse(formData.get("id"));
   if (!id.success) return;
   const r = await deleteEvent(user.id, id.data);

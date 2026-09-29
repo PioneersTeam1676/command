@@ -158,16 +158,14 @@ export async function cancelEvent(actorId: string, id: string): Promise<Result> 
 }
 
 /**
- * Permanently removes an event and its RSVPs. Refused when anyone has checked in, because attendance
- * rows go with the event and members would lose recorded hours (cancel it instead), and when the event
- * is linked to Google Calendar, where a local delete would leave the Google copy or re-import it.
+ * Permanently removes an event, its RSVPs and any attendance recorded against it (admin-only, enforced by
+ * the action). Refused only when the event is linked to Google Calendar, where a local delete would leave
+ * the Google copy or re-import it.
  */
 export async function deleteEvent(actorId: string, id: string): Promise<Result> {
   const before = await getEvent(id);
   if (!before) return { ok: false, error: "That event doesn't exist." };
   if (before.gcalEventId) return { ok: false, error: "This event is linked to Google Calendar. Cancel it here, or delete it in Google Calendar." };
-  const [{ n } = { n: 0 }] = await db.select({ n: sql<number>`count(*)::int` }).from(attendanceSessions).where(eq(attendanceSessions.eventId, id));
-  if (n > 0) return { ok: false, error: `${n} ${n === 1 ? "person has" : "people have"} checked in to this event, and deleting it would erase their hours. Cancel it instead.` };
   await db.delete(events).where(eq(events.id, id));
   await audit({ actorId, action: "event.delete", targetType: "event", targetId: id, before: { title: before.title, startsAt: before.startsAt, endsAt: before.endsAt } });
   return { ok: true };
