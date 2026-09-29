@@ -8,7 +8,7 @@ import type { LegalDoc } from "./types";
  */
 export const PRIVACY: LegalDoc = {
   title: "Privacy Policy",
-  updated: "2026-09-29",
+  updated: "2026-09-30",
   intro:
     "Command is team-management software that each robotics team runs on its own server. This policy explains what information Command handles, who can see it, and the choices you have. Many Command users are under 18, so we collect as little as we can.",
   sections: [
@@ -68,6 +68,7 @@ export const PRIVACY: LegalDoc = {
       heading: "Service providers",
       bullets: [
         "Google, if you choose Google sign-in (sign-in only; Google's own privacy policy applies to your Google account) and if your team connects Google Calendar (event titles, times, locations and descriptions are read from, or sent to, the team's calendar; the team's secret calendar link or service-account key is stored on the team's own server, never with member data).",
+        "Command's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements. Data from Google is used only to sign you in and to sync your team's calendar, and is never sold, used for advertising, or shared with anyone else.",
         "Your device's push service (for example Google, Apple or Mozilla) delivers push notifications. Notification text may pass through it.",
         "Your team's email provider, if the team configures email.",
         "Your team's hosting provider, which stores the database.",

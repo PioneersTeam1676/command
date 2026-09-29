@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GridBackground } from "@/components/ui/grid-background";
-import { requireUser } from "@/lib/auth/current-user";
+import { Landing } from "@/components/landing/landing";
+import { getCurrentUser, requireUser } from "@/lib/auth/current-user";
 import { isReadOnly } from "@/lib/registry";
 import { RSVP_LABEL } from "@/lib/events";
 import { getHomeData, type EventCard } from "@/lib/home";
@@ -16,6 +17,7 @@ import { rsvpQuickAction } from "./calendar/actions";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
+  if (!(await getCurrentUser())) return <Landing />;
   const user = await requireUser();
   const [home, readOnly] = await Promise.all([getHomeData(user.id), isReadOnly()]);
   const tz = home.tz;
