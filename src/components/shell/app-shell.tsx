@@ -1,6 +1,8 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogOut } from "lucide-react";
+import { logoutAction } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
 import { adminItem, navItems, type NavItem } from "./nav";
 
@@ -66,6 +68,14 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
             <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
           ))}
         </nav>
+        {isParent ? (
+          <form action={logoutAction} className="mt-auto">
+            <button type="submit" className="flex min-h-10 w-full items-center gap-2.5 rounded-[6px] px-3 text-sm text-muted transition-colors duration-150 hover:bg-surface hover:text-foreground">
+              <LogOut className="size-4" aria-hidden />
+              Sign out
+            </button>
+          </form>
+        ) : null}
       </aside>
 
       <div className="flex min-w-0 flex-col">
@@ -75,6 +85,13 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
             <Link href="/admin" className="inline-flex min-h-[44px] items-center px-2 text-sm font-medium text-accent">
               Admin
             </Link>
+          ) : null}
+          {isParent ? (
+            <form action={logoutAction}>
+              <button type="submit" className="inline-flex min-h-[44px] items-center px-2 text-sm font-medium text-accent">
+                Sign out
+              </button>
+            </form>
           ) : null}
         </header>
         <div className="hidden h-12 items-center justify-end border-b px-6 md:flex">
