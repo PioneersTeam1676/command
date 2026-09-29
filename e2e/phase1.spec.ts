@@ -24,6 +24,13 @@ test("setup wizard creates the first admin, then /setup is gone", async ({ page 
   await expect(page.getByRole("heading", { name: "About your team" })).toBeVisible();
   await page.getByLabel("Team name").fill("Test Robotics");
   await page.getByLabel("Team number (optional)").fill("1234");
+  // Pick a timezone where it is currently mid-day, so clock-in tests never run past the 9 PM cutoff.
+  const tz = await page.evaluate(() => {
+    const opts = [...document.querySelectorAll<HTMLOptionElement>("#f-timezone option")].map((o) => o.value);
+    const hourIn = (z: string) => Number(new Intl.DateTimeFormat("en-US", { timeZone: z, hour: "numeric", hour12: false }).format(new Date())) % 24;
+    return opts.find((z) => hourIn(z) >= 10 && hourIn(z) <= 16) ?? "UTC";
+  });
+  await page.getByLabel("Team timezone").selectOption(tz);
   await page.getByLabel("Auto-approved email domains (optional)").fill("school.edu");
   await page.getByRole("button", { name: "Continue" }).click();
 

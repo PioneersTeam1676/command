@@ -40,6 +40,14 @@ export default async function MePage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>My hours</CardTitle>
+          <CardDescription>See your time this season, and add time if you forgot to clock in.</CardDescription>
+        </CardHeader>
+        <CardContent><Button asChild variant="secondary"><Link href="/me/hours">View my hours</Link></Button></CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Let a parent follow along</CardTitle>
           <CardDescription>
             Create a link and send it to your parent or guardian. After they sign up, a team admin approves them. They can only see your calendar, hours and attendance.

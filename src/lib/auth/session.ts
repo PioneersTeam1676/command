@@ -1,5 +1,5 @@
 import { cookies, headers } from "next/headers";
-import { and, eq, lt } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
 import { hashToken, randomToken } from "./tokens";
@@ -82,8 +82,4 @@ export async function destroyAllSessions(userId: string, exceptCurrent = false):
   const keep = token ? hashToken(token) : "";
   const rows = await db.select({ id: sessions.id }).from(sessions).where(eq(sessions.userId, userId));
   for (const r of rows) if (r.id !== keep) await db.delete(sessions).where(eq(sessions.id, r.id));
-}
-
-export async function purgeExpiredSessions(): Promise<void> {
-  await db.delete(sessions).where(and(lt(sessions.expiresAt, new Date())));
 }

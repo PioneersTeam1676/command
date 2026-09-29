@@ -5,5 +5,9 @@ export async function register() {
   await runMigrations();
   const { ensureSetupToken } = await import("./lib/setup");
   await ensureSetupToken();
-  // Scheduler and registry startup hooks are added in later phases.
+  const { registerAllJobs } = await import("./lib/jobs/handlers");
+  const { startScheduler } = await import("./lib/jobs/scheduler");
+  registerAllJobs();
+  await startScheduler();
+  // Registry startup hook is added with the registry client.
 }

@@ -46,3 +46,18 @@ One line each: what, why.
 - The "no response" list includes active members, leads and admins (not parents, pending or deactivated users).
 - Only `admin` can edit the current season (build range, workdays); leads manage events.
 - Google Calendar pushes go through the `src/lib/gcal-sync.ts` seam (no-op until the Google Calendar phase).
+
+## Phase 3
+
+- Open clock-in is only available inside the season's build date range, once per local day (DB unique index), and closes at the auto clock-out time (default 9 PM team time). After that a lead adds the time.
+- A member can be clocked in to an open session and an event at once; hours use the union of intervals so nothing is double counted.
+- Clock-out after the cutoff (before the sweep has run) closes the session at the cutoff and flags it, exactly as the sweep would.
+- Event check-in opens 30 min before start and closes at the event end; event clock-out is allowed until end + grace, after which the sweep closes it.
+- Code-verified events cannot be checked in offline (a queued code would be stale by the time it syncs). One-tap events and all clock-outs can be queued.
+- Offline queue lives in IndexedDB (`src/lib/offline-queue.ts`) and syncs on `online`, on returning to the foreground, and on load. Background Sync from the service worker is added in the PWA phase. Each tap carries a client-generated action id; the server (`client_actions`) answers retries with the original result.
+- Auto clock-out and event auto-close run in a recurring `attendance.sweep` job (every 60 s). It is idempotent: it only updates rows still `open`, and the member notice is deduped per session.
+- Wrong check-in codes are rate limited per member and event (10 per 5 minutes).
+- Backfill: events must have ended; open-session days must be past build-season days; no overlap with existing non-rejected time; max 16 hours; the member must have joined before the season ended. Approval-off entries count immediately and carry `self_reported`.
+- Lead/admin edits mark an entry `edited` + `approved`. The "Who's here" list and force clock-out UI arrive with the admin dashboard phase; the underlying functions and audit logging are done and tested.
+- Parents see a student's sessions and totals through `src/lib/parent-data.ts`, which always goes through `requireStudent` (reviewer notes are stripped).
+- The check-in display shows a message instead of a code for one-tap events, and keeps the screen awake where supported.

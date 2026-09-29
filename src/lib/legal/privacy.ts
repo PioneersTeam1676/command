@@ -24,7 +24,7 @@ export const PRIVACY: LegalDoc = {
       bullets: [
         "Account details: your name, email address, and either a password (stored only as a one-way hash) or a link to your Google account (we keep Google's account ID and your verified email, nothing else).",
         "Role and status: whether you are a member, lead, admin or parent, and whether your account is approved.",
-        "Attendance: when you clock in and out, the events or days they relate to, notes you or an admin add, and whether entries were edited, backfilled or automatically closed.",
+        "Attendance: when you clock in and out (using the server's clock, plus your device's clock time for taps made offline), the events or days they relate to, notes you or an admin add, and whether entries were edited, backfilled, self-reported or automatically closed. For events that use rotating codes, wrong-code attempts are counted briefly to prevent guessing.",
         "RSVPs: your answer (going, maybe, can't go) and an optional reason.",
         "Optional preferences: notification settings, the workdays you personally attend, whether you appear on the leaderboard, and your theme choice.",
         "Parent accounts: a parent's name, relationship to the student, optional phone number and note, and the link to the student they are approved to view.",

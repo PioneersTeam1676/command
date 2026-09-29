@@ -52,3 +52,13 @@ export async function rsvpAction(_: FormState, formData: FormData): Promise<Form
   revalidatePath(`/calendar/${p.data.eventId}`);
   return { success: "Saved. You can change your answer any time before the event ends." };
 }
+
+/** One-tap RSVP from the Home screen (no reason field). */
+export async function rsvpQuickAction(formData: FormData): Promise<void> {
+  const user = await requireActionUser("member");
+  const p = z.object({ eventId: uuidSchema, response: z.enum(RSVP_RESPONSES) }).safeParse(Object.fromEntries(formData));
+  if (!p.success) return;
+  await setRsvp(user.id, p.data.eventId, p.data.response);
+  revalidatePath("/");
+  revalidatePath("/calendar");
+}

@@ -8,10 +8,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const user = await requireUser({ min: "lead" });
   const isAdmin = roleAtLeast(user.role, "admin");
   let pending = 0;
+  const { reviewQueue } = await import("@/lib/attendance");
+  pending += (await reviewQueue()).length;
   if (isAdmin) {
     const [a] = await db.select({ n: sql<number>`count(*)::int` }).from(accessRequests).where(eq(accessRequests.status, "pending"));
     const [p] = await db.select({ n: sql<number>`count(*)::int` }).from(parentLinks).where(and(eq(parentLinks.status, "pending")));
-    pending = (a?.n ?? 0) + (p?.n ?? 0);
+    pending += (a?.n ?? 0) + (p?.n ?? 0);
   }
   const tabs = [
     { href: "/admin", label: "Overview" },

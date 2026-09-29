@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pencil } from "lucide-react";
+import { Monitor, Pencil } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { EventDetails } from "@/components/calendar/event-details";
 import { RsvpForm } from "@/components/calendar/rsvp-form";
@@ -33,6 +33,12 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
     <div className="space-y-6">
       <Link href="/calendar" className="text-[13px] text-muted underline-offset-4 hover:underline">← Calendar</Link>
       <EventDetails event={event} tz={settings.timezone} showVerification={staff} />
+
+      {staff && !event.cancelledAt ? (
+        <Button asChild size="lg" className="w-full sm:w-auto">
+          <Link href={`/display/${event.id}`}><Monitor aria-hidden />Start check-in display</Link>
+        </Button>
+      ) : null}
 
       {staff ? (
         <div className="flex flex-wrap gap-2">

@@ -1,7 +1,9 @@
 import { cache } from "react";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import type { Role } from "@/db/schema";
 import { isSetupComplete } from "@/lib/settings";
+import { safeNext } from "@/lib/form";
 import { readSession, type SessionUser } from "./session";
 
 export const getCurrentUser = cache(readSession);
@@ -32,7 +34,11 @@ export class AuthError extends Error {
 export async function requireUser(opts: { min?: "member" | "lead" | "admin"; allowParent?: boolean } = {}): Promise<SessionUser> {
   if (!(await isSetupComplete())) redirect("/setup");
   const user = await getCurrentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    // Send them back to the page they wanted (e.g. a check-in link with the code prefilled) after signing in.
+    const back = safeNext((await headers()).get("x-pathname"));
+    redirect(back === "/" ? "/login" : `/login?next=${encodeURIComponent(back)}`);
+  }
   if (user.mustChangePassword) redirect("/change-password");
   if (user.status === "pending") redirect("/waiting");
   if (user.status !== "active") redirect("/login");

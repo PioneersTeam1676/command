@@ -231,6 +231,8 @@ export const attendanceSessions = pgTable(
     selfReported: boolean("self_reported").notNull().default(false),
     clientTimeIn: ts("client_time_in"),
     clientTimeOut: ts("client_time_out"),
+    serverTimeIn: ts("server_time_in"),
+    serverTimeOut: ts("server_time_out"),
     note: text("note"),
     createdAt: createdAt(),
   },
@@ -241,6 +243,14 @@ export const attendanceSessions = pgTable(
     uniqueIndex("attendance_event_per_user_idx").on(t.userId, t.eventId).where(sql`${t.kind} = 'event'`),
   ],
 );
+
+/** Remembers the outcome of a queued/offline tap so a retried request is answered, never applied twice. */
+export const clientActions = pgTable("client_actions", {
+  id: text("id").primaryKey(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  result: jsonb("result"),
+  createdAt: createdAt(),
+});
 
 export const checkinCodes = pgTable("checkin_codes", {
   eventId: uuid("event_id").primaryKey().references(() => events.id, { onDelete: "cascade" }),
