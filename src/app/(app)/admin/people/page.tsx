@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireUser } from "@/lib/auth/current-user";
 import { listUsers } from "@/lib/users";
-import { changeRoleAction, deactivateAction, eraseAction, reactivateAction, resetPasswordAction } from "../actions";
+import { changeRoleAction, deactivateAction, deleteUserAction, eraseAction, reactivateAction, resetPasswordAction } from "../actions";
 
 export const metadata: Metadata = { title: "People" };
 export const dynamic = "force-dynamic";
@@ -54,6 +54,9 @@ export default async function PeoplePage() {
                 ) : null}
                 {u.id !== me.id ? (
                   <ConfirmAction label="Erase data" title={`Permanently erase ${u.name}'s personal data?`} description="This removes their name, email, login and devices for good and can't be undone. Their attendance hours stay in season totals, but no longer show who they belong to. Use this when someone asks to be forgotten." confirmLabel="Erase permanently" action={eraseAction} fields={{ id: u.id }} danger />
+                ) : null}
+                {u.id !== me.id ? (
+                  <ConfirmAction label="Delete" title={`Delete ${u.name}?`} description={u.role === "parent" ? "This deletes the parent account and their links to students. The students' own accounts are not affected. It can't be undone." : "This deletes the account and everything tied to it, including their attendance hours and RSVPs, for good. It can't be undone. To keep their hours, deactivate them instead."} confirmLabel="Delete permanently" action={deleteUserAction} fields={{ id: u.id }} danger />
                 ) : null}
               </div>
               {u.status !== "denied" ? <ResetPasswordButton userId={u.id} action={resetPasswordAction} /> : null}

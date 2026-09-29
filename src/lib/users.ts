@@ -99,3 +99,21 @@ export async function erasePersonalData(actorId: string, userId: string): Promis
   });
   return { ok: true };
 }
+
+/**
+ * Permanently deletes an account (member, lead, admin or parent) and everything hanging off it: sessions,
+ * devices, RSVPs, attendance hours and parent links all cascade. Unlike erasePersonalData, the hours go too.
+ */
+export async function deleteUser(actorId: string, userId: string): Promise<Result> {
+  const [u] = await db.select().from(users).where(eq(users.id, userId));
+  if (!u) return { ok: false, error: "User not found." };
+  if (userId === actorId) return { ok: false, error: "You can't delete your own account." };
+  if (u.role === "admin" && u.status === "active" && (await activeAdminCount()) <= 1) {
+    return { ok: false, error: "You can't delete the only admin." };
+  }
+  await db.transaction(async (tx) => {
+    await tx.delete(users).where(eq(users.id, userId));
+    await audit({ actorId, action: "user.delete", targetType: "user", targetId: userId, before: { name: u.name, email: u.email, role: u.role, status: u.status } }, tx);
+  });
+  return { ok: true };
+}

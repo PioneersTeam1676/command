@@ -48,6 +48,7 @@ describe.skipIf(!hasTestDb)("audit log coverage", () => {
     await expectAudit("user.reactivate", () => users.reactivateUser(u.admin!, u.kid2!));
     await expectAudit("user.password_reset_temporary", async () => (await import("./accounts")).adminResetPassword(u.admin!, u.kid!));
     await expectAudit("user.erase_personal_data", () => users.erasePersonalData(u.admin!, u.kid2!));
+    await expectAudit("user.delete", () => users.deleteUser(u.admin!, u.kid2!));
   });
 
   it("approvals", async () => {

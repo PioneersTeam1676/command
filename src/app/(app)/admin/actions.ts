@@ -5,7 +5,7 @@ import { z } from "zod";
 import { adminResetPassword, approveAccessRequest, denyAccessRequest } from "@/lib/accounts";
 import { requireActionUser } from "@/lib/auth/current-user";
 import { decideParentLink, revokeParentLink } from "@/lib/parents";
-import { changeRole, deactivateUser, erasePersonalData, reactivateUser } from "@/lib/users";
+import { changeRole, deactivateUser, deleteUser, erasePersonalData, reactivateUser } from "@/lib/users";
 import { optionalText, uuidSchema } from "@/lib/validation";
 import type { FormState } from "@/lib/form";
 
@@ -77,6 +77,14 @@ export async function eraseAction(formData: FormData) {
   const id = uuidSchema.safeParse(formData.get("id"));
   if (!id.success) return;
   await erasePersonalData(admin.id, id.data);
+  refresh();
+}
+
+export async function deleteUserAction(formData: FormData) {
+  const admin = await requireActionUser("admin");
+  const id = uuidSchema.safeParse(formData.get("id"));
+  if (!id.success) return;
+  await deleteUser(admin.id, id.data);
   refresh();
 }
 
