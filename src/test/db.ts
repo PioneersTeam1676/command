@@ -23,6 +23,7 @@ export async function createTestDb() {
     async drop() {
       const { getPool } = await import("@/db");
       await getPool().end().catch(() => undefined);
+      await new Promise((r) => setTimeout(r, 50)); // let the driver finish closing before the database is dropped
       await admin.query(`drop database if exists ${name} with (force)`);
       await admin.end();
     },

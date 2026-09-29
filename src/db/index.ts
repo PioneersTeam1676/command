@@ -10,7 +10,11 @@ export function getPool(): Pool {
   if (!globalForDb.__pool) {
     const url = process.env.DATABASE_URL;
     if (!url) throw new Error("DATABASE_URL is required");
-    globalForDb.__pool = new Pool({ connectionString: url, max: 10 });
+    const pool = new Pool({ connectionString: url, max: 10 });
+    // An idle client can be killed by a database restart or failover. Without a listener, `pg` re-emits that as an
+    // uncaught exception and takes the whole app down; the pool simply opens a fresh connection on next use.
+    pool.on("error", (err) => console.error("[db] idle client error:", err.message));
+    globalForDb.__pool = pool;
   }
   return globalForDb.__pool;
 }
