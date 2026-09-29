@@ -1,10 +1,44 @@
+# Private brief (kept out of the repo on purpose)
 spec.md
+
+# Dependencies and build output
 node_modules
 .next
-.env
-.env.local
+out
+build
+dist
+coverage
 *.tsbuildinfo
 next-env.d.ts
+
+# Environment and secrets (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+service-account*.json
+
+# Runtime data (uploaded logos etc.)
+data
+uploads
+
+# Generated at build time (registry integrity manifest)
+src/lib/registry/manifest.json
+
+# Tests
 test-results
 playwright-report
-src/lib/registry/manifest.json
+playwright/.cache
+
+# Logs and OS/editor files
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+.idea
+.vscode
+.vercel
+
+# Local Claude Code state
+.claude

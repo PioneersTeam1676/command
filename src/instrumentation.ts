@@ -3,5 +3,7 @@ export async function register() {
   if (process.env.NEXT_PHASE === "phase-production-build") return;
   const { runMigrations } = await import("./db/migrate");
   await runMigrations();
+  const { ensureSetupToken } = await import("./lib/setup");
+  await ensureSetupToken();
   // Scheduler and registry startup hooks are added in later phases.
 }

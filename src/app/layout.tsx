@@ -3,7 +3,11 @@ import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { deriveAccent } from "@/lib/color";
+import { readSettings } from "@/lib/settings";
 import "./globals.css";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: { default: "Command", template: "%s · Command" },
@@ -21,9 +25,24 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+async function accentCss(): Promise<string> {
+  let hex = "#0070f3";
+  try {
+    hex = (await readSettings()).accentColor;
+  } catch {
+    /* database not reachable yet: use default accent */
+  }
+  const a = deriveAccent(hex);
+  return `:root{--accent:${a.base};--accent-hover:${a.hover};--accent-subtle:${a.subtle};--accent-fg:${a.foreground}}.dark{--accent-subtle:${a.subtleDark}}`;
+}
+
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const css = await accentCss();
   return (
     <html lang="en" suppressHydrationWarning className={`${GeistSans.variable} ${GeistMono.variable}`}>
+      <head>
+        <style dangerouslySetInnerHTML={{ __html: css }} />
+      </head>
       <body>
         <ThemeProvider>
           {children}

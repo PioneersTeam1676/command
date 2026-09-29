@@ -45,6 +45,7 @@ export const teamSettings = pgTable("team_settings", {
   vapidPublic: text("vapid_public"),
   vapidPrivate: text("vapid_private"),
   sessionSecret: text("session_secret"),
+  setupTokenHash: text("setup_token_hash"),
   setupCompletedAt: ts("setup_completed_at"),
   registryRegistered: boolean("registry_registered").notNull().default(false),
   createdAt: createdAt(),

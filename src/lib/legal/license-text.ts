@@ -1,0 +1,69 @@
+/** Must match /LICENSE exactly (enforced by license.test.ts). */
+export const LICENSE_TEXT = `Copyright (c) 2026 Alex Radu. All rights reserved.
+
+COMMAND: PROPRIETARY SOURCE-AVAILABLE LICENSE
+
+Command ("the Software"), including all source code, design, documentation,
+branding, concepts, and associated intellectual property, is the exclusive
+property of Alex Radu ("the Owner"). No rights are granted except those
+expressly stated in this license.
+
+1. PERMITTED
+   a. Viewing the source code for personal reference or learning.
+   b. Running the Software on infrastructure you control, solely for the
+      internal use of your own team or organization ("Your Team"), at no
+      charge.
+   c. Modifying your own copy for Your Team's internal use, provided the
+      modified copy and its source code are kept private (see section 2).
+   d. Submitting issues and pull requests to the official repository. A fork
+      created on GitHub solely to prepare a pull request is permitted and
+      must be deleted once the pull request is merged or closed.
+
+2. NOT PERMITTED without prior written permission from the Owner
+   a. Publishing, distributing, sublicensing, selling, or otherwise making
+      available the Software, any portion of it, or any modified version of
+      it, including on any public or shared repository, package registry, or
+      file host.
+   b. Creating or maintaining public forks, mirrors, or copies of the
+      Software, except as allowed in section 1(d).
+   c. Hosting or operating the Software for the benefit of any team or
+      organization other than Your Team, or offering it as a service.
+   d. Copying, reproducing, or reimplementing the design or functionality of
+      the Software in another product or service.
+   e. Using the Software's name, branding, or identity in any other project.
+   f. Removing, disabling, bypassing, or interfering with the registration
+      and heartbeat mechanism described in section 3, or removing or altering
+      any license notice.
+
+3. REGISTRATION AND HEARTBEAT
+   The Software contacts a registry operated by the Owner when it is set up
+   and at regular intervals afterwards. The data sent is limited to: a random
+   install ID, the software version, the team name, the team number, the
+   region, and the number of active members. No names, email addresses,
+   attendance records, or other personal information about individuals is
+   sent. The registry also keeps a one-way hash of the connecting IP address
+   for up to 30 days, used only to detect misuse of this license (such as
+   one installation being copied or hosted for other teams). This license is
+   granted on the condition that this mechanism remains enabled and functional. If the Software cannot complete a heartbeat for
+   7 consecutive days, or has been modified in a way that removes or alters
+   the mechanism, it will enter a read-only state until the condition is
+   resolved. Data export remains available at all times.
+
+4. CONTRIBUTIONS
+   By submitting a pull request or other contribution, you agree that your
+   contribution becomes the sole property of the Owner under this license,
+   with no rights retained by the contributor.
+
+5. TERMINATION
+   Any breach of this license terminates your rights automatically. Upon
+   termination you must stop running the Software and delete all copies,
+   including modified copies.
+
+6. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. THE OWNER
+   SHALL NOT BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY ARISING
+   FROM THE SOFTWARE.
+
+To request a commercial license or special permission, contact:
+alex@alexradu.co
+`;
