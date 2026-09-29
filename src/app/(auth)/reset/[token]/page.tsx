@@ -27,7 +27,7 @@ export default async function ResetPage({ params }: { params: Promise<{ token: s
           </ActionForm>
         ) : (
           <p className="mt-2 text-sm text-muted">
-            This reset link has expired or was already used. <Link href="/forgot" className="text-accent underline-offset-4 hover:underline">Request a new one</Link>.
+            This reset link has expired or was already used. <Link href="/forgot" className="text-accent underline underline-offset-4">Request a new one</Link>.
           </p>
         )}
       </CardContent>

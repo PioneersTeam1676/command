@@ -56,6 +56,9 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[240px_1fr]">
+      <a href="#main" className="sr-only z-50 rounded-[6px] bg-background px-3 py-2 text-sm focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:border">
+        Skip to content
+      </a>
       <aside className="sticky top-0 hidden h-dvh flex-col gap-6 border-r bg-surface/50 p-4 md:flex">
         <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />
         <nav aria-label="Main" className="flex flex-col gap-1">
@@ -78,7 +81,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
           <span className="text-[13px] text-muted">{teamName}</span>
         </div>
         {banner}
-        <main className="mx-auto w-full max-w-4xl flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-8">{children}</main>
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-8">{children}</main>
       </div>
 
       <nav

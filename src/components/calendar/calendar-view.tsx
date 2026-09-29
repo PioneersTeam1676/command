@@ -117,7 +117,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
                   key={d}
                   className={cn(
                     "min-h-[84px] border-b border-r p-1 text-[12px] [&:nth-child(7n)]:border-r-0",
-                    !inMonth && "opacity-45",
+                    !inMonth && "bg-surface/70",
                     workday && "bg-accent-subtle/60",
                     inSeason && !workday && "border-dashed bg-surface/40",
                   )}

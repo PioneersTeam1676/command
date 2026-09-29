@@ -43,7 +43,7 @@ export default async function AdminHome() {
         <CardHeader><CardTitle>Coming up</CardTitle></CardHeader>
         <CardContent>
           {upcoming.length === 0 ? (
-            <p className="text-sm text-muted">No upcoming events. <Link href="/calendar/new" className="text-accent underline-offset-4 hover:underline">Create one</Link>.</p>
+            <p className="text-sm text-muted">No upcoming events. <Link href="/calendar/new" className="text-accent underline underline-offset-4">Create one</Link>.</p>
           ) : (
             <ul className="divide-y">
               {upcoming.map((e) => (

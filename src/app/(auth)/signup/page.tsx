@@ -48,7 +48,7 @@ export default async function SignupPage() {
         </p>
         <p className="mt-3 text-center text-[13px] text-muted">
           Already have an account?{" "}
-          <Link href="/login" className="text-accent underline-offset-4 hover:underline">Sign in</Link>
+          <Link href="/login" className="text-accent underline underline-offset-4">Sign in</Link>
         </p>
       </CardContent>
     </Card>
