@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Clock } from "lucide-react";
+import { Clock, Download } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/form";
 import { SelectField, TextAreaField, TextField } from "@/components/form-fields";
 import { HoursSummary, SessionList } from "@/components/session-list";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { backfillableEvents, listMySessions } from "@/lib/attendance";
@@ -35,6 +36,7 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
         <h1 className="mt-2 text-[28px] font-semibold">My hours</h1>
       </div>
       <HoursSummary sessions={list} tz={tz} seasonLabel={season.name} />
+      <Button asChild variant="secondary" size="sm"><Link href={`/api/export/my-hours?season=${season.id}`}><Download aria-hidden />Download my hours (CSV)</Link></Button>
 
       {list.length === 0 ? (
         <EmptyState icon={<Clock />} title="No hours yet">Clock in from the Home screen or check in to an event, and your time shows up here.</EmptyState>

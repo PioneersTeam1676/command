@@ -73,3 +73,12 @@ One line each: what, why.
 - Reminder types never write an in-app inbox row (they would only be noise there). Event changes, requests and decisions do.
 - VAPID subject is `APP_URL`.
 - iOS: notification permission is only requested from the Home Screen install; in a Safari tab the panel and banner show the Add to Home Screen steps.
+
+## Phase 5
+
+- Leads get Overview, Needs review (attendance), Who's here and Roster (with add time, edit times, force clock-out). Admins additionally get People, Season, Notifications, Exports, Audit log and Settings. Emails are shown to admins only (the roster and member page hide them from leads).
+- CSV exports: hours per member, attendance per session, RSVPs per event, audit log (admin only, each download audited as `export.*`), plus `my-hours` for the signed-in member. Files start with a UTF-8 BOM and use CRLF; text cells starting with `= + - @ TAB CR` get a leading apostrophe. Exports are rate limited (30 per 10 minutes).
+- Audit entries scrub keys that look like credentials (`password`, `token`, `secret`, `hash`, `key`), and a settings save that changes nothing writes no entry.
+- Settings validate reminder order: clock-in reminder < clock-out reminder < automatic clock-out.
+- Auto clock-out time and reminder times are edited on separate forms so each save validates against the saved value of the other.
+- "Who's here" and the overview refresh themselves (30 s / 60 s) while the tab is visible.
