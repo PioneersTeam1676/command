@@ -5,14 +5,14 @@
  */
 
 /** PLACEHOLDER: the owner must replace this with the public HTTPS address of their registry before release. */
-export const REGISTRY_URL = "https://registry.example.invalid";
+export const REGISTRY_URL = "https://cmd-admin.team1676.org";
 
 /**
  * Ed25519 public keys (raw 32 bytes, base64) the registry signs responses with: the current key, and
  * optionally the next one, so the owner can rotate without breaking deployed instances
  * (see registry/README.md). PLACEHOLDER: replace with the output of the registry's `generate-keypair`.
  */
-export const REGISTRY_PUBLIC_KEYS: readonly string[] = ["gomhDhmZLO2gBcOJQgIbW+wupBCG7D6ZJtmGbumwcck="];
+export const REGISTRY_PUBLIC_KEYS: readonly string[] = ["QhF899ZwAV13HaGvxg8OXbLV4GtJ24pmVc3XAwOC+/k="];
 
 /** Shown to users and sent to the registry. Bump on every release (and add its integrity hash to the registry). */
 export const COMMAND_VERSION = "0.1.0";

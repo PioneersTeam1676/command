@@ -11,5 +11,5 @@ describe("registry address and keys can only be overridden in development", () =
     expect(registryUrl({ NODE_ENV: "development", REGISTRY_URL_OVERRIDE: "http://localhost:3300/" })).toBe("http://localhost:3300");
     expect(registryKeys({ NODE_ENV: "development", REGISTRY_PUBLIC_KEYS_OVERRIDE: "k1, k2" })).toEqual(["k1", "k2"]);
   });
-  it("ships with a placeholder address the owner must replace", () => expect(REGISTRY_URL).toContain("example.invalid"));
+  it("points at an https registry address", () => expect(REGISTRY_URL).toMatch(/^https:\/\//));
 });
