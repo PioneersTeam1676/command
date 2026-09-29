@@ -1,7 +1,7 @@
 node_modules
+registry
 .next
 .git
-registry
 e2e
 spec.md
 .env

@@ -139,8 +139,8 @@ the exact fields), and described here. All of the code for it lives in **`src/li
 Be clear about what this is: a license-compliance mechanism, not copy protection. It cannot make a source-available app
 unmodifiable, and the license is the real protection.
 
-The registry server itself is a separate app in [`registry/`](registry/README.md) that only the owner runs. It is not part of
-the image teams install.
+The registry server itself is a separate app in its own private repository (`command-registry`) that only the owner runs. It is
+not part of this repository or the image teams install.
 
 ## Notice
 
@@ -172,13 +172,13 @@ docker run -d --name command-dev-pg -p 54329:5432 -e POSTGRES_USER=command -e PO
 export TEST_DATABASE_URL=postgres://command:command@localhost:54329/command
 export DATABASE_URL=$TEST_DATABASE_URL
 npm run dev            # http://localhost:3000 (prints a setup token)
-npm run ci             # typecheck, lint, unit + integration tests, for Command and the registry
+npm run ci             # typecheck, lint, unit + integration tests
 npm run build && npm run test:e2e            # Playwright: setup, sign-in, clock in/out, approvals, parents, exports, a11y...
-npm run test:e2e:registry                    # the real registry and a real Command talking to each other
+npm run test:e2e:registry                    # owner only: needs a checkout of command-registry next to this folder (or REGISTRY_DIR=...)
 ```
 
 Without `TEST_DATABASE_URL` the database-backed tests are skipped (not faked). Layout: `src/app` (routes), `src/lib`
 (logic, tested), `src/components`, `src/db` (schema; SQL migrations in `drizzle/`), `src/lib/registry` (the license check),
-`src/lib/legal` (Terms and Privacy), `src/integrations/scorecard` (deferred), `registry/` (the owner's server), `e2e/`.
+`src/lib/legal` (Terms and Privacy), `src/integrations/scorecard` (deferred), `e2e/`.
 
 Decisions taken where the brief was silent are in `DECISIONS.md`.

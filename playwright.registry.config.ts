@@ -6,6 +6,8 @@ import { defineConfig } from "@playwright/test";
  * which is the only mode that may point at a different registry). Proves register, revoke, restore and integrity
  * round-trip through the actual heartbeat.
  */
+/** Checkout of the private command-registry repo (sibling folder by default; override with REGISTRY_DIR). */
+const REGISTRY_DIR = process.env.REGISTRY_DIR ?? "../command-registry";
 const ADMIN = process.env.TEST_DATABASE_URL ?? "postgres://command:command@localhost:54329/command";
 const dbUrl = (name: string) => {
   const u = new URL(ADMIN);
@@ -25,7 +27,7 @@ export default defineConfig({
   use: { baseURL: "http://localhost:3400", trace: "retain-on-failure" },
   webServer: [
     {
-      command: "node e2e-registry/prepare-dbs.mjs && cd registry && npx next start -p 3300",
+      command: `node e2e-registry/prepare-dbs.mjs && cd ${REGISTRY_DIR} && npx next start -p 3300`,
       url: "http://localhost:3300/healthz",
       timeout: 120_000,
       reuseExistingServer: false,

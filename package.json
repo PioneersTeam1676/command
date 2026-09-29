@@ -14,7 +14,7 @@
     "test:e2e:registry": "playwright test -c playwright.registry.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate-cli.ts",
-    "ci": "npm run typecheck && npm run lint && npm run test && npm --prefix registry run typecheck && npm --prefix registry run lint && npm --prefix registry run test"
+    "ci": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
     "@node-rs/argon2": "^2.2.1",
