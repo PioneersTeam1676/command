@@ -148,8 +148,7 @@ export async function finishSetupAction(_: FormState, formData: FormData): Promi
   const admin = await setupAdmin();
   if (formData.get("agree") !== "on") return { error: "Please confirm you've read the license and the registry notice." };
   await completeSetup(admin.id);
-  // Registry registration is wired in when the registry client lands (src/lib/registry).
-  const { registerAtSetup } = await import("@/lib/registry-hook");
+  const { registerAtSetup } = await import("@/lib/registry");
   await registerAtSetup();
   redirect("/?welcome=1");
 }

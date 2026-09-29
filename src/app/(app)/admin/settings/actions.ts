@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActionUser } from "@/lib/auth/current-user";
+import { hit } from "@/lib/auth/rate-limit";
+import { audit } from "@/lib/audit";
+import { checkNow } from "@/lib/registry";
 import { isHexColor } from "@/lib/color";
 import { MAX_LOGO_BYTES, saveLogo, sniffImage } from "@/lib/files";
 import { parseForm, type FormState } from "@/lib/form";
@@ -99,4 +102,16 @@ export async function saveRemindersAction(_: FormState, formData: FormData): Pro
   if (err) return { error: err, fieldErrors: { clockoutReminderTime: err } };
   const r = await updateTeamSettings(admin.id, p.data, "settings.reminders");
   return done(r.changed ? r.fields : undefined);
+}
+
+
+/** "Check now": send a license-check heartbeat immediately and report what came back. */
+export async function checkRegistryNowAction(_: FormState, __: FormData): Promise<FormState> {
+  const admin = await requireActionUser("admin", { allowReadOnly: true });
+  if (!(await hit(`registry-check:${admin.id}`, 6, 600)).allowed) return { error: "Too many checks. Wait a few minutes." };
+  const state = await checkNow();
+  await audit({ actorId: admin.id, action: "registry.check_now", targetType: "registry", after: { state: state.state } });
+  revalidatePath("/admin/settings");
+  revalidatePath("/", "layout");
+  return state.state === "ok" || state.state === "revoked" ? { success: state.state === "ok" ? "Checked in with the license registry. All good." : "Checked in. The owner has revoked this installation: see the notice at the top." } : { error: "Couldn't complete a check-in yet. The notice at the top explains what to do." };
 }

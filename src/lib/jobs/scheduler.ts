@@ -13,6 +13,13 @@ const SCHEDULER_LOCK = 727302;
 const STALE_LOCK_MINUTES = 5;
 const MAX_ATTEMPTS = 5;
 
+/** Throw from a handler to try again later without counting it as a failed attempt (e.g. while the instance is read-only). */
+export class RescheduleError extends Error {
+  constructor(readonly delayMs: number, message = "rescheduled") {
+    super(message);
+  }
+}
+
 export type JobRow = typeof jobs.$inferSelect;
 export type JobHandler = (job: JobRow, now: Date) => Promise<void>;
 
@@ -79,6 +86,10 @@ export async function runDueJobs(now: Date = new Date()): Promise<number> {
             await db.execute(sql`update jobs set done_at = ${now.toISOString()}::timestamptz, locked_at = null where id = ${job.id}`);
           }
         } catch (err) {
+          if (err instanceof RescheduleError) {
+            await db.execute(sql`update jobs set run_at = ${new Date(now.getTime() + err.delayMs).toISOString()}::timestamptz, locked_at = null, attempts = greatest(attempts - 1, 0) where id = ${job.id}`);
+            continue;
+          }
           const message = err instanceof Error ? err.message : String(err);
           const giveUp = !every && job.attempts >= MAX_ATTEMPTS;
           const backoffMs = Math.min(2 ** job.attempts * 30_000, 3_600_000);

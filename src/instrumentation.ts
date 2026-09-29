@@ -9,5 +9,6 @@ export async function register() {
   const { startScheduler } = await import("./lib/jobs/scheduler");
   registerAllJobs();
   await startScheduler();
-  // Registry startup hook is added with the registry client.
+  const { startRegistry } = await import("./lib/registry");
+  await startRegistry();
 }

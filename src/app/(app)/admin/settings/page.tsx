@@ -11,7 +11,9 @@ import { db } from "@/db";
 import { jobs } from "@/db/schema";
 import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { parseServiceAccount } from "@/lib/gcal/api";
-import { saveAttendanceAction, saveRemindersAction, saveTeamAction } from "./actions";
+import { LicenseCard } from "@/components/registry/license-card";
+import { registryOverview } from "@/lib/registry";
+import { checkRegistryNowAction, saveAttendanceAction, saveRemindersAction, saveTeamAction } from "./actions";
 import { importPastAction, saveIcsUrlAction, syncNowAction, testConnectionAction } from "./gcal-actions";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -43,6 +45,7 @@ export default async function SettingsPage() {
   const s = await readSettings();
   const env = getEnv();
   const sa = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  const license = await registryOverview();
   const [failing] = await db.select({ n: sql<number>`count(*)::int` }).from(jobs).where(and(eq(jobs.kind, "gcal.push"), isNull(jobs.doneAt), isNotNull(jobs.lastError)));
   const icsSaved = s.googleIcsUrl ? `…${s.googleIcsUrl.slice(-8)}` : null;
   return (
@@ -134,6 +137,8 @@ export default async function SettingsPage() {
         failingPushes={failing?.n ?? 0}
         actions={{ saveIcs: saveIcsUrlAction, test: testConnectionAction, sync: syncNowAction, importPast: importPastAction }}
       />
+
+      <LicenseCard o={license} action={checkRegistryNowAction} />
 
       <Card>
         <CardHeader>

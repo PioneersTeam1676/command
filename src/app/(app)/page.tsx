@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GridBackground } from "@/components/ui/grid-background";
 import { requireUser } from "@/lib/auth/current-user";
+import { isReadOnly } from "@/lib/registry";
 import { RSVP_LABEL } from "@/lib/events";
 import { getHomeData, type EventCard } from "@/lib/home";
 import { formatInTz } from "@/lib/time";
@@ -16,12 +17,14 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const user = await requireUser();
-  const home = await getHomeData(user.id);
+  const [home, readOnly] = await Promise.all([getHomeData(user.id), isReadOnly()]);
   const tz = home.tz;
   const first = user.name.split(" ")[0];
   const cutoffLabel = formatInTz(home.cutoffLabelAt, tz, "h:mm a");
 
-  const idle = home.todaysOpen?.clockOutAt
+  const idle = readOnly
+    ? "Clocking in is paused while Command is read-only"
+    : home.todaysOpen?.clockOutAt
     ? `You already clocked out today (${formatInTz(home.todaysOpen.clockInAt, tz, "h:mm a")} – ${formatInTz(home.todaysOpen.clockOutAt, tz, "h:mm a")})`
     : home.buildDay
       ? `Clock-in closed for today at ${cutoffLabel}`
@@ -53,7 +56,7 @@ export default async function HomePage() {
         <div className="mt-4">
           <ClockHero
             runningSince={home.openSession?.clockInAt.toISOString() ?? null}
-            canClockIn={home.openClockInAllowed}
+            canClockIn={home.openClockInAllowed && !readOnly}
             idleMessage={idle}
             cutoffLabel={cutoffLabel}
           />

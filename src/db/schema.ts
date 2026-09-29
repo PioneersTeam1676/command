@@ -373,6 +373,8 @@ export const registryState = pgTable("registry_state", {
   lastMismatchAt: ts("last_mismatch_at"),
   signatureFailures: integer("signature_failures").notNull().default(0),
   firstSignatureFailureAt: ts("first_signature_failure_at"),
+  lastSignatureFailureAt: ts("last_signature_failure_at"),
+  registeredAt: ts("registered_at"),
   status: text("status").notNull().default("ok"),
   instanceToken: text("instance_token"),
   lastMessage: text("last_message"),
