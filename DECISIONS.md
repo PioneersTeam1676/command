@@ -82,3 +82,12 @@ One line each: what, why.
 - Settings validate reminder order: clock-in reminder < clock-out reminder < automatic clock-out.
 - Auto clock-out time and reminder times are edited on separate forms so each save validates against the saved value of the other.
 - "Who's here" and the overview refresh themselves (30 s / 60 s) while the tab is visible.
+
+## Phase 6
+
+- Starting a new season: start date is today or earlier and not before the current season began. The old season ends the day before (or on its own first day if both start the same day). Future events (from the new season's first day) move to the new season; everything else stays put. Anyone still clocked in keeps that time in the old season.
+- Leaderboard rank uses competition ranking (1, 2, 2, 4), compared at display precision (0.1 h, 0.1 %). Members with no attendance rate yet (no finished events) are listed last, unranked.
+- Attendance rate counts a member's event sessions that aren't rejected or waiting for approval, over all non-cancelled events that have ended in the season. Open build-season days are not part of it.
+- Opted-out members are dropped from the entries server-side (never sent to the page) and see a "You're hidden" note with their own numbers. Leads and admins appear on the board like members; parents are redirected away from it.
+- `LEADERBOARD_ENABLED=false` removes the nav item, the Me-page switch, and makes `/leaderboard` a 404. An e2e run against a second server with the flag off proves it.
+- Form field ids are generated per field instance (`useId`) so two forms with a "name" field on one page don't clash.

@@ -10,7 +10,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { requireUser } from "@/lib/auth/current-user";
 import { activeInvites as loadActiveInvites, linksForStudent } from "@/lib/parents";
 import { logoutAction } from "../../(auth)/actions";
-import { createInviteAction, revokeInviteAction, studentRevokeLinkAction } from "./actions";
+import { PrefSwitch } from "@/components/pref-switch";
+import { getEnv } from "@/lib/env";
+import { createInviteAction, revokeInviteAction, setLeaderboardVisibilityAction, studentRevokeLinkAction } from "./actions";
 
 export const metadata: Metadata = { title: "Me" };
 export const dynamic = "force-dynamic";
@@ -37,6 +39,27 @@ export default async function MePage() {
         </CardHeader>
         <CardContent><ThemeToggle /></CardContent>
       </Card>
+
+      {getEnv().LEADERBOARD_ENABLED ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Leaderboard</CardTitle>
+            <CardDescription>Your display name and hours are shown to other members. You can hide yourself. Your hours still count and admins can still see them.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PrefSwitch
+              type="leaderboard"
+              label="Show me on the leaderboard"
+              description="Turn off to be hidden from the board."
+              enabled={!user.leaderboardHidden}
+              action={async (_t, on) => {
+                "use server";
+                return setLeaderboardVisibilityAction(!on);
+              }}
+            />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <Card>
         <CardHeader>

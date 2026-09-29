@@ -8,15 +8,17 @@ import { requireParent } from "@/lib/auth/current-user";
 import { ParentScopeError, studentDisplay } from "@/lib/parent-scope";
 import { z } from "zod";
 import { studentSessionsForParent } from "@/lib/parent-data";
-import { getCurrentSeason } from "@/lib/seasons";
+import { SeasonPicker } from "@/components/season-picker";
+import { getCurrentSeason, getSeason, listSeasons } from "@/lib/seasons";
 import { getSettings } from "@/lib/settings";
 
 export const metadata: Metadata = { title: "Student" };
 export const dynamic = "force-dynamic";
 
-export default async function ParentStudentPage({ params }: { params: Promise<{ studentId: string }> }) {
+export default async function ParentStudentPage({ params, searchParams }: { params: Promise<{ studentId: string }>; searchParams: Promise<{ season?: string }> }) {
   const parent = await requireParent();
   const { studentId } = await params;
+  const { season: seasonParam } = await searchParams;
   if (!z.string().uuid().safeParse(studentId).success) notFound();
   let student;
   try {
@@ -26,11 +28,14 @@ export default async function ParentStudentPage({ params }: { params: Promise<{ 
     if (e instanceof ParentScopeError) notFound();
     throw e;
   }
-  const [sessions, season, settings] = await Promise.all([studentSessionsForParent(parent.id, student.id), getCurrentSeason(), getSettings()]);
+  const [current, allSeasons, settings] = await Promise.all([getCurrentSeason(), listSeasons(), getSettings()]);
+  const season = (seasonParam ? await getSeason(seasonParam) : undefined) ?? current;
+  const sessions = await studentSessionsForParent(parent.id, student.id, season.id);
   return (
     <div className="space-y-6">
       <Link href="/parent" className="text-[13px] text-muted underline-offset-4 hover:underline">← All students</Link>
       <h1 className="text-[28px] font-semibold">{student.name}</h1>
+      <SeasonPicker seasons={allSeasons} selectedId={season.id} />
       <HoursSummary sessions={sessions} tz={settings.timezone} seasonLabel={season.name} />
       {sessions.length === 0 ? (
         <EmptyState icon={<Clock />} title="No attendance yet">When {student.name.split(" ")[0]} clocks in or checks in to an event, it shows up here.</EmptyState>

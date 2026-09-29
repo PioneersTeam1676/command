@@ -31,3 +31,14 @@ export async function studentRevokeLinkAction(formData: FormData) {
   await revokeParentLink(user.id, id.data, { onlyStudentId: user.id });
   revalidatePath("/me");
 }
+
+export async function setLeaderboardVisibilityAction(hidden: boolean): Promise<{ ok: boolean }> {
+  const user = await requireActionUser("member");
+  const { db } = await import("@/db");
+  const { users } = await import("@/db/schema");
+  const { eq } = await import("drizzle-orm");
+  await db.update(users).set({ leaderboardHidden: Boolean(hidden) }).where(eq(users.id, user.id));
+  revalidatePath("/leaderboard");
+  revalidatePath("/me");
+  return { ok: true };
+}

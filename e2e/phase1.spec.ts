@@ -26,7 +26,7 @@ test("setup wizard creates the first admin, then /setup is gone", async ({ page 
   await page.getByLabel("Team number (optional)").fill("1234");
   // Pick a timezone where it is currently mid-day, so clock-in tests never run past the 9 PM cutoff.
   const tz = await page.evaluate(() => {
-    const opts = [...document.querySelectorAll<HTMLOptionElement>("#f-timezone option")].map((o) => o.value);
+    const opts = [...document.querySelectorAll<HTMLOptionElement>("select[name=timezone] option")].map((o) => o.value);
     const hourIn = (z: string) => Number(new Intl.DateTimeFormat("en-US", { timeZone: z, hour: "numeric", hour12: false }).format(new Date())) % 24;
     return opts.find((z) => hourIn(z) >= 10 && hourIn(z) <= 16) ?? "UTC";
   });

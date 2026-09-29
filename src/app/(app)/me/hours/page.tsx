@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/ui/empty-state";
 import { backfillableEvents, listMySessions } from "@/lib/attendance";
 import { requireUser } from "@/lib/auth/current-user";
-import { getCurrentSeason, getSeason } from "@/lib/seasons";
+import { SeasonPicker } from "@/components/season-picker";
+import { getCurrentSeason, getSeason, listSeasons } from "@/lib/seasons";
 import { getSettings } from "@/lib/settings";
 import { formatInTz, toDatetimeLocal } from "@/lib/time";
 import { backfillDayAction, backfillEventAction } from "./actions";
@@ -22,7 +23,7 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
   const { season: seasonParam } = await searchParams;
   const settings = await getSettings();
   const tz = settings.timezone;
-  const current = await getCurrentSeason();
+  const [current, allSeasons] = await Promise.all([getCurrentSeason(), listSeasons()]);
   const season = (seasonParam ? await getSeason(seasonParam) : undefined) ?? current;
   const isCurrent = season.id === current.id;
   const rows = await listMySessions(user.id, season.id);
@@ -35,6 +36,7 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
         <Link href="/me" className="text-[13px] text-muted underline-offset-4 hover:underline">← Me</Link>
         <h1 className="mt-2 text-[28px] font-semibold">My hours</h1>
       </div>
+      <SeasonPicker seasons={allSeasons} selectedId={season.id} />
       <HoursSummary sessions={list} tz={tz} seasonLabel={season.name} />
       <Button asChild variant="secondary" size="sm"><Link href={`/api/export/my-hours?season=${season.id}`}><Download aria-hidden />Download my hours (CSV)</Link></Button>
 

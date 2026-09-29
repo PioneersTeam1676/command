@@ -1,8 +1,10 @@
 import { and, asc, desc, eq, gte, isNull, lte, or } from "drizzle-orm";
+import { events } from "@/db/schema";
 import { db } from "@/db";
 import { seasons } from "@/db/schema";
 import { audit } from "@/lib/audit";
-import { isLocalDate } from "@/lib/time";
+import { addDaysLocal, isLocalDate, startOfLocalDay, todayLocal } from "@/lib/time";
+import { readSettings } from "@/lib/settings";
 
 export type Season = typeof seasons.$inferSelect;
 
@@ -71,4 +73,40 @@ export async function updateCurrentSeason(actorId: string, input: SeasonInput): 
     );
   });
   return { ok: true };
+}
+
+export type NewSeasonInput = { name: string; startDate: string; buildStart: string | null; buildEnd: string | null; workdays: number[] };
+
+/**
+ * Archive the current season and start a new one. Nothing is deleted: the old season keeps its hours,
+ * attendance and leaderboard, and stays viewable and exportable. Future events already on the calendar
+ * move into the new season so they count there.
+ */
+export async function startNewSeason(actorId: string, input: NewSeasonInput): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
+  const settings = await readSettings();
+  const today = todayLocal(settings.timezone);
+  const current = await getCurrentSeason();
+  const err = validateSeasonInput({ name: input.name, buildStart: input.buildStart, buildEnd: input.buildEnd, workdays: input.workdays });
+  if (err) return { ok: false, error: err };
+  if (!isLocalDate(input.startDate)) return { ok: false, error: "Choose a start date." };
+  if (input.startDate > today) return { ok: false, error: "A new season starts today or earlier. You can't start one in the future." };
+  if (input.startDate < current.startDate) return { ok: false, error: `The new season can't start before the current one began (${current.startDate}).` };
+  // Day before the new season, but never before the old season's own first day (same-day starts end it that day).
+  const dayBefore = addDaysLocal(input.startDate, -1);
+  const oldEnd = dayBefore < current.startDate ? current.startDate : dayBefore;
+
+  const id = await db.transaction(async (tx) => {
+    await tx.update(seasons).set({ isCurrent: false, endDate: oldEnd }).where(eq(seasons.id, current.id));
+    const [created] = await tx
+      .insert(seasons)
+      .values({ name: input.name.trim(), startDate: input.startDate, isCurrent: true, buildStart: input.buildStart, buildEnd: input.buildEnd, workdays: [...new Set(input.workdays)].sort() })
+      .returning({ id: seasons.id });
+    await tx
+      .update(events)
+      .set({ seasonId: created!.id })
+      .where(and(eq(events.seasonId, current.id), gte(events.startsAt, startOfLocalDay(input.startDate, settings.timezone))));
+    await audit({ actorId, action: "season.start_new", targetType: "season", targetId: created!.id, before: { archived: current.name, endDate: oldEnd }, after: { name: input.name.trim(), startDate: input.startDate } }, tx);
+    return created!.id;
+  });
+  return { ok: true, id };
 }

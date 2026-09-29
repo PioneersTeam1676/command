@@ -1,5 +1,6 @@
 "use client";
 import * as React from "react";
+import { useId } from "react";
 import { Field } from "@/components/ui/label";
 import { Input, Select, Textarea } from "@/components/ui/input";
 import { useFormState } from "@/components/form";
@@ -8,7 +9,9 @@ type Common = { name: string; label: string; help?: string; className?: string }
 
 function useErr(name: string) {
   const s = useFormState();
-  return { error: s.fieldErrors?.[name], kept: s.values?.[name] };
+  // Unique per field instance, so two forms on one page can both have a "name" field without clashing ids.
+  const uid = useId().replace(/:/g, "");
+  return { error: s.fieldErrors?.[name], kept: s.values?.[name], id: `f-${name}-${uid}` };
 }
 
 export function TextField({
@@ -19,8 +22,7 @@ export function TextField({
   defaultValue,
   ...props
 }: Common & Omit<React.InputHTMLAttributes<HTMLInputElement>, "name" | "className">) {
-  const { error, kept } = useErr(name);
-  const id = `f-${name}`;
+  const { error, kept, id } = useErr(name);
   return (
     <Field label={label} htmlFor={id} help={help} error={error} className={className}>
       <Input
@@ -43,8 +45,7 @@ export function TextAreaField({
   defaultValue,
   ...props
 }: Common & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, "name" | "className">) {
-  const { error, kept } = useErr(name);
-  const id = `f-${name}`;
+  const { error, kept, id } = useErr(name);
   return (
     <Field label={label} htmlFor={id} help={help} error={error} className={className}>
       <Textarea
@@ -70,8 +71,7 @@ export function SelectField({
 }: Common & {
   options: readonly (string | { value: string; label: string })[];
 } & Omit<React.SelectHTMLAttributes<HTMLSelectElement>, "name" | "className">) {
-  const { error, kept } = useErr(name);
-  const id = `f-${name}`;
+  const { error, kept, id } = useErr(name);
   return (
     <Field label={label} htmlFor={id} help={help} error={error} className={className}>
       <Select id={id} name={name} defaultValue={kept ?? defaultValue} aria-invalid={error ? true : undefined} {...props}>
