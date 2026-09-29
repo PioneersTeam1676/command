@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { GeistSans } from "geist/font/sans";
 import { GeistMono } from "geist/font/mono";
 import { Toaster } from "sonner";
+import { RegisterSW } from "@/components/pwa/register-sw";
 import { ThemeProvider } from "@/components/theme-provider";
 import { deriveAccent } from "@/lib/color";
 import { readSettings } from "@/lib/settings";
@@ -13,6 +14,10 @@ export const metadata: Metadata = {
   title: { default: "Command", template: "%s · Command" },
   description: "Team attendance, calendar and notifications for robotics teams.",
   applicationName: "Command",
+  manifest: "/manifest.webmanifest",
+  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch.png" },
+  appleWebApp: { capable: true, title: "Command", statusBarStyle: "default" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = {
@@ -46,6 +51,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <ThemeProvider>
           {children}
+          <RegisterSW />
           <Toaster position="top-center" />
         </ThemeProvider>
       </body>

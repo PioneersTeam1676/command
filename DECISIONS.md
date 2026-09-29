@@ -61,3 +61,15 @@ One line each: what, why.
 - Lead/admin edits mark an entry `edited` + `approved`. The "Who's here" list and force clock-out UI arrive with the admin dashboard phase; the underlying functions and audit logging are done and tested.
 - Parents see a student's sessions and totals through `src/lib/parent-data.ts`, which always goes through `requireStudent` (reviewer notes are stripped).
 - The check-in display shows a message instead of a code for one-tap events, and keeps the screen awake where supported.
+
+## Phase 4
+
+- `sharp` is added as an explicit dependency (Next already bundles it) to generate PWA icons from the team logo, or a font-free default clock glyph on the accent colour, at `/icons/*.png` (192, 512, maskable 512, apple-touch 180).
+- The service worker (`public/sw.js`) caches only hashed build assets and icons (cache first) and a short allow-list of page navigations (`/`, calendar, my hours, parent home/calendar) with network first. It never caches `/api/*`. It is registered in production builds only, and cached pages are wiped when the browser reaches `/login`.
+- Push permission is reported by the browser to `/api/push/state`, so the admin page can tell "permission denied" from "never enabled". A browser that is subscribed but unknown to the server re-registers itself.
+- A push endpoint moves to whoever registered it last (shared devices), and a 404/410 disables the subscription instead of deleting it (so status can show "subscription expired").
+- Reminders run from the `reminders.tick` job (every 60 s). Daily clock-in reminder window: from the reminder time for 2 hours (never after the auto clock-out). Event check-in prompt window: 20 minutes from start. Event reminders and prompts follow the event, so they are not restricted to build workdays; the daily and clock-out reminders are.
+- Clock-out reminder targets open build-season clock-ins only (event sessions have their own end-of-event prompt) and ignores `member_days` (being clocked in already shows they came).
+- Reminder types never write an in-app inbox row (they would only be noise there). Event changes, requests and decisions do.
+- VAPID subject is `APP_URL`.
+- iOS: notification permission is only requested from the Home Screen install; in a Safari tab the panel and banner show the Add to Home Screen steps.

@@ -65,6 +65,9 @@ export const users = pgTable(
     emailVerifiedAt: ts("email_verified_at"),
     leaderboardHidden: boolean("leaderboard_hidden").notNull().default(false),
     themePreference: text("theme_preference").notNull().default("system"),
+    /** What the browser last told us about notification permission: granted | denied | default. */
+    pushPermission: text("push_permission"),
+    pushPermissionAt: ts("push_permission_at"),
     createdAt: createdAt(),
   },
   (t) => [

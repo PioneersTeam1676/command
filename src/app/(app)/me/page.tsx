@@ -40,6 +40,14 @@ export default async function MePage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Notifications</CardTitle>
+          <CardDescription>Turn on reminders for this device and choose what you get.</CardDescription>
+        </CardHeader>
+        <CardContent><Button asChild variant="secondary"><Link href="/me/notifications">Notification settings</Link></Button></CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>My hours</CardTitle>
           <CardDescription>See your time this season, and add time if you forgot to clock in.</CardDescription>
         </CardHeader>

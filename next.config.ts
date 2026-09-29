@@ -11,9 +11,13 @@ const securityHeaders = [
 const config: NextConfig = {
   output: "standalone",
   poweredByHeader: false,
-  serverExternalPackages: ["@node-rs/argon2", "pg", "web-push", "node-ical", "nodemailer", "googleapis"],
+  serverExternalPackages: ["@node-rs/argon2", "pg", "web-push", "node-ical", "nodemailer", "googleapis", "sharp"],
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // The service worker must never be served stale, and may control the whole origin.
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache, no-store, must-revalidate" }, { key: "Content-Type", value: "application/javascript; charset=utf-8" }, { key: "Service-Worker-Allowed", value: "/" }] },
+    ];
   },
 };
 

@@ -2,6 +2,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { inAppNotifications, notificationLog, notificationPrefs, users } from "@/db/schema";
 import { sendMail } from "@/lib/mail";
+import { REMINDER_TYPES } from "@/lib/notification-types";
 import { sendPushToUser } from "@/lib/push";
 
 export type NotifyInput = {
@@ -43,7 +44,7 @@ export async function notify(input: NotifyInput): Promise<number> {
       .returning({ id: notificationLog.id });
     if (claimed.length === 0) continue; // already sent
 
-    if (!input.skipInApp) {
+    if (!input.skipInApp && !REMINDER_TYPES.has(input.type)) {
       await db.insert(inAppNotifications).values({
         userId,
         type: input.type,

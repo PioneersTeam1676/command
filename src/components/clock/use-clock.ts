@@ -92,6 +92,10 @@ export function useClock() {
       return { ok: false, error: "You're offline and this browser can't save the tap. Try again when you have signal." };
     }
     await refreshQueue();
+    // Ask the browser to flush this in the background too (Chrome/Android); otherwise the next foreground does.
+    navigator.serviceWorker?.ready
+      .then((reg) => (reg as ServiceWorkerRegistration & { sync?: { register: (t: string) => Promise<void> } }).sync?.register("command-sync"))
+      .catch(() => undefined);
     return { ok: true, queued: true };
   }
 

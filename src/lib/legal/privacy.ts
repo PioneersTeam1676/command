@@ -29,7 +29,7 @@ export const PRIVACY: LegalDoc = {
         "Optional preferences: notification settings, the workdays you personally attend, whether you appear on the leaderboard, and your theme choice.",
         "Parent accounts: a parent's name, relationship to the student, optional phone number and note, and the link to the student they are approved to view.",
         "Access requests: your name, email and optional note when you ask to join.",
-        "Notifications: if you turn on push notifications, your browser's push subscription (an address and keys issued by your device's push service) and the time of the last successful delivery.",
+        "Notifications: if you turn on push notifications, your browser's push subscription (an address and keys issued by your device's push service), whether your browser has allowed or blocked notifications, and the time of the last successful delivery. Admins can see whether each member has notifications working (not the content of your devices).",
         "Security records: a session record (browser description and a one-way hash of your IP address), sign-in rate-limit counters, and an audit log of actions taken by admins and leads.",
       ],
     },
@@ -61,7 +61,7 @@ export const PRIVACY: LegalDoc = {
     {
       heading: "Cookies and local storage",
       paragraphs: [
-        "Command uses one strictly necessary cookie to keep you signed in (httpOnly, expires after 30 days of inactivity), short-lived cookies during Google sign-in and setup, and your theme choice stored in your browser. The installed app also stores a cache and, if you go offline, a queue of clock-in and clock-out taps on your device until they sync. There are no advertising or tracking cookies.",
+        "Command uses one strictly necessary cookie to keep you signed in (httpOnly, expires after 30 days of inactivity), short-lived cookies during Google sign-in and setup, and your theme choice stored in your browser. The installed app also keeps a cache of recently viewed pages on your device (cleared when you sign out) and, if you go offline, a queue of clock-in and clock-out taps until they sync. There are no advertising or tracking cookies.",
       ],
     },
     {
