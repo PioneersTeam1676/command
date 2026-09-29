@@ -23,6 +23,15 @@ export function registryUrl(env: { NODE_ENV?: string; REGISTRY_URL_OVERRIDE?: st
   return REGISTRY_URL;
 }
 
+/**
+ * Same rule for the trusted keys: only a development run may substitute its own (comma-separated), so a
+ * production install can't be pointed at a look-alike registry through the environment.
+ */
+export function registryKeys(env: { NODE_ENV?: string; REGISTRY_PUBLIC_KEYS_OVERRIDE?: string } = process.env): readonly string[] {
+  if (env.NODE_ENV === "development" && env.REGISTRY_PUBLIC_KEYS_OVERRIDE) return env.REGISTRY_PUBLIC_KEYS_OVERRIDE.split(",").map((k) => k.trim()).filter(Boolean);
+  return REGISTRY_PUBLIC_KEYS;
+}
+
 const HOUR = 3_600_000;
 export const TIMING = {
   /** Normal cadence, with +/- jitter so a whole fleet doesn't call at the same second. */

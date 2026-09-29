@@ -6,3 +6,7 @@ e2e
 spec.md
 .env
 .env.local
+e2e-registry
+playwright.config.ts
+playwright.registry.config.ts
+test-results

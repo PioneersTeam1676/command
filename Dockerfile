@@ -19,6 +19,8 @@ COPY --from=build --chown=app:app /app/.next/standalone ./
 COPY --from=build --chown=app:app /app/.next/static ./.next/static
 COPY --from=build --chown=app:app /app/public ./public
 COPY --from=build --chown=app:app /app/drizzle ./drizzle
+# The license-check files are shipped as source next to their build manifest so the startup integrity check can compare them.
+COPY --from=build --chown=app:app /app/src/lib/registry ./src/lib/registry
 USER app
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \

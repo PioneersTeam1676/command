@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { getPool } from "@/db";
-import { COMMAND_VERSION, REGISTRY_PUBLIC_KEYS, TIMING, registryUrl } from "./config";
+import { COMMAND_VERSION, TIMING, registryKeys, registryUrl } from "./config";
 import { checkIntegrity, integrityForHeartbeat, type IntegrityResult } from "./integrity";
 import { canonicalJson, verifyEnvelope, type RegistryPayload, type ResponseBody } from "./protocol";
 import { activeMemberCount, patchRegistry, readRegistryRow, snapshot } from "./store";
@@ -28,7 +28,7 @@ export const defaultDeps = (): Deps => ({
   fetch: (...a) => fetch(...a),
   now: () => new Date(),
   nonce: () => randomBytes(16).toString("hex"),
-  keys: REGISTRY_PUBLIC_KEYS,
+  keys: registryKeys(),
   baseUrl: registryUrl(),
   random: Math.random,
   integrity: () => checkIntegrity(),
