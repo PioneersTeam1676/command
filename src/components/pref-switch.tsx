@@ -11,7 +11,7 @@ export function PrefSwitch({ type, label, description, enabled, action }: { type
     <div className="flex items-start justify-between gap-4 py-3">
       <div className="min-w-0">
         <label htmlFor={id} className="text-sm font-medium">{label}</label>
-        <p className="text-[13px] text-muted">{description}</p>
+        <p className="text-sm md:text-[13px] text-muted">{description}</p>
       </div>
       <Switch
         id={id}

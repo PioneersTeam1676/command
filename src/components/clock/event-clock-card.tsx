@@ -38,11 +38,11 @@ export function EventClockCard(p: EventClockProps) {
   }
 
   return (
-    <div className={cn("rounded-[8px] border p-4", checkedIn && "border-accent bg-accent-subtle/50")}>
+    <div className={cn("rounded-[10px] border p-5 md:rounded-[8px] md:p-4", checkedIn && "border-accent bg-accent-subtle/50")}>
       <div className="flex items-start justify-between gap-3">
         <Link href={`/calendar/${p.eventId}`} className="min-w-0">
           <p className={cn("truncate font-medium", p.cancelled && "text-muted line-through")}>{p.title}</p>
-          <p className="font-mono text-[12px] text-muted">{p.whenLabel}</p>
+          <p className="font-mono text-[13px] md:text-[12px] text-muted">{p.whenLabel}</p>
         </Link>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {p.cancelled ? <Badge tone="error">Cancelled</Badge> : null}
@@ -53,7 +53,7 @@ export function EventClockCard(p: EventClockProps) {
       </div>
 
       {p.cancelled ? null : done ? (
-        <p className="mt-3 flex items-center gap-1.5 text-[13px] text-muted">
+        <p className="mt-3 flex items-center gap-1.5 text-sm md:text-[13px] text-muted">
           <CheckCircle2 className="size-4 text-success" aria-hidden />
           {p.session!.inLabel} – {p.session!.outLabel}
         </p>
@@ -76,10 +76,10 @@ export function EventClockCard(p: EventClockProps) {
           <Button onClick={onTap} disabled={busy || (!checkedIn && p.needsCode && code.replace(/\s/g, "").length !== 6)} variant={checkedIn ? "secondary" : "primary"} size="lg" className="w-full">
             {checkedIn ? "Clock out of event" : "Check in"}
           </Button>
-          {pending.length > 0 ? <p className="text-[12px] text-warning">Saved on this phone. Will sync when you&apos;re back online.</p> : null}
+          {pending.length > 0 ? <p className="text-[13px] md:text-[12px] text-warning">Saved on this phone. Will sync when you&apos;re back online.</p> : null}
         </div>
       ) : p.opensLabel ? (
-        <p className="mt-3 text-[13px] text-muted">{p.opensLabel}</p>
+        <p className="mt-3 text-sm md:text-[13px] text-muted">{p.opensLabel}</p>
       ) : null}
     </div>
   );

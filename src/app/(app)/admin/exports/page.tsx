@@ -30,7 +30,7 @@ export default async function ExportsPage() {
               <option key={s.id} value={s.id}>{s.name}{s.isCurrent ? " (current)" : ""}</option>
             ))}
           </Select>
-          <p className="text-[13px] text-muted">Pick the season, then use a download button below.</p>
+          <p className="text-sm md:text-[13px] text-muted">Pick the season, then use a download button below.</p>
         </div>
         <div className="space-y-3">
           {ITEMS.map((i) => (

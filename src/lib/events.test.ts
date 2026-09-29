@@ -89,6 +89,26 @@ describe.skipIf(!hasTestDb)("events, RSVPs, notifications", () => {
     expect(titles.some((t) => t.startsWith("Event cancelled: Scrimmage"))).toBe(true);
   });
 
+  it("delete removes an unused event, but refuses when people checked in", async () => {
+    const { createEvent, deleteEvent, getEvent, setRsvp } = await import("./events");
+    const { db } = await import("@/db");
+    const { attendanceSessions, seasons } = await import("@/db/schema");
+    const [season] = await db.select().from(seasons);
+    const empty = await createEvent(ids.lead!, { title: "Oops duplicate", startsAt: future(6), endsAt: future(6, 20), verification: "none" });
+    if (!empty.ok) throw new Error("create failed");
+    await setRsvp(ids.m1!, empty.id, "going");
+    expect((await deleteEvent(ids.lead!, empty.id)).ok).toBe(true);
+    expect(await getEvent(empty.id)).toBeUndefined();
+
+    const used = await createEvent(ids.lead!, { title: "Real meeting", startsAt: future(7), endsAt: future(7, 20), verification: "none" });
+    if (!used.ok) throw new Error("create failed");
+    await db.insert(attendanceSessions).values({ userId: ids.m1!, seasonId: season!.id, kind: "event", eventId: used.id, localDate: "2026-01-01", clockInAt: new Date(), status: "open" });
+    const refused = await deleteEvent(ids.lead!, used.id);
+    expect(refused.ok).toBe(false);
+    expect(await getEvent(used.id)).toBeDefined();
+    expect((await deleteEvent(ids.lead!, "00000000-0000-4000-8000-000000000000")).ok).toBe(false);
+  });
+
   it("imported events only allow changing the check-in method", async () => {
     const { updateEvent, getEvent } = await import("./events");
     const { db } = await import("@/db");

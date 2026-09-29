@@ -29,7 +29,7 @@ export default async function NotificationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/me" className="text-[13px] text-muted underline-offset-4 hover:underline">← Me</Link>
+        <Link href="/me" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Me</Link>
         <h1 className="mt-2 text-[28px] font-semibold">Notifications</h1>
       </div>
 
@@ -96,8 +96,8 @@ export default async function NotificationsPage() {
                 <li key={n.id} className="py-3">
                   <Link href={n.url ?? "#"} className="block">
                     <p className={`text-sm ${n.readAt ? "" : "font-medium"}`}>{n.title}</p>
-                    {n.body ? <p className="text-[13px] text-muted">{n.body}</p> : null}
-                    <p className="mt-0.5 font-mono text-[11px] text-muted">{formatDistanceToNow(n.createdAt, { addSuffix: true })}</p>
+                    {n.body ? <p className="text-sm md:text-[13px] text-muted">{n.body}</p> : null}
+                    <p className="mt-0.5 font-mono text-xs md:text-[11px] text-muted">{formatDistanceToNow(n.createdAt, { addSuffix: true })}</p>
                   </Link>
                 </li>
               ))}

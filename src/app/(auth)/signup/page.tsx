@@ -41,12 +41,12 @@ export default async function SignupPage() {
             </SubmitButton>
           </ActionForm>
         </div>
-        <p className="mt-4 text-center text-[12px] text-muted">
+        <p className="mt-4 text-center text-[13px] md:text-[12px] text-muted">
           By creating an account you agree to the{" "}
           <Link href="/terms" className="underline underline-offset-4">Terms</Link> and{" "}
           <Link href="/privacy" className="underline underline-offset-4">Privacy Policy</Link>.
         </p>
-        <p className="mt-3 text-center text-[13px] text-muted">
+        <p className="mt-3 text-center text-sm md:text-[13px] text-muted">
           Already have an account?{" "}
           <Link href="/login" className="text-accent underline underline-offset-4">Sign in</Link>
         </p>

@@ -33,7 +33,7 @@ export default async function ParentStudentPage({ params, searchParams }: { para
   const sessions = await studentSessionsForParent(parent.id, student.id, season.id);
   return (
     <div className="space-y-6">
-      <Link href="/parent" className="text-[13px] text-muted underline-offset-4 hover:underline">← All students</Link>
+      <Link href="/parent" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← All students</Link>
       <h1 className="text-[28px] font-semibold">{student.name}</h1>
       <SeasonPicker seasons={allSeasons} selectedId={season.id} />
       <HoursSummary sessions={sessions} tz={settings.timezone} seasonLabel={season.name} />
@@ -42,7 +42,7 @@ export default async function ParentStudentPage({ params, searchParams }: { para
       ) : (
         <SessionList sessions={sessions} tz={settings.timezone} />
       )}
-      <p className="text-[13px] text-muted">
+      <p className="text-sm md:text-[13px] text-muted">
         See upcoming events on the <Link href="/parent/calendar" className="underline underline-offset-4">calendar</Link>.
       </p>
     </div>

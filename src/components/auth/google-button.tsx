@@ -14,7 +14,7 @@ export function GoogleButton({ intent = "login", next, recommended = true }: { i
           <path fill="#EA4335" d="M12 4.8c1.8 0 3.3.6 4.6 1.8l3.4-3.4A12 12 0 0 0 1.4 6.5l4 3.1C6.3 6.9 8.9 4.8 12 4.8Z" />
         </svg>
         Continue with Google
-        {recommended ? <span className="rounded-full bg-accent-subtle px-2 py-0.5 text-[11px] font-medium">Recommended</span> : null}
+        {recommended ? <span className="rounded-full bg-accent-subtle px-2 py-0.5 text-xs md:text-[11px] font-medium">Recommended</span> : null}
       </a>
     </Button>
   );

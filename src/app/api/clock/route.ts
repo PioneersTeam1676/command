@@ -47,7 +47,7 @@ export async function POST(req: Request) {
           ? await clockInEvent(user.id, b.eventId!, { ...timing, code: b.code }, origin)
           : await clockOutEvent(user.id, b.eventId!, timing, origin);
     if (!r.ok) return { ok: false as const, error: r.error, conflict: r.conflict ?? false };
-    return { ok: true as const, autoClosed: "autoClosed" in r ? r.autoClosed : false, at: (b.action === "in" ? r.session.clockInAt : r.session.clockOutAt)?.toISOString() ?? null };
+    return { ok: true as const, autoClosed: "autoClosed" in r ? r.autoClosed : false, offHours: "offHours" in r ? r.offHours : false, at: (b.action === "in" ? r.session.clockInAt : r.session.clockOutAt)?.toISOString() ?? null };
   });
   return NextResponse.json(result);
 }

@@ -36,6 +36,13 @@
       "when": 1790691974639,
       "tag": "0004_daffy_jean_grey",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790714346421,
+      "tag": "0005_cheerful_boomer",
+      "breakpoints": true
     }
   ]
 }

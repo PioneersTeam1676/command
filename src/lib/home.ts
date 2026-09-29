@@ -21,9 +21,9 @@ export type HomeData = {
   today: string;
   buildDay: boolean;
   workday: boolean;
-  openClockInAllowed: boolean;
+  /** Outside build season or past the cutoff: clocking in still works, but a lead has to approve the time. */
+  offHours: boolean;
   openSession: { id: string; clockInAt: Date } | null;
-  todaysOpen: { clockInAt: Date; clockOutAt: Date | null } | null;
   cutoffLabelAt: Date;
   todayEvents: EventCard[];
   upcoming: EventCard[];
@@ -38,10 +38,6 @@ export async function getHomeData(userId: string, now: Date = new Date()): Promi
   const cutoff = autoCloseAt(today, settings);
   const buildDay = inBuildSeason(today, season);
 
-  const [todayOpenRow] = await db
-    .select()
-    .from(attendanceSessions)
-    .where(and(eq(attendanceSessions.userId, userId), eq(attendanceSessions.kind, "open"), eq(attendanceSessions.localDate, today)));
   const [stillOpen] = await db
     .select()
     .from(attendanceSessions)
@@ -83,9 +79,8 @@ export async function getHomeData(userId: string, now: Date = new Date()): Promi
     today,
     buildDay,
     workday: isBuildWorkday(today, season),
-    openClockInAllowed: buildDay && now < cutoff && !todayOpenRow,
+    offHours: !buildDay || now >= cutoff,
     openSession: stillOpen ? { id: stillOpen.id, clockInAt: stillOpen.clockInAt } : null,
-    todaysOpen: todayOpenRow ? { clockInAt: todayOpenRow.clockInAt, clockOutAt: todayOpenRow.clockOutAt } : null,
     cutoffLabelAt: cutoff,
     todayEvents: windowEvents.map(card),
     upcoming: upcomingEvents.map(card),

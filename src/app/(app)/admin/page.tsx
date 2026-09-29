@@ -18,9 +18,9 @@ export const dynamic = "force-dynamic";
 function Tile({ href, label, value, note }: { href: string; label: string; value: string | number; note?: string }) {
   return (
     <Link href={href} className="group rounded-[8px] border p-4 transition-colors duration-150 hover:bg-surface">
-      <p className="flex items-center justify-between text-[13px] text-muted">{label}<ArrowRight className="size-4 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden /></p>
+      <p className="flex items-center justify-between text-sm md:text-[13px] text-muted">{label}<ArrowRight className="size-4 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden /></p>
       <p className="mt-1 font-mono text-[28px] font-medium">{value}</p>
-      {note ? <p className="text-[12px] text-muted">{note}</p> : null}
+      {note ? <p className="text-[13px] md:text-[12px] text-muted">{note}</p> : null}
     </Link>
   );
 }
@@ -50,7 +50,7 @@ export default async function AdminHome() {
                 <li key={e.id}>
                   <Link href={`/calendar/${e.id}`} className="flex items-center justify-between gap-3 py-2.5 text-sm hover:underline">
                     <span className={e.cancelledAt ? "text-muted line-through" : ""}>{e.title}</span>
-                    <span className="flex items-center gap-2 font-mono text-[12px] text-muted">
+                    <span className="flex items-center gap-2 font-mono text-[13px] md:text-[12px] text-muted">
                       {e.cancelledAt ? <Badge tone="error">Cancelled</Badge> : null}
                       {formatInTz(e.startsAt, settings.timezone, "EEE MMM d, h:mm a")}
                     </span>

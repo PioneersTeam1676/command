@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActionUser } from "@/lib/auth/current-user";
-import { cancelEvent, createEvent, eventFormSchema, RSVP_RESPONSES, setRsvp, updateEvent } from "@/lib/events";
+import { cancelEvent, createEvent, deleteEvent, eventFormSchema, RSVP_RESPONSES, setRsvp, updateEvent } from "@/lib/events";
 import { parseForm, type FormState } from "@/lib/form";
 import { uuidSchema } from "@/lib/validation";
 
@@ -61,4 +61,15 @@ export async function rsvpQuickAction(formData: FormData): Promise<void> {
   await setRsvp(user.id, p.data.eventId, p.data.response);
   revalidatePath("/");
   revalidatePath("/calendar");
+}
+
+/** Permanent delete from the event page. Returns to the calendar on success; the page shows why when it's refused. */
+export async function deleteEventAction(formData: FormData) {
+  const user = await requireActionUser("lead");
+  const id = uuidSchema.safeParse(formData.get("id"));
+  if (!id.success) return;
+  const r = await deleteEvent(user.id, id.data);
+  revalidatePath("/calendar");
+  if (r.ok) redirect("/calendar");
+  redirect(`/calendar/${id.data}?deleteError=${encodeURIComponent(r.error)}`);
 }

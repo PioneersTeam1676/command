@@ -57,7 +57,7 @@ export default async function SeasonPage({ searchParams }: { searchParams: Promi
                 </label>
               ))}
             </div>
-            <p className="mt-2 text-[13px] text-muted">Reminders only go out on these days. Members can still clock in on other days inside build season.</p>
+            <p className="mt-2 text-sm md:text-[13px] text-muted">Reminders only go out on these days. Members can still clock in on other days inside build season.</p>
           </fieldset>
           <SubmitButton pendingText="Saving…">Save season</SubmitButton>
         </ActionForm>
@@ -86,7 +86,7 @@ export default async function SeasonPage({ searchParams }: { searchParams: Promi
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-3 py-3 text-sm">
                 <span>
                   <span className="font-medium">{a.name}</span> <Badge>Archived</Badge>
-                  <span className="ml-2 font-mono text-[12px] text-muted">{a.startDate} – {a.endDate ?? "?"}</span>
+                  <span className="ml-2 font-mono text-[13px] md:text-[12px] text-muted">{a.startDate} – {a.endDate ?? "?"}</span>
                 </span>
                 <span className="flex gap-2">
                   <Button asChild size="sm" variant="secondary"><Link href={`/admin/roster?season=${a.id}`}>Roster</Link></Button>

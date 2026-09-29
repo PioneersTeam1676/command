@@ -31,7 +31,7 @@ export default function ForgotPage() {
             <strong>Reset password</strong>. They&apos;ll give you a temporary password.
           </p>
         )}
-        <p className="mt-5 text-center text-[13px]">
+        <p className="mt-5 text-center text-sm md:text-[13px]">
           <Link href="/login" className="text-accent underline-offset-4 hover:underline">Back to sign in</Link>
         </p>
       </CardContent>

@@ -39,13 +39,13 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
 
       <div role="tablist" aria-label="Ranking" className="inline-flex rounded-[8px] border p-0.5">
         {([["hours", "Total hours"], ["attendance", "Attendance rate"]] as const).map(([t, label]) => (
-          <Link key={t} role="tab" aria-selected={tab === t} href={href(t)} className={cn("inline-flex min-h-[36px] items-center rounded-[6px] px-4 text-[13px] transition-colors duration-150", tab === t ? "bg-surface font-medium" : "text-muted hover:text-foreground")}>
+          <Link key={t} role="tab" aria-selected={tab === t} href={href(t)} className={cn("inline-flex min-h-[36px] items-center rounded-[6px] px-4 text-sm md:text-[13px] transition-colors duration-150", tab === t ? "bg-surface font-medium" : "text-muted hover:text-foreground")}>
             {label}
           </Link>
         ))}
       </div>
       {tab === "attendance" ? (
-        <p className="-mt-3 text-[13px] text-muted">Events you attended out of {endedEvents} finished event{endedEvents === 1 ? "" : "s"} this season. Open build season days don&apos;t count.</p>
+        <p className="-mt-3 text-sm md:text-[13px] text-muted">Events you attended out of {endedEvents} finished event{endedEvents === 1 ? "" : "s"} this season. Open build season days don&apos;t count.</p>
       ) : null}
 
       {hidden && me ? (
@@ -76,7 +76,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
                   </span>
                   <span className="shrink-0 font-mono text-sm">
                     {tab === "hours" ? `${r.hours.toFixed(1)} h` : r.attendanceRate === null ? "No events yet" : `${Math.round(r.attendanceRate * 100)}%`}
-                    {tab === "attendance" && r.attendanceRate !== null ? <span className="ml-2 text-[12px] text-muted">{r.eventsAttended}/{endedEvents}</span> : null}
+                    {tab === "attendance" && r.attendanceRate !== null ? <span className="ml-2 text-[13px] md:text-[12px] text-muted">{r.eventsAttended}/{endedEvents}</span> : null}
                   </span>
                 </li>
               );

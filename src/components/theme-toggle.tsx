@@ -30,7 +30,7 @@ export function ThemeToggle() {
             aria-checked={active}
             onClick={() => setTheme(value)}
             className={cn(
-              "inline-flex min-h-[36px] items-center gap-1.5 rounded-[6px] px-3 text-[13px] transition-colors duration-150",
+              "inline-flex min-h-[36px] items-center gap-1.5 rounded-[6px] px-3 text-sm md:text-[13px] transition-colors duration-150",
               active ? "bg-surface font-medium text-foreground" : "text-muted hover:text-foreground",
             )}
           >

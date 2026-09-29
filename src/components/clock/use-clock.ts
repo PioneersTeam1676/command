@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { enqueueTap, listQueue, newActionId, syncQueue, type QueuedTap } from "@/lib/offline-queue";
 
 export type TapInput = { action: "in" | "out"; kind: "open" | "event"; eventId?: string; code?: string; label: string };
-export type TapResult = { ok: boolean; queued?: boolean; error?: string; autoClosed?: boolean };
+export type TapResult = { ok: boolean; queued?: boolean; error?: string; autoClosed?: boolean; offHours?: boolean };
 
 /** Shared clock logic: online taps go straight to the server, offline taps are queued with the device time. */
 export function useClock() {

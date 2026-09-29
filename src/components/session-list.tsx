@@ -41,11 +41,11 @@ export function SessionList({ sessions, tz }: { sessions: SessionRowData[]; tz: 
           <li key={s.id} className="flex flex-col gap-1.5 p-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <p className="truncate text-sm font-medium">{s.kind === "event" ? (s.eventTitle ?? "Event") : "Build season clock-in"}</p>
-              <p className="font-mono text-[12px] text-muted">
+              <p className="font-mono text-[13px] md:text-[12px] text-muted">
                 {formatInTz(s.clockInAt, tz, "EEE MMM d, h:mm a")}
                 {s.clockOutAt ? ` – ${formatInTz(s.clockOutAt, tz, "h:mm a")}` : " – now"}
               </p>
-              {s.note ? <p className="mt-0.5 text-[12px] text-muted">“{s.note}”</p> : null}
+              {s.note ? <p className="mt-0.5 text-[13px] md:text-[12px] text-muted">“{s.note}”</p> : null}
             </div>
             <div className="flex items-center gap-3 sm:flex-col sm:items-end sm:gap-1">
               <span className={`font-mono text-sm ${counts ? "" : "text-muted line-through"}`}>{s.clockOutAt ? formatDuration(ms) : "…"}</span>
@@ -65,11 +65,11 @@ export function HoursSummary({ sessions, tz, seasonLabel }: { sessions: SessionR
   return (
     <dl className="grid grid-cols-2 gap-3">
       <div className="rounded-[8px] border p-4">
-        <dt className="text-[13px] text-muted">Hours in {seasonLabel}</dt>
+        <dt className="text-sm md:text-[13px] text-muted">Hours in {seasonLabel}</dt>
         <dd className="mt-1 font-mono text-[28px] font-medium">{(total / 3_600_000).toFixed(1)}</dd>
       </div>
       <div className="rounded-[8px] border p-4">
-        <dt className="text-[13px] text-muted">Days with time</dt>
+        <dt className="text-sm md:text-[13px] text-muted">Days with time</dt>
         <dd className="mt-1 font-mono text-[28px] font-medium">{days}</dd>
       </div>
     </dl>

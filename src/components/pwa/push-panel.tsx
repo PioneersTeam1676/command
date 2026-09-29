@@ -53,7 +53,7 @@ export function IosInstallGuide() {
           <span>Open <strong>Command from your Home Screen</strong> (not Safari), go to <strong>Me → Notifications</strong>, and tap <strong>Turn on notifications</strong>.</span>
         </li>
       </ol>
-      <p className="text-[12px] text-muted">Needs iOS 16.4 or newer.</p>
+      <p className="text-[13px] md:text-[12px] text-muted">Needs iOS 16.4 or newer.</p>
     </div>
   );
 }

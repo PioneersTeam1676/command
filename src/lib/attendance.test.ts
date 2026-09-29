@@ -43,7 +43,7 @@ describe.skipIf(!hasTestDb)("attendance: clock in/out, sweeps, backfill, review"
   });
 
   describe("open clock-in", () => {
-    it("clocks in and out, one per day", async () => {
+    it("clocks in and out as often as you like, but never two running at once", async () => {
       const a = await import("./attendance");
       const inR = await a.clockInOpen(userId, { now: MON_3PM });
       expect(inR.ok).toBe(true);
@@ -52,14 +52,23 @@ describe.skipIf(!hasTestDb)("attendance: clock in/out, sweeps, backfill, review"
       const out = await a.clockOutOpen(userId, { now: T("2026-01-12T22:00:00Z") });
       expect(out).toMatchObject({ ok: true, autoClosed: false });
       if (out.ok) expect(out.session).toMatchObject({ status: "closed", reviewState: "none", origin: "live" });
-      // Once out, can't clock in again the same day.
-      expect((await a.clockInOpen(userId, { now: T("2026-01-12T23:00:00Z") })).ok).toBe(false);
+      // Once out, a second session the same day is fine.
+      const second = await a.clockInOpen(userId, { now: T("2026-01-12T23:00:00Z") });
+      expect(second).toMatchObject({ ok: true, offHours: false });
+      expect((await a.clockOutOpen(userId, { now: T("2026-01-13T00:00:00Z") })).ok).toBe(true);
     });
 
-    it("refuses outside build season, on a day with no build range, and after the cutoff", async () => {
+    it("lets you clock in outside build season or after the cutoff, pending a lead's approval", async () => {
       const a = await import("./attendance");
-      expect((await a.clockInOpen(otherId, { now: T("2026-03-02T20:00:00Z") })).ok).toBe(false); // after build season
-      expect((await a.clockInOpen(otherId, { now: T("2026-01-13T02:30:00Z") })).ok).toBe(false); // Jan 12, 9:30 PM local: past cutoff
+      const late = await a.clockInOpen(otherId, { now: T("2026-03-02T20:00:00Z") }); // after build season
+      expect(late).toMatchObject({ ok: true, offHours: true });
+      if (late.ok) expect(late.session.reviewState).toBe("pending_approval");
+      // The daily cutoff doesn't cut off an off-hours session: it runs to the 16 hour cap.
+      const out = await a.clockOutOpen(otherId, { now: T("2026-03-02T23:00:00Z") });
+      expect(out).toMatchObject({ ok: true, autoClosed: false });
+      const pastCutoff = await a.clockInOpen(otherId, { now: T("2026-01-13T02:30:00Z") }); // Jan 12, 9:30 PM local
+      expect(pastCutoff).toMatchObject({ ok: true, offHours: true });
+      await a.clockOutOpen(otherId, { now: T("2026-01-13T04:00:00Z") });
       expect((await a.clockOutOpen(otherId, { now: MON_3PM })).ok).toBe(false); // not clocked in
     });
 

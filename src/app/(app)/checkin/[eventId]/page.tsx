@@ -48,7 +48,7 @@ export default async function CheckInPage({ params, searchParams }: { params: Pr
           </ActionForm>
         </CardContent>
       </Card>
-      <Link href="/" className="block text-center text-[13px] text-muted underline-offset-4 hover:underline">Back to Home</Link>
+      <Link href="/" className="block text-center text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">Back to Home</Link>
     </div>
   );
 }

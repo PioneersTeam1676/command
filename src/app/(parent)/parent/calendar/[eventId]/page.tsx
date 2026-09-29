@@ -21,7 +21,7 @@ export default async function ParentEventPage({ params }: { params: Promise<{ ev
   const settings = await getSettings();
   return (
     <div className="space-y-6">
-      <Link href="/parent/calendar" className="text-[13px] text-muted underline-offset-4 hover:underline">← Calendar</Link>
+      <Link href="/parent/calendar" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Calendar</Link>
       <EventDetails event={event} tz={settings.timezone} />
     </div>
   );

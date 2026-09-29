@@ -76,7 +76,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
               <>
                 <h2 className="text-lg font-semibold">Enter your setup token</h2>
                 <p className="mt-1 text-sm text-muted">
-                  When Command started, it printed a one-time token in its logs. Run <code className="font-mono text-[13px]">docker compose logs app</code> and copy the token. This stops anyone else from claiming a new install.
+                  When Command started, it printed a one-time token in its logs. Run <code className="font-mono text-sm md:text-[13px]">docker compose logs app</code> and copy the token. This stops anyone else from claiming a new install.
                 </p>
                 <ActionForm action={submitTokenAction} className="mt-5 space-y-4">
                   <TextField name="token" label="Setup token" autoComplete="off" spellCheck={false} required className="font-mono" />
@@ -195,7 +195,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
             )}
           </CardContent>
         </Card>
-        <LegalLinks className="mt-6 text-center text-[13px] text-muted" />
+        <LegalLinks className="mt-6 text-center text-sm md:text-[13px] text-muted" />
       </div>
     </GridBackground>
   );

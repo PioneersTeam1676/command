@@ -18,7 +18,7 @@ export function EventDetails({ event, tz, showVerification = false }: { event: E
         <span>
           {formatInTz(event.startsAt, tz, "EEEE, MMMM d")}
           <br />
-          <span className="font-mono text-[13px] text-muted">
+          <span className="font-mono text-sm md:text-[13px] text-muted">
             {formatInTz(event.startsAt, tz, "h:mm a")} – {sameDay ? formatInTz(event.endsAt, tz, "h:mm a") : formatInTz(event.endsAt, tz, "EEE MMM d, h:mm a")} ({formatInTz(event.startsAt, tz, "zzz")})
           </span>
         </span>
@@ -31,7 +31,7 @@ export function EventDetails({ event, tz, showVerification = false }: { event: E
       ) : null}
       {event.description ? <p className="whitespace-pre-wrap text-[15px] text-foreground/90">{event.description}</p> : null}
       {showVerification ? (
-        <p className="text-[13px] text-muted">
+        <p className="text-sm md:text-[13px] text-muted">
           Check-in: {event.verification === "code" ? "rotating code" : event.verification === "none" ? "one tap" : "team default"}
         </p>
       ) : null}

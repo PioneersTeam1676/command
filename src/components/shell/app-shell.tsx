@@ -69,10 +69,10 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="pt-safe sticky top-0 z-30 flex h-12 items-center justify-between border-b bg-background/90 px-4 backdrop-blur md:hidden">
+        <header className="pt-safe sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/90 px-5 backdrop-blur md:hidden">
           <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />
           {isStaff ? (
-            <Link href="/admin" className="inline-flex min-h-[44px] items-center px-2 text-[13px] font-medium text-accent">
+            <Link href="/admin" className="inline-flex min-h-[44px] items-center px-2 text-sm font-medium text-accent">
               Admin
             </Link>
           ) : null}
@@ -81,7 +81,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
           <span className="text-[13px] text-muted">{teamName}</span>
         </div>
         {banner}
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 pb-28 pt-6 md:px-8 md:pb-12 md:pt-8">{children}</main>
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-5 pb-32 pt-6 md:px-8 md:pb-12 md:pt-8">{children}</main>
       </div>
 
       <nav
@@ -97,11 +97,11 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-[56px] flex-col items-center justify-center gap-0.5 text-[11px] transition-colors duration-150",
+                "flex min-h-[64px] flex-col items-center justify-center gap-1 text-xs transition-colors duration-150",
                 active ? "font-medium text-accent" : "text-muted",
               )}
             >
-              <item.Icon className="size-5" aria-hidden />
+              <item.Icon className="size-6" aria-hidden />
               {item.label}
             </Link>
           );

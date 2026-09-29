@@ -21,7 +21,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ even
   const settings = await getSettings();
   return (
     <div className="max-w-xl">
-      <Link href={`/calendar/${event.id}`} className="text-[13px] text-muted underline-offset-4 hover:underline">← Back to event</Link>
+      <Link href={`/calendar/${event.id}`} className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Back to event</Link>
       <h1 className="mb-6 mt-3 text-[28px] font-semibold">Edit event</h1>
       <EventForm
         action={updateEventAction}

@@ -32,7 +32,7 @@ export default async function HerePage() {
               <li key={h.sessionId} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <Link href={`/admin/roster/${h.userId}`} className="font-medium underline-offset-4 hover:underline">{h.name}</Link>
-                  <p className="text-[13px] text-muted">
+                  <p className="text-sm md:text-[13px] text-muted">
                     {h.kind === "event" ? h.eventTitle ?? "Event" : "Build season clock-in"} · in at{" "}
                     <span className="font-mono">{formatInTz(h.since, settings.timezone, "h:mm a")}</span> ({formatDistanceToNowStrict(h.since)})
                   </p>

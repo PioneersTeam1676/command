@@ -64,12 +64,12 @@ export function GcalCard({
         {mode === "api" ? (
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             <div>
-              <dt className="text-[13px] text-muted">Calendar</dt>
-              <dd className="break-all font-mono text-[13px]">{calendarId ?? "Not set"}</dd>
+              <dt className="text-sm md:text-[13px] text-muted">Calendar</dt>
+              <dd className="break-all font-mono text-sm md:text-[13px]">{calendarId ?? "Not set"}</dd>
             </div>
             <div>
-              <dt className="text-[13px] text-muted">Share your calendar with this email (“Make changes to events”)</dt>
-              <dd className="break-all font-mono text-[13px]">{serviceAccountEmail ?? "Key not set"}</dd>
+              <dt className="text-sm md:text-[13px] text-muted">Share your calendar with this email (“Make changes to events”)</dt>
+              <dd className="break-all font-mono text-sm md:text-[13px]">{serviceAccountEmail ?? "Key not set"}</dd>
             </div>
           </dl>
         ) : null}
@@ -88,7 +88,7 @@ export function GcalCard({
         ) : null}
 
         {mode === "ics" ? (
-          <p className="text-[13px] text-muted">
+          <p className="text-sm md:text-[13px] text-muted">
             {lastSyncAt ? <>Last check: <span className="font-mono">{format(lastSyncAt, "MMM d, h:mm a")}</span>. </> : "Not checked yet. "}
             {lastResult ? <span className={lastResult.startsWith("Failed") ? "text-error" : ""}>{lastResult}</span> : null}
           </p>
@@ -96,10 +96,10 @@ export function GcalCard({
 
         {mode === "api" ? (
           <>
-            {failingPushes > 0 ? <p role="alert" className="rounded-[8px] border bg-warning-subtle p-3 text-[13px] text-warning">{failingPushes} change{failingPushes === 1 ? "" : "s"} couldn&apos;t be sent to Google yet. Command keeps retrying. Use “Test connection” to see why.</p> : null}
+            {failingPushes > 0 ? <p role="alert" className="rounded-[8px] border bg-warning-subtle p-3 text-sm md:text-[13px] text-warning">{failingPushes} change{failingPushes === 1 ? "" : "s"} couldn&apos;t be sent to Google yet. Command keeps retrying. Use “Test connection” to see why.</p> : null}
             <div className="border-t pt-5">
               <h3 className="text-sm font-medium">Import past events</h3>
-              <p className="mb-3 mt-1 text-[13px] text-muted">Brings events already on your Google Calendar into Command so members can add their attendance. Safe to run again: events already imported are skipped, and nothing is sent back to Google.</p>
+              <p className="mb-3 mt-1 text-sm md:text-[13px] text-muted">Brings events already on your Google Calendar into Command so members can add their attendance. Safe to run again: events already imported are skipped, and nothing is sent back to Google.</p>
               <ActionForm action={actions.importPast} className="space-y-3">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <TextField name="from" label="From" type="date" required />

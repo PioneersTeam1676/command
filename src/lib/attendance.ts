@@ -27,6 +27,19 @@ export const MAX_SESSION_MS = 16 * 3_600_000;
 export const autoCloseAt = (localDate: string, s: Pick<TeamSettings, "timezone" | "autoClockoutTime">) =>
   localToUtc(localDate, s.autoClockoutTime.slice(0, 5), s.timezone);
 
+/**
+ * When an open (non-event) session is auto-closed. Normal sessions close at the daily cutoff.
+ * Off-hours sessions (started outside build season or after the cutoff, awaiting approval) get the
+ * 16 hour cap instead, since the cutoff has already passed or doesn't apply to them.
+ */
+export const openSessionCloseAt = (
+  s: Pick<Session, "localDate" | "clockInAt" | "reviewState">,
+  settings: Pick<TeamSettings, "timezone" | "autoClockoutTime">,
+) => {
+  const cutoff = autoCloseAt(s.localDate, settings);
+  return s.reviewState === "pending_approval" || s.clockInAt >= cutoff ? new Date(s.clockInAt.getTime() + MAX_SESSION_MS) : cutoff;
+};
+
 export const eventAutoCloseAt = (event: { endsAt: Date }, s: Pick<TeamSettings, "eventAutocloseGraceMinutes">) =>
   new Date(event.endsAt.getTime() + s.eventAutocloseGraceMinutes * 60_000);
 
@@ -48,16 +61,14 @@ function resolveTime(t: Timing, origin: Origin): Res<{ at: Date; client: Date | 
 
 // ---------------------------------------------------------------- open clock-in
 
-export async function clockInOpen(userId: string, t: Timing, origin: Origin = "live"): Promise<Res<{ session: Session }>> {
+export async function clockInOpen(userId: string, t: Timing, origin: Origin = "live"): Promise<Res<{ session: Session; offHours: boolean }>> {
   const time = resolveTime(t, origin);
   if (!time.ok) return time;
   const settings = await getSettings();
   const localDate = localDateOf(time.at, settings.timezone);
   const season = await seasonForDate(localDate);
-  if (!inBuildSeason(localDate, season)) return fail("Clocking in without an event is only available during build season.");
-  if (time.at >= autoCloseAt(localDate, settings)) {
-    return fail(`Open clock-in closes at ${formatInTz(autoCloseAt(localDate, settings), settings.timezone, "h:mm a")}. Ask a lead to add your time.`);
-  }
+  // Anyone can clock in at any time. Outside build season, or after the daily cutoff, the time waits for a lead's approval.
+  const offHours = !inBuildSeason(localDate, season) || time.at >= autoCloseAt(localDate, settings);
   try {
     const [row] = await db
       .insert(attendanceSessions)
@@ -68,13 +79,14 @@ export async function clockInOpen(userId: string, t: Timing, origin: Origin = "l
         localDate,
         clockInAt: time.at,
         origin,
+        reviewState: offHours ? "pending_approval" : "none",
         clientTimeIn: time.client,
         serverTimeIn: t.now,
       })
       .returning();
-    return { ok: true, session: row! };
+    return { ok: true, session: row!, offHours };
   } catch (e) {
-    if (isUniqueViolation(e)) return fail("You've already clocked in today. Open clock-in works once per day.", true);
+    if (isUniqueViolation(e)) return fail("You're already clocked in.", true);
     throw e;
   }
 }
@@ -109,7 +121,7 @@ export async function clockOutOpen(userId: string, t: Timing, origin: Origin = "
   if (!open) return fail("You're not clocked in, so there's nothing to clock out of.", true);
   if (time.at <= open.clockInAt) return fail("That clock-out is before your clock-in. Ask a lead to fix your time.", true);
 
-  const cutoff = autoCloseAt(open.localDate, settings);
+  const cutoff = openSessionCloseAt(open, settings);
   if (time.at >= cutoff) {
     // The nightly sweep hasn't run yet: close at the cutoff, flagged, exactly as the sweep would.
     const row = await closeSession(open, cutoff, { origin, now: t.now, client: time.client, auto: true });
@@ -221,7 +233,7 @@ export async function sweepAutoClose(now: Date = new Date()): Promise<{ open: nu
     .from(attendanceSessions)
     .where(and(eq(attendanceSessions.kind, "open"), eq(attendanceSessions.status, "open")));
   for (const s of openSessions) {
-    const cutoff = autoCloseAt(s.localDate, settings);
+    const cutoff = openSessionCloseAt(s, settings);
     if (cutoff > now) continue;
     const closed = await closeSession(s, cutoff, { origin: s.origin as Origin, now, client: null, auto: true });
     if (!closed) continue;

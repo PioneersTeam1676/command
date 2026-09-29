@@ -33,7 +33,7 @@ function Status({ on, label, help }: { on: boolean; label: string; help: string 
     <div className="flex items-start justify-between gap-4 py-3">
       <div>
         <p className="text-sm font-medium">{label}</p>
-        <p className="text-[13px] text-muted">{help}</p>
+        <p className="text-sm md:text-[13px] text-muted">{help}</p>
       </div>
       <Badge tone={on ? "success" : "neutral"}>{on ? "On" : "Off"}</Badge>
     </div>
@@ -101,7 +101,7 @@ export default async function SettingsPage() {
               <input type="checkbox" name="backfillRequiresApproval" defaultChecked={s.backfillRequiresApproval} className="mt-1 size-4 accent-[var(--accent)]" />
               <span>
                 <span className="font-medium">Require approval for added time</span>
-                <span className="block text-[13px] text-muted">When someone adds time they forgot to clock, a lead or admin must approve it before it counts. If you turn this off, it counts right away and is marked “self-reported”.</span>
+                <span className="block text-sm md:text-[13px] text-muted">When someone adds time they forgot to clock, a lead or admin must approve it before it counts. If you turn this off, it counts right away and is marked “self-reported”.</span>
               </span>
             </label>
             <SubmitButton pendingText="Saving…">Save</SubmitButton>

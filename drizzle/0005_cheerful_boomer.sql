@@ -1,0 +1,2 @@
+DROP INDEX "attendance_open_per_day_idx";--> statement-breakpoint
+CREATE UNIQUE INDEX "attendance_one_running_open_idx" ON "attendance_sessions" USING btree ("user_id") WHERE "attendance_sessions"."kind" = 'open' and "attendance_sessions"."status" = 'open';

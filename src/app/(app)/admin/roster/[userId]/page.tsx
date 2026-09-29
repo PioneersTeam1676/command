@@ -43,9 +43,9 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/admin/roster" className="text-[13px] text-muted underline-offset-4 hover:underline">← Roster</Link>
+        <Link href="/admin/roster" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Roster</Link>
         <h2 className="mt-2 text-2xl font-semibold">{member.name}</h2>
-        <p className="mt-1 flex flex-wrap items-center gap-2 text-[13px] text-muted">
+        <p className="mt-1 flex flex-wrap items-center gap-2 text-sm md:text-[13px] text-muted">
           <Badge className="capitalize">{member.role}</Badge>
           <Badge tone={member.status === "active" ? "success" : "neutral"} className="capitalize">{member.status}</Badge>
           {isAdmin ? <span className="font-mono">{member.email}</span> : null}
@@ -66,11 +66,11 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-medium">{s.kind === "event" ? (s.eventTitle ?? "Event") : "Build season clock-in"}</p>
-                      <p className="font-mono text-[12px] text-muted">
+                      <p className="font-mono text-[13px] md:text-[12px] text-muted">
                         {formatInTz(s.clockInAt, tz, "EEE MMM d, h:mm a")} – {s.clockOutAt ? formatInTz(s.clockOutAt, tz, "h:mm a") : "now"}
                         {s.clockOutAt ? ` · ${formatDuration(s.clockOutAt.getTime() - s.clockInAt.getTime())}` : ""}
                       </p>
-                      {s.note ? <p className="mt-0.5 text-[12px] text-muted">“{s.note}”</p> : null}
+                      {s.note ? <p className="mt-0.5 text-[13px] md:text-[12px] text-muted">“{s.note}”</p> : null}
                     </div>
                     <div className="flex flex-col items-end gap-1">
                       <Badge tone={counts ? "success" : "neutral"}>{counts ? "Counts" : "Not counted"}</Badge>
@@ -86,7 +86,7 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
                           <label className="space-y-1.5 text-sm font-medium">In<Input type="datetime-local" name="inAt" required defaultValue={toDatetimeLocal(s.clockInAt, tz)} /></label>
                           <label className="space-y-1.5 text-sm font-medium">Out<Input type="datetime-local" name="outAt" required defaultValue={s.clockOutAt ? toDatetimeLocal(s.clockOutAt, tz) : ""} /></label>
                         </div>
-                        <p className="text-[12px] text-muted">Times are in {tz}.</p>
+                        <p className="text-[13px] md:text-[12px] text-muted">Times are in {tz}.</p>
                       </ConfirmAction>
                     )}
                     {flagged ? (

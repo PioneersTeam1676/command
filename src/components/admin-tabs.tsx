@@ -21,7 +21,7 @@ export function AdminTabs({ tabs }: { tabs: { href: string; label: string; count
                 )}
               >
                 {t.label}
-                {t.count ? <span className="rounded-full bg-accent px-1.5 font-mono text-[11px] text-accent-fg">{t.count}</span> : null}
+                {t.count ? <span className="rounded-full bg-accent px-1.5 font-mono text-xs md:text-[11px] text-accent-fg">{t.count}</span> : null}
               </Link>
             </li>
           );

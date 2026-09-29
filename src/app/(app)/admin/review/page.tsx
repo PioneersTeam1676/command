@@ -71,7 +71,7 @@ export default async function ReviewPage() {
               return (
                 <Card key={a.id}>
                   <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-                    <div className="min-w-0 text-[13px]">
+                    <div className="min-w-0 text-sm md:text-[13px]">
                       <p className="text-[15px] font-medium">{userName}</p>
                       <p className="text-muted">{a.kind === "event" ? (eventTitle ?? "Event") : "Build season clock-in"}</p>
                       <p className="font-mono text-muted">
@@ -95,7 +95,7 @@ export default async function ReviewPage() {
                       {a.clockOutAt ? (
                         <ConfirmAction label="Edit end time" title="Set the real end time" description="Use this when they actually left earlier. It will be marked as edited." confirmLabel="Save" action={editSessionEndAction} fields={{ id: a.id }}>
                           <Input type="datetime-local" name="outAt" aria-label="End time" required defaultValue={toDatetimeLocal(a.clockOutAt, tz)} />
-                          <p className="text-[12px] text-muted">Times are in {tz}.</p>
+                          <p className="text-[13px] md:text-[12px] text-muted">Times are in {tz}.</p>
                         </ConfirmAction>
                       ) : null}
                       <ConfirmAction label={pendingBackfill ? "Deny" : "Reject"} danger title={`${pendingBackfill ? "Deny" : "Reject"} this time?`} description="It won't count toward their hours. They can still see it marked as not counted." confirmLabel={pendingBackfill ? "Deny" : "Reject"} action={rejectSessionAction} fields={{ id: a.id }}>
@@ -119,9 +119,9 @@ export default async function ReviewPage() {
                 <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0">
                     <p className="font-medium">{r.name}</p>
-                    <p className="truncate font-mono text-[13px] text-muted">{r.email}</p>
+                    <p className="truncate font-mono text-sm md:text-[13px] text-muted">{r.email}</p>
                     <p className="mt-1">{r.verified ? <Badge tone="success">Email confirmed</Badge> : <Badge tone="warning">Email not confirmed</Badge>}</p>
-                    {r.note ? <p className="mt-2 text-[13px]">“{r.note}”</p> : null}
+                    {r.note ? <p className="mt-2 text-sm md:text-[13px]">“{r.note}”</p> : null}
                   </div>
                   <div className="flex shrink-0 gap-2">
                     <ConfirmAction
@@ -163,7 +163,7 @@ export default async function ReviewPage() {
             {parents.map((r) => (
               <Card key={r.id}>
                 <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
-                  <div className="min-w-0 text-[13px]">
+                  <div className="min-w-0 text-sm md:text-[13px]">
                     <p className="text-[15px] font-medium">{r.fullName} <span className="text-muted">({r.relationship})</span></p>
                     <p className="text-muted">wants to view <strong className="text-foreground">{r.studentName}</strong></p>
                     <p className="mt-1 font-mono text-muted">{r.email}{r.phone ? ` · ${r.phone}` : ""}</p>

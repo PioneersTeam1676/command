@@ -33,7 +33,7 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
   return (
     <div className="space-y-6">
       <div>
-        <Link href="/me" className="text-[13px] text-muted underline-offset-4 hover:underline">← Me</Link>
+        <Link href="/me" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Me</Link>
         <h1 className="mt-2 text-[28px] font-semibold">My hours</h1>
       </div>
       <SeasonPicker seasons={allSeasons} selectedId={season.id} />
@@ -60,7 +60,7 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
             <div>
               <h3 className="mb-3 text-sm font-medium">A past event</h3>
               {missed.length === 0 ? (
-                <p className="text-[13px] text-muted">No past events are waiting for your time.</p>
+                <p className="text-sm md:text-[13px] text-muted">No past events are waiting for your time.</p>
               ) : (
                 <ActionForm action={backfillEventAction} resetOnSuccess className="space-y-4">
                   <SelectField

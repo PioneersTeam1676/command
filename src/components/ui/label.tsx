@@ -32,12 +32,12 @@ export function Field({
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
       {help && !error ? (
-        <p id={`${htmlFor}-help`} className="text-[13px] text-muted">
+        <p id={`${htmlFor}-help`} className="text-sm md:text-[13px] text-muted">
           {help}
         </p>
       ) : null}
       {error ? (
-        <p id={`${htmlFor}-error`} role="alert" className="text-[13px] text-error">
+        <p id={`${htmlFor}-error`} role="alert" className="text-sm md:text-[13px] text-error">
           {error}
         </p>
       ) : null}

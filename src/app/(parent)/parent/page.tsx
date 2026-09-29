@@ -40,7 +40,7 @@ export default async function ParentHome() {
               {l.status === "approved" ? (
                 <Button asChild variant="secondary"><Link href={`/parent/${l.studentId}`}>View {l.studentName.split(" ")[0]}</Link></Button>
               ) : null}
-              {l.adminMessage ? <p className="rounded-[8px] border bg-surface p-3 text-[13px]"><strong>Message from the team:</strong> {l.adminMessage}</p> : null}
+              {l.adminMessage ? <p className="rounded-[8px] border bg-surface p-3 text-sm md:text-[13px]"><strong>Message from the team:</strong> {l.adminMessage}</p> : null}
               {l.status === "needs_info" ? (
                 <ActionForm action={resubmitParentLinkAction} className="space-y-4 border-t pt-4">
                   <input type="hidden" name="linkId" value={l.id} />

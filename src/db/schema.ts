@@ -242,7 +242,8 @@ export const attendanceSessions = pgTable(
   (t) => [
     index("attendance_user_idx").on(t.userId, t.seasonId),
     index("attendance_open_idx").on(t.status),
-    uniqueIndex("attendance_open_per_day_idx").on(t.userId, t.localDate).where(sql`${t.kind} = 'open'`),
+    // Clock in and out as often as you like, but never two running open sessions at once.
+    uniqueIndex("attendance_one_running_open_idx").on(t.userId).where(sql`${t.kind} = 'open' and ${t.status} = 'open'`),
     uniqueIndex("attendance_event_per_user_idx").on(t.userId, t.eventId).where(sql`${t.kind} = 'event'`),
   ],
 );

@@ -69,14 +69,14 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
             {rows.map(({ a, actorName }) => (
               <li key={a.id} className="p-4 text-sm">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p><span className="font-medium">{actorName ?? "System"}</span> <span className="font-mono text-[13px] text-muted">{a.action}</span></p>
-                  <time dateTime={a.createdAt.toISOString()} className="font-mono text-[12px] text-muted">{format(a.createdAt, "MMM d, yyyy h:mm a")}</time>
+                  <p><span className="font-medium">{actorName ?? "System"}</span> <span className="font-mono text-sm md:text-[13px] text-muted">{a.action}</span></p>
+                  <time dateTime={a.createdAt.toISOString()} className="font-mono text-[13px] md:text-[12px] text-muted">{format(a.createdAt, "MMM d, yyyy h:mm a")}</time>
                 </div>
-                {a.targetType ? <p className="text-[12px] text-muted">{a.targetType}{a.targetId ? ` · ${a.targetId.slice(0, 8)}` : ""}</p> : null}
+                {a.targetType ? <p className="text-[13px] md:text-[12px] text-muted">{a.targetType}{a.targetId ? ` · ${a.targetId.slice(0, 8)}` : ""}</p> : null}
                 {a.before || a.after ? (
                   <details className="mt-1.5">
-                    <summary className="cursor-pointer text-[12px] text-muted">Details</summary>
-                    <pre className="mt-1 overflow-x-auto rounded-[6px] bg-surface p-2 font-mono text-[11px]">{JSON.stringify({ before: a.before, after: a.after }, null, 2)}</pre>
+                    <summary className="cursor-pointer text-[13px] md:text-[12px] text-muted">Details</summary>
+                    <pre className="mt-1 overflow-x-auto rounded-[6px] bg-surface p-2 font-mono text-xs md:text-[11px]">{JSON.stringify({ before: a.before, after: a.after }, null, 2)}</pre>
                   </details>
                 ) : null}
               </li>
@@ -84,7 +84,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
           </ul>
         </Card>
       )}
-      <div className="flex items-center justify-between text-[13px] text-muted">
+      <div className="flex items-center justify-between text-sm md:text-[13px] text-muted">
         <span>{total} entries</span>
         <span className="flex items-center gap-2">
           {page > 1 ? <Button asChild size="sm" variant="secondary"><Link href={qs(page - 1)}>Newer</Link></Button> : null}

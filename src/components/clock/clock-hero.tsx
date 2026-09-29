@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CloudOff, Loader2 } from "lucide-react";
+import { ArrowRight, CloudOff, Loader2, ShieldAlert, Square } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useClock } from "./use-clock";
@@ -16,14 +16,16 @@ function fmt(ms: number) {
 export type HeroProps = {
   /** ISO start of the currently running open session, if any. */
   runningSince: string | null;
-  /** Open clock-in allowed right now (build season, before cutoff, not already used today). */
+  /** Clocking in is possible (false only while Command is read-only). */
   canClockIn: boolean;
   /** Plain-language status line when there's nothing to tap. */
   idleMessage: string;
   cutoffLabel: string;
+  /** Outside build season or past the cutoff: a lead has to approve the time. */
+  offHours?: boolean;
 };
 
-export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel }: HeroProps) {
+export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, offHours = false }: HeroProps) {
   const { tap, busy, queue } = useClock();
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
@@ -44,37 +46,58 @@ export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel }
     const r = await tap({ action: running ? "out" : "in", kind: "open", label: running ? "Clock out" : "Clock in" });
     if (!r.ok) toast.error(r.error ?? "That didn't work.");
     else if (r.queued) toast.message("Saved on this phone. It will sync when you're back online.");
+    else if (r.offHours) toast.message("You're clocked in. Since it's outside build hours, a lead will approve this time.");
     else if (r.autoClosed) toast.message(`You were past the ${cutoffLabel} cutoff, so we closed your time there. A lead may review it.`);
   }
 
   return (
-    <div className="flex flex-col items-center gap-4 py-2">
-      <p className="text-sm text-muted" aria-live="polite">
-        {running ? "You're clocked in" : canClockIn ? "You're clocked out" : idleMessage}
-      </p>
+    <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-6 py-4">
+      <div className="flex flex-col items-center gap-2" aria-live="polite">
+        <p className="flex items-center gap-2 text-sm text-muted">
+          <span aria-hidden className="relative flex size-2">
+            {running ? <span className="clock-dot absolute inline-flex size-full rounded-full bg-success" /> : null}
+            <span className={cn("relative inline-flex size-2 rounded-full", running ? "bg-success" : "bg-muted/50")} />
+          </span>
+          {running ? "Clocked in" : canClockIn ? "Clocked out" : idleMessage}
+        </p>
+        <p className={cn("font-mono text-6xl font-light tabular-nums tracking-tight transition-colors duration-300", running ? "text-foreground" : "text-muted/40")}>
+          {fmt(elapsed)}
+        </p>
+      </div>
+
       <button
         type="button"
         onClick={onTap}
         disabled={disabled}
         aria-label={running ? "Clock out" : "Clock in"}
         className={cn(
-          "grid size-52 place-items-center rounded-full border text-center transition-[background-color,transform,box-shadow] duration-200 ease-out active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 md:size-56",
-          running ? "border-transparent bg-accent text-accent-fg shadow-[0_0_0_8px_var(--accent-subtle)]" : "bg-surface text-foreground hover:bg-background",
+          "group flex h-14 w-full items-center justify-center gap-2.5 rounded-full text-base font-medium transition-[background-color,transform,box-shadow,color] duration-200 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
+          running
+            ? "border border-error/40 bg-error-subtle text-error hover:bg-error hover:text-white"
+            : "bg-foreground text-background shadow-sm hover:shadow-md",
         )}
       >
-        <span className="flex flex-col items-center gap-1">
-          {busy ? <Loader2 className="size-6 animate-spin" aria-hidden /> : null}
-          {running ? <span className="font-mono text-[28px] font-medium tabular-nums">{fmt(elapsed)}</span> : null}
-          <span className={cn("font-semibold", running ? "text-lg" : "text-2xl")}>{running ? "Clock out" : "Clock in"}</span>
-        </span>
+        {busy ? (
+          <Loader2 className="size-5 animate-spin" aria-hidden />
+        ) : running ? (
+          <Square className="size-4 fill-current" aria-hidden />
+        ) : null}
+        {running ? "Clock out" : "Clock in"}
+        {!running && !busy ? <ArrowRight className="size-5 transition-transform duration-200 group-hover:translate-x-0.5" aria-hidden /> : null}
       </button>
+
       {pending ? (
-        <p className="flex items-center gap-1.5 text-[13px] text-warning">
-          <CloudOff className="size-4" aria-hidden />
+        <p className="flex items-center gap-1.5 text-center text-sm text-warning">
+          <CloudOff className="size-4 shrink-0" aria-hidden />
           Saved on this phone. Will sync when you&apos;re back online.
         </p>
+      ) : offHours && !running ? (
+        <p className="flex items-center gap-1.5 text-center text-sm text-warning">
+          <ShieldAlert className="size-4 shrink-0" aria-hidden />
+          Outside build hours. A lead will approve this time.
+        </p>
       ) : running ? (
-        <p className="text-[13px] text-muted">We&apos;ll clock you out automatically at {cutoffLabel} if you forget.</p>
+        <p className="text-center text-sm text-muted">Auto clock-out at {cutoffLabel} if you forget.</p>
       ) : null}
     </div>
   );

@@ -19,7 +19,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
           {name}
         </div>
         {children}
-        <LegalLinks className="mt-6 text-center text-[13px] text-muted" />
+        <LegalLinks className="mt-6 text-center text-sm md:text-[13px] text-muted" />
       </div>
     </GridBackground>
   );

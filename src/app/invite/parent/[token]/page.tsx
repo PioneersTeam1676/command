@@ -106,7 +106,7 @@ function Shell({ children }: { children: React.ReactNode }) {
         <Card>
           <CardContent className="p-6">{children}</CardContent>
         </Card>
-        <LegalLinks className="mt-6 text-center text-[13px] text-muted" />
+        <LegalLinks className="mt-6 text-center text-sm md:text-[13px] text-muted" />
       </div>
     </GridBackground>
   );

@@ -37,14 +37,14 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
         ) : null}
       </div>
       <Card className="overflow-hidden">
-        <div className="hidden grid-cols-[1fr_90px_80px_80px_170px] gap-4 border-b bg-surface px-4 py-2 text-[12px] font-medium text-muted md:grid">
+        <div className="hidden grid-cols-[1fr_90px_80px_80px_170px] gap-4 border-b bg-surface px-4 py-2 text-[13px] md:text-[12px] font-medium text-muted md:grid">
           <span>Member</span><span className="text-right">Hours</span><span className="text-right">Days</span><span className="text-right">Events</span><span>Needs attention</span>
         </div>
         <ul className="divide-y">
           {rows.map((r) => (
             <li key={r.userId}>
               <Link href={`/admin/roster/${r.userId}?season=${season.id}`} className="grid gap-1 px-4 py-3 transition-colors duration-150 hover:bg-surface md:grid-cols-[1fr_90px_80px_80px_170px] md:items-center md:gap-4">
-                <span className="font-medium">{r.name} <span className="text-[12px] font-normal capitalize text-muted">{r.role}</span></span>
+                <span className="font-medium">{r.name} <span className="text-[13px] md:text-[12px] font-normal capitalize text-muted">{r.role}</span></span>
                 <span className="font-mono text-sm md:text-right"><span className="text-muted md:hidden">Hours </span>{r.hours.toFixed(1)}</span>
                 <span className="font-mono text-sm md:text-right"><span className="text-muted md:hidden">Days </span>{r.days}</span>
                 <span className="font-mono text-sm md:text-right"><span className="text-muted md:hidden">Events </span>{r.eventsAttended}</span>

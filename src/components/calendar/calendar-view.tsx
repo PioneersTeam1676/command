@@ -27,13 +27,13 @@ function EventPill({ e, tz, basePath, mine, compact }: { e: EventRow; tz: string
     <Link
       href={`${basePath}/${e.id}`}
       className={cn(
-        "block truncate rounded-[6px] border bg-background px-1.5 py-0.5 text-[12px] leading-tight transition-colors duration-150 hover:bg-surface",
+        "block truncate rounded-[6px] border bg-background px-1.5 py-0.5 text-[13px] md:text-[12px] leading-tight transition-colors duration-150 hover:bg-surface",
         cancelled && "text-muted line-through",
         mine === "going" && !cancelled && "border-accent",
       )}
       title={`${e.title} · ${formatInTz(e.startsAt, tz, "h:mm a")}${cancelled ? " (cancelled)" : ""}`}
     >
-      <span className="font-mono text-[11px] text-muted">{formatInTz(e.startsAt, tz, "h:mma").toLowerCase()}</span> {compact ? "" : e.title}
+      <span className="font-mono text-xs md:text-[11px] text-muted">{formatInTz(e.startsAt, tz, "h:mma").toLowerCase()}</span> {compact ? "" : e.title}
       {compact ? e.title : null}
     </Link>
   );
@@ -66,7 +66,7 @@ function Nav({ range, basePath, tz }: { range: Props["range"]; basePath: string;
             role="tab"
             aria-selected={range.view === v}
             href={q(v, range.view === v ? range.date : todayLocal(tz))}
-            className={cn("inline-flex min-h-[36px] items-center rounded-[6px] px-3 text-[13px] capitalize transition-colors duration-150", range.view === v ? "bg-surface font-medium" : "text-muted hover:text-foreground")}
+            className={cn("inline-flex min-h-[36px] items-center rounded-[6px] px-3 text-sm md:text-[13px] capitalize transition-colors duration-150", range.view === v ? "bg-surface font-medium" : "text-muted hover:text-foreground")}
           >
             {v}
           </Link>
@@ -87,7 +87,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
   return (
     <div>
       <Nav range={range} basePath={basePath} tz={tz} />
-      <p className="mb-3 text-[12px] text-muted">
+      <p className="mb-3 text-[13px] md:text-[12px] text-muted">
         Times are shown in your team&apos;s timezone ({tz}).
         {season.buildStart ? (
           <>
@@ -100,7 +100,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
 
       {range.view === "month" ? (
         <div className="overflow-hidden rounded-[8px] border">
-          <div className="grid grid-cols-7 border-b bg-surface text-center text-[12px] text-muted">
+          <div className="grid grid-cols-7 border-b bg-surface text-center text-[13px] md:text-[12px] text-muted">
             {DOW.map((d) => (
               <div key={d} className="py-2">{d}</div>
             ))}
@@ -116,7 +116,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
                 <div
                   key={d}
                   className={cn(
-                    "min-h-[84px] border-b border-r p-1 text-[12px] [&:nth-child(7n)]:border-r-0",
+                    "min-h-[84px] border-b border-r p-1 text-[13px] md:text-[12px] [&:nth-child(7n)]:border-r-0",
                     !inMonth && "bg-surface/70",
                     workday && "bg-accent-subtle/60",
                     inSeason && !workday && "border-dashed bg-surface/40",
@@ -125,7 +125,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
                   <Link
                     href={`${basePath}?view=week&date=${d}`}
                     aria-label={formatInTz(new Date(`${d}T12:00:00Z`), "UTC", "EEEE, MMMM d")}
-                    className={cn("mb-1 inline-flex size-6 items-center justify-center rounded-full font-mono text-[12px]", d === today ? "bg-accent text-accent-fg" : "text-muted hover:bg-surface")}
+                    className={cn("mb-1 inline-flex size-6 items-center justify-center rounded-full font-mono text-[13px] md:text-[12px]", d === today ? "bg-accent text-accent-fg" : "text-muted hover:bg-surface")}
                   >
                     {Number(d.slice(8))}
                   </Link>
@@ -134,7 +134,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
                       <EventPill key={e.id} e={e} tz={tz} basePath={basePath} mine={mine?.get(e.id)} compact />
                     ))}
                     {list.length > 3 ? (
-                      <Link href={`${basePath}?view=week&date=${d}`} className="block px-1 text-[11px] text-muted underline-offset-2 hover:underline">
+                      <Link href={`${basePath}?view=week&date=${d}`} className="block px-1 text-xs md:text-[11px] text-muted underline-offset-2 hover:underline">
                         +{list.length - 3} more
                       </Link>
                     ) : null}
@@ -154,12 +154,12 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
             const workday = isBuildWorkday(d, season);
             return (
               <section key={d} aria-label={d} className={cn("rounded-[8px] border p-2", workday && "bg-accent-subtle/60", d === today && "ring-1 ring-accent")}>
-                <h3 className="mb-2 flex items-baseline justify-between text-[12px]">
+                <h3 className="mb-2 flex items-baseline justify-between text-[13px] md:text-[12px]">
                   <span className="font-medium">{DOW[i]}</span>
                   <span className={cn("font-mono", d === today ? "text-accent" : "text-muted")}>{formatInTz(new Date(`${d}T12:00:00Z`), "UTC", "MMM d")}</span>
                 </h3>
                 <div className="space-y-1">
-                  {list.length === 0 ? <p className="text-[12px] text-muted">No events</p> : list.map((e) => <EventPill key={e.id} e={e} tz={tz} basePath={basePath} mine={mine?.get(e.id)} />)}
+                  {list.length === 0 ? <p className="text-[13px] md:text-[12px] text-muted">No events</p> : list.map((e) => <EventPill key={e.id} e={e} tz={tz} basePath={basePath} mine={mine?.get(e.id)} />)}
                 </div>
               </section>
             );
@@ -174,7 +174,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
           <ol className="space-y-5">
             {[...byDay.entries()].map(([d, list]) => (
               <li key={d}>
-                <h3 className="mb-2 text-[13px] font-medium text-muted">{d === today ? "Today · " : ""}{formatInTz(new Date(`${d}T12:00:00Z`), "UTC", "EEEE, MMMM d")}</h3>
+                <h3 className="mb-2 text-sm md:text-[13px] font-medium text-muted">{d === today ? "Today · " : ""}{formatInTz(new Date(`${d}T12:00:00Z`), "UTC", "EEEE, MMMM d")}</h3>
                 <ul className="space-y-2">
                   {list.map((e) => {
                     const r = mine?.get(e.id);
@@ -183,7 +183,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
                         <Link href={`${basePath}/${e.id}`} className="flex items-center justify-between gap-3 rounded-[8px] border p-3 transition-colors duration-150 hover:bg-surface">
                           <div className="min-w-0">
                             <p className={cn("truncate font-medium", e.cancelledAt && "text-muted line-through")}>{e.title}</p>
-                            <p className="font-mono text-[12px] text-muted">
+                            <p className="font-mono text-[13px] md:text-[12px] text-muted">
                               {formatInTz(e.startsAt, tz, "h:mm a")} – {formatInTz(e.endsAt, tz, "h:mm a")}
                               {e.locationText ? ` · ${e.locationText}` : ""}
                             </p>

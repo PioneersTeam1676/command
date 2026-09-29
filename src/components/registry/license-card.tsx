@@ -20,17 +20,17 @@ export function LicenseCard({ o, action }: { o: Overview; action: (prev: FormSta
       </CardHeader>
       <CardContent className="space-y-5">
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
-          <div><dt className="text-[13px] text-muted">Last successful check</dt><dd className="font-mono text-[13px]">{o.lastSuccessAt ? format(o.lastSuccessAt, "MMM d, yyyy h:mm a") : "Never"}</dd></div>
-          <div><dt className="text-[13px] text-muted">Next check</dt><dd className="font-mono text-[13px]">{o.nextHeartbeatAt ? format(o.nextHeartbeatAt, "MMM d, h:mm a") : "Soon"}</dd></div>
-          <div><dt className="text-[13px] text-muted">Registry</dt><dd className="font-mono text-[13px]">{o.registryHost}</dd></div>
-          <div><dt className="text-[13px] text-muted">Version</dt><dd className="font-mono text-[13px]">{o.version}</dd></div>
-          <div><dt className="text-[13px] text-muted">Checked files</dt><dd className="text-[13px]">{o.integrity.status === "ok" ? "Match this build" : o.integrity.status === "manifest_missing" ? "No build manifest (not a release build)" : `Changed: ${o.integrity.changed.join(", ")}`}</dd></div>
-          <div><dt className="text-[13px] text-muted">Failed attempts in a row</dt><dd className="font-mono text-[13px]">{o.consecutiveFailures}</dd></div>
+          <div><dt className="text-sm md:text-[13px] text-muted">Last successful check</dt><dd className="font-mono text-sm md:text-[13px]">{o.lastSuccessAt ? format(o.lastSuccessAt, "MMM d, yyyy h:mm a") : "Never"}</dd></div>
+          <div><dt className="text-sm md:text-[13px] text-muted">Next check</dt><dd className="font-mono text-sm md:text-[13px]">{o.nextHeartbeatAt ? format(o.nextHeartbeatAt, "MMM d, h:mm a") : "Soon"}</dd></div>
+          <div><dt className="text-sm md:text-[13px] text-muted">Registry</dt><dd className="font-mono text-sm md:text-[13px]">{o.registryHost}</dd></div>
+          <div><dt className="text-sm md:text-[13px] text-muted">Version</dt><dd className="font-mono text-sm md:text-[13px]">{o.version}</dd></div>
+          <div><dt className="text-sm md:text-[13px] text-muted">Checked files</dt><dd className="text-sm md:text-[13px]">{o.integrity.status === "ok" ? "Match this build" : o.integrity.status === "manifest_missing" ? "No build manifest (not a release build)" : `Changed: ${o.integrity.changed.join(", ")}`}</dd></div>
+          <div><dt className="text-sm md:text-[13px] text-muted">Failed attempts in a row</dt><dd className="font-mono text-sm md:text-[13px]">{o.consecutiveFailures}</dd></div>
         </dl>
-        {o.isPlaceholder ? <p className="rounded-[8px] border bg-warning-subtle p-3 text-[13px]">This build points at a placeholder registry address, so check-ins can&apos;t succeed yet. Release builds set the real address.</p> : null}
-        {o.effective.message ? <p className="rounded-[8px] border bg-info-subtle p-3 text-[13px]"><strong>Message from the owner:</strong> {o.effective.message}</p> : null}
+        {o.isPlaceholder ? <p className="rounded-[8px] border bg-warning-subtle p-3 text-sm md:text-[13px]">This build points at a placeholder registry address, so check-ins can&apos;t succeed yet. Release builds set the real address.</p> : null}
+        {o.effective.message ? <p className="rounded-[8px] border bg-info-subtle p-3 text-sm md:text-[13px]"><strong>Message from the owner:</strong> {o.effective.message}</p> : null}
 
-        <div className="rounded-[8px] border bg-surface p-4 text-[13px]">
+        <div className="rounded-[8px] border bg-surface p-4 text-sm md:text-[13px]">
           <p className="font-medium">Exactly what is sent</p>
           <ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-muted">
             <li>A random install ID and the Command version</li>

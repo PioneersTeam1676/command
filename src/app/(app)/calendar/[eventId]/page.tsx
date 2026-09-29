@@ -12,14 +12,15 @@ import { requireUser, roleAtLeast } from "@/lib/auth/current-user";
 import { getEvent, getRsvp, isOver, rsvpLists } from "@/lib/events";
 import { getSettings } from "@/lib/settings";
 import { uuidSchema } from "@/lib/validation";
-import { cancelEventAction, rsvpAction } from "../actions";
+import { cancelEventAction, deleteEventAction, rsvpAction } from "../actions";
 
 export const metadata: Metadata = { title: "Event" };
 export const dynamic = "force-dynamic";
 
-export default async function EventPage({ params }: { params: Promise<{ eventId: string }> }) {
+export default async function EventPage({ params, searchParams }: { params: Promise<{ eventId: string }>; searchParams: Promise<{ deleteError?: string }> }) {
   const user = await requireUser();
   const { eventId } = await params;
+  const { deleteError } = await searchParams;
   if (!uuidSchema.safeParse(eventId).success) notFound();
   const event = await getEvent(eventId);
   if (!event) notFound();
@@ -31,7 +32,7 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
 
   return (
     <div className="space-y-6">
-      <Link href="/calendar" className="text-[13px] text-muted underline-offset-4 hover:underline">← Calendar</Link>
+      <Link href="/calendar" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Calendar</Link>
       <EventDetails event={event} tz={settings.timezone} showVerification={staff} />
 
       {staff && !event.cancelledAt ? (
@@ -55,8 +56,19 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
               fields={{ id: event.id }}
             />
           ) : null}
+          <ConfirmAction
+            label="Delete event"
+            size="md"
+            danger
+            title={`Delete “${event.title}”?`}
+            description="This removes the event and its RSVPs for good, with no notification. It can't be undone. If people have checked in, cancel it instead."
+            confirmLabel="Delete event"
+            action={deleteEventAction}
+            fields={{ id: event.id }}
+          />
         </div>
       ) : null}
+      {staff && deleteError ? <p role="alert" className="rounded-[8px] bg-error-subtle p-3 text-sm text-error">{deleteError}</p> : null}
 
       {open ? (
         <Card>
@@ -84,9 +96,9 @@ export default async function EventPage({ params }: { params: Promise<{ eventId:
                   {label} <Badge tone={tone}>{list.length}</Badge>
                 </h3>
                 {list.length === 0 ? (
-                  <p className="text-[13px] text-muted">Nobody</p>
+                  <p className="text-sm md:text-[13px] text-muted">Nobody</p>
                 ) : (
-                  <ul className="space-y-1 text-[13px]">
+                  <ul className="space-y-1 text-sm md:text-[13px]">
                     {list.map((p) => (
                       <li key={"userId" in p ? p.userId : p.id}>
                         {p.name}

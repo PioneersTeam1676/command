@@ -29,7 +29,7 @@ export default async function AdminNotificationsPage({ searchParams }: { searchP
       <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {(Object.keys(counts) as PushStatus[]).map((k) => (
           <div key={k} className="rounded-[8px] border p-4">
-            <dt className="text-[13px] text-muted">{PUSH_STATUS_LABEL[k]}</dt>
+            <dt className="text-sm md:text-[13px] text-muted">{PUSH_STATUS_LABEL[k]}</dt>
             <dd className="mt-1 font-mono text-[28px] font-medium">{counts[k]}</dd>
           </div>
         ))}
@@ -42,16 +42,16 @@ export default async function AdminNotificationsPage({ searchParams }: { searchP
         <EmptyState icon={<BellOff />} title={notOn ? "Everyone has notifications on" : "No members yet"}>{notOn ? "Nice. Nobody is missing reminders." : "People appear here once they've joined."}</EmptyState>
       ) : (
         <Card className="overflow-hidden">
-          <div className="hidden grid-cols-[1fr_180px_90px_170px] gap-4 border-b bg-surface px-4 py-2 text-[12px] font-medium text-muted md:grid">
+          <div className="hidden grid-cols-[1fr_180px_90px_170px] gap-4 border-b bg-surface px-4 py-2 text-[13px] md:text-[12px] font-medium text-muted md:grid">
             <span>Member</span><span>Status</span><span>Devices</span><span>Last push delivered</span>
           </div>
           <ul className="divide-y">
             {shown.map((r) => (
               <li key={r.userId} className={cn("grid gap-1 px-4 py-3 md:grid-cols-[1fr_180px_90px_170px] md:items-center md:gap-4")}>
-                <span className="font-medium">{r.name} <span className="text-[12px] font-normal capitalize text-muted">{r.role}</span></span>
+                <span className="font-medium">{r.name} <span className="text-[13px] md:text-[12px] font-normal capitalize text-muted">{r.role}</span></span>
                 <span><Badge tone={tone[r.status]}>{PUSH_STATUS_LABEL[r.status]}</Badge></span>
-                <span className="font-mono text-[13px] text-muted"><span className="md:hidden">Devices: </span>{r.devices}</span>
-                <span className="font-mono text-[13px] text-muted">{r.lastSuccessAt ? format(r.lastSuccessAt, "MMM d, h:mm a") : "Never"}</span>
+                <span className="font-mono text-sm md:text-[13px] text-muted"><span className="md:hidden">Devices: </span>{r.devices}</span>
+                <span className="font-mono text-sm md:text-[13px] text-muted">{r.lastSuccessAt ? format(r.lastSuccessAt, "MMM d, h:mm a") : "Never"}</span>
               </li>
             ))}
           </ul>

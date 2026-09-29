@@ -22,13 +22,7 @@ export default async function HomePage() {
   const first = user.name.split(" ")[0];
   const cutoffLabel = formatInTz(home.cutoffLabelAt, tz, "h:mm a");
 
-  const idle = readOnly
-    ? "Clocking in is paused while Command is read-only"
-    : home.todaysOpen?.clockOutAt
-    ? `You already clocked out today (${formatInTz(home.todaysOpen.clockInAt, tz, "h:mm a")} – ${formatInTz(home.todaysOpen.clockOutAt, tz, "h:mm a")})`
-    : home.buildDay
-      ? `Clock-in closed for today at ${cutoffLabel}`
-      : "It isn't build season right now. Check in from an event below.";
+  const idle = readOnly ? "Clocking in is paused while Command is read-only" : "Clock in any time";
 
   const eventProps = (c: EventCard) => ({
     eventId: c.event.id,
@@ -49,14 +43,15 @@ export default async function HomePage() {
   });
 
   return (
-    <div className="space-y-8">
-      <GridBackground className="-mx-4 -mt-6 px-4 pb-4 pt-6 md:-mx-8 md:-mt-8 md:px-8 md:pt-8">
-        <h1 className="text-[28px] font-semibold">Hi, {first}</h1>
+    <div className="space-y-10">
+      <GridBackground className="-mx-5 -mt-6 px-5 pb-6 pt-6 md:-mx-8 md:-mt-8 md:px-8 md:pt-8">
+        <h1 className="text-3xl font-semibold">Hi, {first}</h1>
         <p className="mt-0.5 text-sm text-muted">{formatInTz(new Date(), tz, "EEEE, MMMM d")}{home.buildDay ? (home.workday ? " · Build season workday" : " · Build season") : ""}</p>
-        <div className="mt-4">
+        <div className="mt-6">
           <ClockHero
             runningSince={home.openSession?.clockInAt.toISOString() ?? null}
-            canClockIn={home.openClockInAllowed && !readOnly}
+            canClockIn={!readOnly}
+            offHours={home.offHours}
             idleMessage={idle}
             cutoffLabel={cutoffLabel}
           />
@@ -86,11 +81,11 @@ export default async function HomePage() {
         ) : (
           <ul className="space-y-3">
             {home.upcoming.map((c) => (
-              <li key={c.event.id} className="rounded-[8px] border p-4">
+              <li key={c.event.id} className="rounded-[10px] border p-5 md:rounded-[8px] md:p-4">
                 <div className="flex items-start justify-between gap-3">
                   <Link href={`/calendar/${c.event.id}`} className="min-w-0">
                     <p className={`truncate font-medium ${c.event.cancelledAt ? "text-muted line-through" : ""}`}>{c.event.title}</p>
-                    <p className="font-mono text-[12px] text-muted">{formatInTz(c.event.startsAt, tz, "EEE MMM d, h:mm a")}</p>
+                    <p className="font-mono text-[13px] md:text-[12px] text-muted">{formatInTz(c.event.startsAt, tz, "EEE MMM d, h:mm a")}</p>
                   </Link>
                   {c.event.cancelledAt ? <Badge tone="error">Cancelled</Badge> : null}
                 </div>

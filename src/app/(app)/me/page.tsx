@@ -28,7 +28,7 @@ export default async function MePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[28px] font-semibold">{user.name}</h1>
-        <p className="mt-1 font-mono text-[13px] text-muted">{user.email}</p>
+        <p className="mt-1 font-mono text-sm md:text-[13px] text-muted">{user.email}</p>
         <p className="mt-2"><Badge tone="accent" className="capitalize">{user.role}</Badge></p>
       </div>
 
@@ -87,7 +87,7 @@ export default async function MePage() {
         <CardContent className="space-y-4">
           <InviteCreator action={createInviteAction} />
           {activeInvites.length > 0 ? (
-            <ul className="divide-y rounded-[8px] border text-[13px]">
+            <ul className="divide-y rounded-[8px] border text-sm md:text-[13px]">
               {activeInvites.map((i) => (
                 <li key={i.id} className="flex items-center justify-between gap-3 p-3">
                   <span className="text-muted">Link expires {format(i.expiresAt, "MMM d")} · used {i.usedCount}×</span>
@@ -102,7 +102,7 @@ export default async function MePage() {
           {links.length > 0 ? (
             <div>
               <h3 className="mb-2 text-sm font-medium">Parents</h3>
-              <ul className="divide-y rounded-[8px] border text-[13px]">
+              <ul className="divide-y rounded-[8px] border text-sm md:text-[13px]">
                 {links.map((l) => (
                   <li key={l.id} className="flex items-center justify-between gap-3 p-3">
                     <span>
@@ -133,7 +133,7 @@ export default async function MePage() {
         </CardContent>
       </Card>
 
-      <footer className="pt-4 text-center text-[12px] text-muted">
+      <footer className="pt-4 text-center text-[13px] md:text-[12px] text-muted">
         <LegalLinks />
         <p className="mt-1">Powered by Command</p>
       </footer>
