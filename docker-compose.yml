@@ -1,0 +1,35 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgres://command:${POSTGRES_PASSWORD:-command}@db:5432/command
+      APP_URL: ${APP_URL:-http://localhost:3000}
+    ports:
+      - "${PORT:-3000}:3000"
+    volumes:
+      - command_data:/app/data
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: command
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-command}
+      POSTGRES_DB: command
+    volumes:
+      - command_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U command -d command"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  command_pgdata:
+  command_data:

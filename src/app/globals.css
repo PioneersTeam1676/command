@@ -1,0 +1,128 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #ffffff;
+  --surface: #fafafa;
+  --border: #eaeaea;
+  --foreground: #171717;
+  --muted: #666666;
+  --accent: #0070f3;
+  --accent-hover: #0060d0;
+  --accent-subtle: #eef5ff;
+  --accent-fg: #ffffff;
+  --success: #0a7a3d;
+  --success-subtle: #e8f7ee;
+  --warning: #8a5a00;
+  --warning-subtle: #fff4d6;
+  --error: #c62828;
+  --error-subtle: #fdecec;
+  --info: #1a56c4;
+  --info-subtle: #e8f0fd;
+  --grid-line: rgb(0 0 0 / 0.05);
+  --radius: 8px;
+}
+
+.dark {
+  --background: #000000;
+  --surface: #0a0a0a;
+  --border: #262626;
+  --foreground: #ededed;
+  --muted: #a1a1a1;
+  --accent-subtle: #0b1a33;
+  --success: #4ade80;
+  --success-subtle: #0b2416;
+  --warning: #fbbf24;
+  --warning-subtle: #2b2008;
+  --error: #f87171;
+  --error-subtle: #2a1010;
+  --info: #7cb0ff;
+  --info-subtle: #0d1c33;
+  --grid-line: rgb(255 255 255 / 0.06);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-fg: var(--accent-fg);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-error: var(--error);
+  --color-error-subtle: var(--error-subtle);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --radius-card: 8px;
+  --radius-control: 6px;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.02em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Subtle grid that fades out with a radial mask. Static; never animated. */
+.grid-bg {
+  position: relative;
+  isolation: isolate;
+}
+.grid-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 100%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 0%, #000 30%, transparent 100%);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

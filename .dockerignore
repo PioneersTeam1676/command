@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+registry
+e2e
+spec.md
+.env
+.env.local

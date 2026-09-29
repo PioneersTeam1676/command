@@ -1,0 +1,10 @@
+spec.md
+node_modules
+.next
+.env
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+test-results
+playwright-report
+src/lib/registry/manifest.json
