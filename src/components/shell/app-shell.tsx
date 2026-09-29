@@ -14,11 +14,11 @@ type Props = {
   children: React.ReactNode;
 };
 
-const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : href === "/parent" ? pathname === "/parent" || /^\/parent\/(?!calendar)/.test(pathname) : pathname.startsWith(href));
 
-function Brand({ teamName, logoUrl }: { teamName: string; logoUrl?: string | null }) {
+function Brand({ teamName, logoUrl, href = "/" }: { teamName: string; logoUrl?: string | null; href?: string }) {
   return (
-    <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight">
+    <Link href={href} className="flex items-center gap-2.5 font-semibold tracking-tight">
       {logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img src={logoUrl} alt="" className="size-7 rounded-[6px] object-cover" />
@@ -57,7 +57,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[240px_1fr]">
       <aside className="sticky top-0 hidden h-dvh flex-col gap-6 border-r bg-surface/50 p-4 md:flex">
-        <Brand teamName={teamName} logoUrl={logoUrl} />
+        <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />
         <nav aria-label="Main" className="flex flex-col gap-1">
           {all.map((item) => (
             <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
@@ -67,7 +67,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
 
       <div className="flex min-w-0 flex-col">
         <header className="pt-safe sticky top-0 z-30 flex h-12 items-center justify-between border-b bg-background/90 px-4 backdrop-blur md:hidden">
-          <Brand teamName={teamName} logoUrl={logoUrl} />
+          <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />
           {isStaff ? (
             <Link href="/admin" className="inline-flex min-h-[44px] items-center px-2 text-[13px] font-medium text-accent">
               Admin

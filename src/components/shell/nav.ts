@@ -3,6 +3,12 @@ import { CalendarDays, Home, Shield, Trophy, User, type LucideIcon } from "lucid
 export type NavItem = { href: string; label: string; Icon: LucideIcon };
 
 export function navItems(opts: { leaderboardEnabled: boolean; isStaff: boolean; isParent?: boolean }): NavItem[] {
+  if (opts.isParent) {
+    return [
+      { href: "/parent", label: "Home", Icon: Home },
+      { href: "/parent/calendar", label: "Calendar", Icon: CalendarDays },
+    ];
+  }
   const items: NavItem[] = [
     { href: "/", label: "Home", Icon: Home },
     { href: "/calendar", label: "Calendar", Icon: CalendarDays },

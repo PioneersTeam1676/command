@@ -36,3 +36,13 @@ One line each: what, why.
 - Integration tests use a throwaway Postgres database per test file; set `TEST_DATABASE_URL` to run them (they are skipped, not faked, when it is unset). CI must set it.
 - Playwright e2e runs against `next build` output on port 3100 with a fresh `cmd_e2e` database and `SETUP_TOKEN=e2e-setup-token-1234`.
 - `nodemailer` 7 is used (matches `@types/nodemailer` 7).
+
+## Phase 2
+
+- Multi-day events show on the calendar on the day they start. Events are capped at 3 days.
+- An event's season is the season whose date range contains its start date (current season as fallback).
+- Event change notifications go to every active member (member, lead, admin) and to parents with an approved, non-revoked link to an active student; deduped per change.
+- Parents see the team calendar read-only once at least one student link is approved (event data is team-wide, not personal).
+- The "no response" list includes active members, leads and admins (not parents, pending or deactivated users).
+- Only `admin` can edit the current season (build range, workdays); leads manage events.
+- Google Calendar pushes go through the `src/lib/gcal-sync.ts` seam (no-op until the Google Calendar phase).
