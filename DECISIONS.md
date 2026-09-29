@@ -91,3 +91,14 @@ One line each: what, why.
 - Opted-out members are dropped from the entries server-side (never sent to the page) and see a "You're hidden" note with their own numbers. Leads and admins appear on the board like members; parents are redirected away from it.
 - `LEADERBOARD_ENABLED=false` removes the nav item, the Me-page switch, and makes `/leaderboard` a 404. An e2e run against a second server with the flag off proves it.
 - Form field ids are generated per field instance (`useId`) so two forms with a "name" field on one page don't clash.
+
+## Phase 7
+
+- ICS mode: recurring events are expanded with `node-ical`'s `expandRecurringEvent` (EXDATE, moved instances and DST handled), from 2 months back to 6 months ahead, and each occurrence becomes its own imported event keyed by `uid` (recurring ones as `uid#start`). All-day events become midnight-to-midnight in the team timezone.
+- Imports reconcile: new events are created, changed ones updated, and future ones that vanished from the feed are cancelled (past ones are never touched). Re-appearing events are un-cancelled. The check-in method chosen in Command is preserved. The first import is silent; later changes notify members (future events only).
+- The ICS address is a secret, so it is never shown in full again after saving (only its last 8 characters) and is never written to the audit log (`(set)` / `(removed)`).
+- The server fetches the ICS address, so it must be public http(s) (no credentials, no private, loopback or link-local addresses, checked after DNS). `ICS_ALLOW_PRIVATE_NETWORKS=true` lets an operator opt in to a LAN calendar server.
+- API mode pushes through a `gcal.push` job (retried with backoff, up to 5 attempts). A retry can't duplicate an event: the Google event is looked up by a private extended property holding the Command event id before inserting.
+- Cancelling in API mode keeps the Google event and renames it `[Cancelled] Title` (so people subscribed to the calendar still see what happened), rather than deleting it.
+- "Import past events" caps at one year per run and 2000 events, skips duplicates by Google event id, skips events Command itself created and cancelled ones, and imports as `source = imported` so nothing is pushed back.
+- Real Google calls are exercised in tests through an injected fake `CalendarApi`; no test reaches Google. The README documents how to verify against a real calendar.

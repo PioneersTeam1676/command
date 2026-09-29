@@ -20,11 +20,17 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${PORT}`, trace: "retain-on-failure" },
   webServer: [
     {
+      // A tiny calendar server the app imports from in ICS mode. The test changes its content through POST /set.
+      command: "node e2e/ics-server.mjs",
+      url: "http://127.0.0.1:3199/health",
+      reuseExistingServer: false,
+    },
+    {
       command: `node e2e/prepare-db.mjs && npx next start -p ${PORT}`,
       url: `http://localhost:${PORT}/api/health`,
       timeout: 120_000,
       reuseExistingServer: false,
-      env: { ...baseEnv, DATABASE_URL: dbUrl.toString(), APP_URL: `http://localhost:${PORT}` },
+      env: { ...baseEnv, DATABASE_URL: dbUrl.toString(), APP_URL: `http://localhost:${PORT}`, GOOGLE_CALENDAR_MODE: "ics", ICS_ALLOW_PRIVATE_NETWORKS: "true" },
     },
     {
       // Same database, but with the leaderboard switched off, to prove LEADERBOARD_ENABLED=false hides it everywhere.

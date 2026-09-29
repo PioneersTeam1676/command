@@ -6,7 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { requireUser } from "@/lib/auth/current-user";
 import { getEnv, googleAuthEnabled, smtpConfigured } from "@/lib/env";
 import { readSettings } from "@/lib/settings";
+import { GcalCard } from "@/components/gcal-card";
+import { db } from "@/db";
+import { jobs } from "@/db/schema";
+import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
+import { parseServiceAccount } from "@/lib/gcal/api";
 import { saveAttendanceAction, saveRemindersAction, saveTeamAction } from "./actions";
+import { importPastAction, saveIcsUrlAction, syncNowAction, testConnectionAction } from "./gcal-actions";
 
 export const metadata: Metadata = { title: "Settings" };
 export const dynamic = "force-dynamic";
@@ -36,6 +42,9 @@ export default async function SettingsPage() {
   await requireUser({ min: "admin" });
   const s = await readSettings();
   const env = getEnv();
+  const sa = parseServiceAccount(env.GOOGLE_SERVICE_ACCOUNT_JSON);
+  const [failing] = await db.select({ n: sql<number>`count(*)::int` }).from(jobs).where(and(eq(jobs.kind, "gcal.push"), isNull(jobs.doneAt), isNotNull(jobs.lastError)));
+  const icsSaved = s.googleIcsUrl ? `…${s.googleIcsUrl.slice(-8)}` : null;
   return (
     <div className="max-w-2xl space-y-6">
       <Card>
@@ -114,6 +123,18 @@ export default async function SettingsPage() {
         </CardContent>
       </Card>
 
+      <GcalCard
+        mode={env.GOOGLE_CALENDAR_MODE}
+        icsSaved={icsSaved}
+        icsFromEnv={Boolean(env.GOOGLE_CALENDAR_ICS_URL) && !s.googleIcsUrl}
+        lastSyncAt={s.googleCalendarLastSyncAt}
+        lastResult={s.googleCalendarLastResult}
+        calendarId={env.GOOGLE_CALENDAR_ID}
+        serviceAccountEmail={sa.ok ? sa.email : undefined}
+        failingPushes={failing?.n ?? 0}
+        actions={{ saveIcs: saveIcsUrlAction, test: testConnectionAction, sync: syncNowAction, importPast: importPastAction }}
+      />
+
       <Card>
         <CardHeader>
           <CardTitle>Connections</CardTitle>
@@ -123,7 +144,6 @@ export default async function SettingsPage() {
           <Status on={googleAuthEnabled()} label="Sign in with Google" help="Lets people sign in with a Google account. Recommended." />
           <Status on={smtpConfigured()} label="Email" help="Enables email confirmation, password reset links and decision emails." />
           <Status on={env.LEADERBOARD_ENABLED} label="Leaderboard" help="Hidden everywhere when off." />
-          <Status on={env.GOOGLE_CALENDAR_MODE !== "off"} label={`Google Calendar (${env.GOOGLE_CALENDAR_MODE})`} help="Imports or pushes events." />
         </CardContent>
       </Card>
     </div>

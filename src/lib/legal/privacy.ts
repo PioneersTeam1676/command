@@ -67,7 +67,7 @@ export const PRIVACY: LegalDoc = {
     {
       heading: "Service providers",
       bullets: [
-        "Google, if you choose Google sign-in (sign-in only; Google's own privacy policy applies to your Google account) and if your team connects Google Calendar (event titles and times).",
+        "Google, if you choose Google sign-in (sign-in only; Google's own privacy policy applies to your Google account) and if your team connects Google Calendar (event titles, times, locations and descriptions are read from, or sent to, the team's calendar; the team's secret calendar link or service-account key is stored on the team's own server, never with member data).",
         "Your device's push service (for example Google, Apple or Mozilla) delivers push notifications. Notification text may pass through it.",
         "Your team's email provider, if the team configures email.",
         "Your team's hosting provider, which stores the database.",

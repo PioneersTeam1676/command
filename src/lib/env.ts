@@ -22,6 +22,8 @@ const schema = z.object({
   SMTP_PASSWORD: z.preprocess(emptyToUndef, z.string().optional()),
   SMTP_FROM: z.preprocess(emptyToUndef, z.string().optional()),
   GOOGLE_CALENDAR_MODE: z.preprocess(emptyToUndef, z.enum(["off", "ics", "api"]).default("off")),
+  /** Let the ICS address point at a private network (e.g. a calendar server on your LAN). Off by default. */
+  ICS_ALLOW_PRIVATE_NETWORKS: bool(false),
   GOOGLE_CALENDAR_ICS_URL: z.preprocess(emptyToUndef, z.string().optional()),
   GOOGLE_CALENDAR_ID: z.preprocess(emptyToUndef, z.string().optional()),
   GOOGLE_SERVICE_ACCOUNT_JSON: z.preprocess(emptyToUndef, z.string().optional()),
