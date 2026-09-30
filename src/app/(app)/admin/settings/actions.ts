@@ -10,7 +10,10 @@ import { isHexColor } from "@/lib/color";
 import { MAX_LOGO_BYTES, saveLogo, sniffImage } from "@/lib/files";
 import { parseForm, type FormState } from "@/lib/form";
 import { isHHMM, parseDomains, updateTeamSettings, validateSchedule } from "@/lib/settings-admin";
+import { smtpConfigured } from "@/lib/env";
+import { sendMail } from "@/lib/mail";
 import { readSettings } from "@/lib/settings";
+import { buildAdminWelcome } from "@/lib/team-emails";
 import { isValidTimezone } from "@/lib/setup";
 import { optionalText } from "@/lib/validation";
 
@@ -104,6 +107,34 @@ export async function saveRemindersAction(_: FormState, formData: FormData): Pro
   return done(r.changed ? r.fields : undefined);
 }
 
+
+const emailsSchema = z.object({ emailNote: optionalText(300) });
+
+export async function saveEmailsAction(_: FormState, formData: FormData): Promise<FormState> {
+  const admin = await requireActionUser("admin");
+  const p = parseForm(emailsSchema, formData, { keepValues: ["emailNote"] });
+  if (!p.ok) return p.state;
+  const r = await updateTeamSettings(
+    admin.id,
+    {
+      emailAdminPromoted: formData.get("emailAdminPromoted") === "on",
+      emailAccessApproved: formData.get("emailAccessApproved") === "on",
+      emailAccessDenied: formData.get("emailAccessDenied") === "on",
+      emailNote: p.data.emailNote ?? null,
+    },
+    "settings.emails",
+  );
+  return done(r.changed ? r.fields : undefined);
+}
+
+/** Send the branded admin email to the person clicking, using the saved settings. */
+export async function sendEmailPreviewAction(_: FormState, __: FormData): Promise<FormState> {
+  const admin = await requireActionUser("admin");
+  if (!smtpConfigured()) return { error: "Email isn't set up on this server yet." };
+  const mail = await buildAdminWelcome(await readSettings(), admin, admin.name);
+  const r = await sendMail(admin.email, mail.subject, mail.text, mail.html, mail.attachments);
+  return r.sent ? { success: `Preview sent to ${admin.email}.` } : { error: `Couldn't send: ${r.error}` };
+}
 
 /** "Check now": send a license-check heartbeat immediately and report what came back. */
 export async function checkRegistryNowAction(_: FormState, __: FormData): Promise<FormState> {

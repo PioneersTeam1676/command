@@ -1,3 +1,4 @@
+import { EmailText } from "@/components/email-text";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { format } from "date-fns";
@@ -28,7 +29,7 @@ export default async function MePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-[28px] font-semibold">{user.name}</h1>
-        <p className="mt-1 font-mono text-sm md:text-[13px] text-muted">{user.email}</p>
+        <p className="mt-1 font-mono text-sm md:text-[13px] text-muted"><EmailText email={user.email} /></p>
         <p className="mt-2"><Badge tone="accent" className="capitalize">{user.role}</Badge></p>
       </div>
 

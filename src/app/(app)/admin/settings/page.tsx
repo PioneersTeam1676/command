@@ -13,7 +13,7 @@ import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { parseServiceAccount } from "@/lib/gcal/api";
 import { LicenseCard } from "@/components/registry/license-card";
 import { registryOverview } from "@/lib/registry";
-import { checkRegistryNowAction, saveAttendanceAction, saveRemindersAction, saveTeamAction } from "./actions";
+import { checkRegistryNowAction, saveAttendanceAction, saveEmailsAction, saveRemindersAction, sendEmailPreviewAction, saveTeamAction } from "./actions";
 import { importPastAction, saveIcsUrlAction, syncNowAction, testConnectionAction } from "./gcal-actions";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -122,6 +122,41 @@ export default async function SettingsPage() {
             </div>
             <TextField name="eventReminderMinutesBefore" label="Event reminder (minutes before)" type="number" min={5} max={1440} defaultValue={s.eventReminderMinutesBefore} help="Sent to people who said Going or Maybe." />
             <SubmitButton pendingText="Saving…">Save reminder times</SubmitButton>
+          </ActionForm>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Emails</CardTitle>
+          <CardDescription>
+            Which emails Command sends. They use your team name, color and logo from above. Sign-up confirmation and password reset emails always go out.
+            {!smtpConfigured() ? " Email isn't set up on this server yet, so none of these will send." : ""}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ActionForm action={saveEmailsAction} className="space-y-4">
+            {(
+              [
+                ["emailAdminPromoted", s.emailAdminPromoted, "Welcome email for new admins", "Sent when someone is made an admin."],
+                ["emailAccessApproved", s.emailAccessApproved, "Access approved", "Sent when someone's request to join is approved (only if they have no push notifications set up)."],
+                ["emailAccessDenied", s.emailAccessDenied, "Access denied", "Sent when someone's request to join is denied."],
+              ] as const
+            ).map(([name, on, label, help]) => (
+              <label key={name} className="flex items-start gap-3 text-sm">
+                <input type="checkbox" name={name} defaultChecked={on} className="mt-1 size-4 accent-[var(--accent)]" />
+                <span>
+                  <span className="font-medium">{label}</span>
+                  <span className="block text-sm md:text-[13px] text-muted">{help}</span>
+                </span>
+              </label>
+            ))}
+            <TextField name="emailNote" label="Personal note (optional)" defaultValue={s.emailNote ?? ""} maxLength={300} help="Added to the welcome email for new admins, e.g. “Come find us in the shop on Tuesday!”" />
+            <SubmitButton pendingText="Saving…">Save email settings</SubmitButton>
+          </ActionForm>
+          <ActionForm action={sendEmailPreviewAction} className="mt-4 border-t pt-4">
+            <p className="mb-2 text-sm md:text-[13px] text-muted">Save first, then send yourself a preview of the new-admin email.</p>
+            <SubmitButton pendingText="Sending…">Send me a preview</SubmitButton>
           </ActionForm>
         </CardContent>
       </Card>

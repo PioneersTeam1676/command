@@ -36,6 +36,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ even
           startsAt: toDatetimeLocal(event.startsAt, settings.timezone),
           endsAt: toDatetimeLocal(event.endsAt, settings.timezone),
           verification: event.verification,
+          rsvpEnabled: event.rsvpEnabled,
         }}
       />
     </div>

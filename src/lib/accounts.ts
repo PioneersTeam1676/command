@@ -236,7 +236,7 @@ export async function approveAccessRequest(actorId: string, requestId: string, r
       body: `Your request to join was approved.`,
       url: "/",
       dedupeKey: `access-decision:${requestId}`,
-      emailFallback: { subject: "Your Command access was approved", text: `Hi ${before.name},\n\nYour request to join was approved. Sign in here: ${appUrl()}/login` },
+      emailFallback: !(await readSettings()).emailAccessApproved ? undefined : { subject: "Your Command access was approved", text: `Hi ${before.name},\n\nYour request to join was approved. Sign in here: ${appUrl()}/login` },
     });
   }
   return { ok: true as const };
@@ -255,7 +255,7 @@ export async function denyAccessRequest(actorId: string, requestId: string, reas
     await tx.delete(sessions).where(eq(sessions.userId, req.userId));
     await audit({ actorId, action: "access_request.deny", targetType: "user", targetId: req.userId, before: { status: before?.status }, after: { status: "denied", reason: reason ?? null } }, tx);
   });
-  if (before && smtpConfigured()) {
+  if (before && smtpConfigured() && (await readSettings()).emailAccessDenied) {
     await sendMail(
       before.email,
       "Your Command access request",

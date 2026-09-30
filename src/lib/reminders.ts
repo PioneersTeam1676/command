@@ -81,7 +81,8 @@ export async function runReminders(now: Date = new Date()): Promise<ReminderSumm
       .select({ userId: rsvps.userId })
       .from(rsvps)
       .where(and(eq(rsvps.eventId, e.id), inArray(rsvps.response, ["going", "maybe"])));
-    const coming = answered.map((r) => r.userId).filter((id) => activeIds.includes(id));
+    // No-RSVP (e.g. mandatory) events go to everyone; otherwise only people who said Going or Maybe.
+    const coming = e.rsvpEnabled ? answered.map((r) => r.userId).filter((id) => activeIds.includes(id)) : activeIds;
 
     if (now >= new Date(e.startsAt.getTime() - lead) && now < e.startsAt) {
       out.eventReminder += await notify({

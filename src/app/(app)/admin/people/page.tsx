@@ -1,3 +1,4 @@
+import { EmailText } from "@/components/email-text";
 import type { Metadata } from "next";
 import { format } from "date-fns";
 import { ConfirmAction } from "@/components/confirm-action";
@@ -15,18 +16,20 @@ export const dynamic = "force-dynamic";
 
 const statusTone = { active: "success", pending: "warning", denied: "error", deactivated: "neutral" } as const;
 
-export default async function PeoplePage() {
+export default async function PeoplePage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
+  const { error } = await searchParams;
   const me = await requireUser({ min: "admin" });
   const all = await listUsers();
   return (
     <div className="space-y-3">
+      {error ? <p role="alert" className="rounded-[8px] bg-error-subtle p-3 text-sm text-error">{error.slice(0, 200)}</p> : null}
       <p className="text-sm text-muted">Everyone with an account. Members never see each other&apos;s email addresses; only admins see them here.</p>
       {all.map((u) => (
         <Card key={u.id} className="p-5">
           <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div className="min-w-0">
               <p className="font-medium">{u.name}</p>
-              <p className="truncate font-mono text-sm md:text-[13px] text-muted">{u.email}</p>
+              <p className="truncate font-mono text-sm md:text-[13px] text-muted"><EmailText email={u.email} /></p>
               <p className="mt-1.5 flex flex-wrap gap-1.5">
                 <Badge tone={statusTone[u.status]} className="capitalize">{u.status}</Badge>
                 <Badge className="capitalize">{u.role}</Badge>

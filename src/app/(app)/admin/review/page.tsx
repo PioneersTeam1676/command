@@ -1,3 +1,4 @@
+import { EmailText } from "@/components/email-text";
 import type { Metadata } from "next";
 import { aliasedTable, desc, eq } from "drizzle-orm";
 import { Inbox } from "lucide-react";
@@ -119,7 +120,7 @@ export default async function ReviewPage() {
                 <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
                   <div className="min-w-0">
                     <p className="font-medium">{r.name}</p>
-                    <p className="truncate font-mono text-sm md:text-[13px] text-muted">{r.email}</p>
+                    <p className="truncate font-mono text-sm md:text-[13px] text-muted"><EmailText email={r.email} /></p>
                     <p className="mt-1">{r.verified ? <Badge tone="success">Email confirmed</Badge> : <Badge tone="warning">Email not confirmed</Badge>}</p>
                     {r.note ? <p className="mt-2 text-sm md:text-[13px]">“{r.note}”</p> : null}
                   </div>
@@ -166,7 +167,7 @@ export default async function ReviewPage() {
                   <div className="min-w-0 text-sm md:text-[13px]">
                     <p className="text-[15px] font-medium">{r.fullName} <span className="text-muted">({r.relationship})</span></p>
                     <p className="text-muted">wants to view <strong className="text-foreground">{r.studentName}</strong></p>
-                    <p className="mt-1 font-mono text-muted">{r.email}{r.phone ? ` · ${r.phone}` : ""}</p>
+                    <p className="mt-1 font-mono text-muted"><EmailText email={r.email} />{r.phone ? ` · ${r.phone}` : ""}</p>
                     {r.note ? <p className="mt-2">“{r.note}”</p> : null}
                   </div>
                   <div className="flex shrink-0 flex-wrap gap-2">

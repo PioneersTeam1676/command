@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { adminResetPassword, approveAccessRequest, denyAccessRequest } from "@/lib/accounts";
 import { requireActionUser } from "@/lib/auth/current-user";
@@ -52,8 +53,9 @@ export async function changeRoleAction(formData: FormData) {
   const admin = await requireActionUser("admin");
   const p = z.object({ id: uuidSchema, role: z.enum(["member", "lead", "admin"]) }).safeParse(Object.fromEntries(formData));
   if (!p.success) return;
-  await changeRole(admin.id, p.data.id, p.data.role);
+  const r = await changeRole(admin.id, p.data.id, p.data.role);
   refresh();
+  if (!r.ok) redirect(`/admin/people?error=${encodeURIComponent(r.error)}`);
 }
 
 export async function deactivateAction(formData: FormData) {

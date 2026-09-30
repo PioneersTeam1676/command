@@ -11,6 +11,7 @@ import { getCurrentUser, requireUser } from "@/lib/auth/current-user";
 import { isReadOnly } from "@/lib/registry";
 import { RSVP_LABEL } from "@/lib/events";
 import { getHomeData, type EventCard } from "@/lib/home";
+import { pickGreeting } from "@/lib/greetings";
 import { formatInTz } from "@/lib/time";
 import { rsvpQuickAction } from "./calendar/actions";
 
@@ -22,6 +23,7 @@ export default async function HomePage() {
   const [home, readOnly] = await Promise.all([getHomeData(user.id), isReadOnly()]);
   const tz = home.tz;
   const first = user.name.split(" ")[0];
+  const greeting = pickGreeting(Number(formatInTz(new Date(), tz, "H")));
   const cutoffLabel = formatInTz(home.cutoffLabelAt, tz, "h:mm a");
 
   const idle = readOnly ? "Clocking in is paused while Command is read-only" : "Clock in any time";
@@ -47,7 +49,7 @@ export default async function HomePage() {
   return (
     <div className="space-y-10">
       <GridBackground className="-mx-5 -mt-6 px-5 pb-6 pt-6 md:-mx-8 md:-mt-8 md:px-8 md:pt-8">
-        <h1 className="text-3xl font-semibold">Hi, {first}</h1>
+        <h1 className="text-3xl font-semibold">{greeting}, {first}!</h1>
         <p className="mt-0.5 text-sm text-muted">{formatInTz(new Date(), tz, "EEEE, MMMM d")}{home.buildDay ? (home.workday ? " · Build season workday" : " · Build season") : ""}</p>
         <div className="mt-6">
           <ClockHero
@@ -91,7 +93,7 @@ export default async function HomePage() {
                   </Link>
                   {c.event.cancelledAt ? <Badge tone="error">Cancelled</Badge> : null}
                 </div>
-                {c.event.cancelledAt ? null : (
+                {c.event.cancelledAt || !c.event.rsvpEnabled ? null : (
                   <form action={rsvpQuickAction} className="mt-3 grid grid-cols-3 gap-2">
                     <input type="hidden" name="eventId" value={c.event.id} />
                     {(["going", "maybe", "cant"] as const).map((r) => (

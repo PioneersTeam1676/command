@@ -27,9 +27,9 @@ export default async function EventPage({ params, searchParams }: { params: Prom
   const settings = await getSettings();
   const staff = roleAtLeast(user.role, "lead");
   const admin = roleAtLeast(user.role, "admin");
-  const [mine, lists] = await Promise.all([getRsvp(user.id, event.id), staff ? rsvpLists(event.id) : null]);
+  const [mine, lists] = await Promise.all([getRsvp(user.id, event.id), staff && event.rsvpEnabled ? rsvpLists(event.id) : null]);
   const over = isOver(event);
-  const open = !event.cancelledAt && !over;
+  const open = !event.cancelledAt && !over && event.rsvpEnabled;
 
   return (
     <div className="space-y-6">
@@ -76,7 +76,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
           <CardHeader><CardTitle>Will you be there?</CardTitle></CardHeader>
           <CardContent><RsvpForm eventId={event.id} current={mine?.response as never} reason={mine?.reason} action={rsvpAction} /></CardContent>
         </Card>
-      ) : mine ? (
+      ) : !event.rsvpEnabled ? null : mine ? (
         <p className="text-sm text-muted">Your answer: <strong className="text-foreground capitalize">{mine.response === "cant" ? "Can't go" : mine.response}</strong></p>
       ) : null}
 

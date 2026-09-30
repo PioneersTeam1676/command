@@ -14,13 +14,16 @@ function getTransport() {
   return transport;
 }
 
+/** Inline image referenced from the HTML as `src="cid:<cid>"`. */
+export type MailAttachment = { filename: string; content: Buffer; cid: string; contentType: string };
+
 export type MailResult = { sent: boolean; error?: string };
 
-/** Plain-text email. Returns `{ sent: false }` when SMTP is not configured; never throws. */
-export async function sendMail(to: string, subject: string, text: string): Promise<MailResult> {
+/** Email (plain text, plus an optional HTML alternative). Returns `{ sent: false }` when SMTP is not configured; never throws. */
+export async function sendMail(to: string, subject: string, text: string, html?: string, attachments?: MailAttachment[]): Promise<MailResult> {
   if (!smtpConfigured()) return { sent: false, error: "SMTP is not configured" };
   try {
-    await getTransport().sendMail({ from: getEnv().SMTP_FROM, to, subject, text });
+    await getTransport().sendMail({ from: getEnv().SMTP_FROM, to, subject, text, html, attachments });
     return { sent: true };
   } catch (err) {
     return { sent: false, error: err instanceof Error ? err.message : "send failed" };

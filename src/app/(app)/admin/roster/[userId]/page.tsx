@@ -1,3 +1,4 @@
+import { EmailText } from "@/components/email-text";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -48,7 +49,7 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
         <p className="mt-1 flex flex-wrap items-center gap-2 text-sm md:text-[13px] text-muted">
           <Badge className="capitalize">{member.role}</Badge>
           <Badge tone={member.status === "active" ? "success" : "neutral"} className="capitalize">{member.status}</Badge>
-          {isAdmin ? <span className="font-mono">{member.email}</span> : null}
+          {isAdmin ? <EmailText className="font-mono" email={member.email} /> : null}
         </p>
       </div>
       <HoursSummary sessions={sessions} tz={tz} seasonLabel={season.name} />

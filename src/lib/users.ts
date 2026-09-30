@@ -2,6 +2,10 @@ import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { accessRequests, parentInvites, parentLinks, pushSubscriptions, sessions, users, type Role } from "@/db/schema";
 import { audit } from "@/lib/audit";
+import { smtpConfigured } from "@/lib/env";
+import { sendMail } from "@/lib/mail";
+import { readSettings } from "@/lib/settings";
+import { buildAdminWelcome } from "@/lib/team-emails";
 
 export async function listUsers() {
   return db
@@ -35,6 +39,12 @@ export async function changeRole(actorId: string, userId: string, role: Role): P
   }
   await db.update(users).set({ role }).where(eq(users.id, userId));
   await audit({ actorId, action: "user.change_role", targetType: "user", targetId: userId, before: { role: u.role }, after: { role } });
+  const team = await readSettings();
+  if (role === "admin" && u.role !== "admin" && u.status === "active" && smtpConfigured() && team.emailAdminPromoted) {
+    const [actor] = await db.select({ name: users.name }).from(users).where(eq(users.id, actorId));
+    const mail = await buildAdminWelcome(team, u, actor?.name);
+    await sendMail(u.email, mail.subject, mail.text, mail.html, mail.attachments); // best effort: never blocks the role change
+  }
   return { ok: true };
 }
 

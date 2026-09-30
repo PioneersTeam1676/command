@@ -1,3 +1,4 @@
+import { EmailText } from "@/components/email-text";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { and, eq } from "drizzle-orm";
@@ -32,7 +33,7 @@ export default async function WaitingPage() {
             <MailCheck className="size-6 text-muted" aria-hidden />
             <h1 className="text-2xl font-semibold">Check your email</h1>
             <p className="text-sm text-muted">
-              We sent a confirmation link to <strong className="text-foreground">{user.email}</strong>. Open it on this device to finish signing up.
+              We sent a confirmation link to <strong className="text-foreground"><EmailText email={user.email} /></strong>. Open it on this device to finish signing up.
             </p>
             <ActionForm action={async () => resendVerificationAction()} className="space-y-3">
               <SubmitButton variant="secondary" pendingText="Sending…">Send it again</SubmitButton>

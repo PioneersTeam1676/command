@@ -30,6 +30,11 @@ export const teamSettings = pgTable("team_settings", {
   timezone: text("timezone").notNull().default("UTC"),
   accentColor: text("accent_color").notNull().default("#0070f3"),
   logoPath: text("logo_path"),
+  emailAdminPromoted: boolean("email_admin_promoted").notNull().default(true),
+  emailAccessApproved: boolean("email_access_approved").notNull().default(true),
+  emailAccessDenied: boolean("email_access_denied").notNull().default(true),
+  /** Optional short message added to the branded emails (e.g. "See you at the shop Tuesday!"). */
+  emailNote: text("email_note"),
   allowedDomains: text("allowed_domains").array().notNull().default(sql`'{}'::text[]`),
   defaultCheckinVerification: text("default_checkin_verification").notNull().default("none"),
   backfillRequiresApproval: boolean("backfill_requires_approval").notNull().default(true),
@@ -190,6 +195,8 @@ export const events = pgTable(
     endsAt: ts("ends_at").notNull(),
     cancelledAt: ts("cancelled_at"),
     verification: text("verification").notNull().default("inherit"), // inherit | none | code
+    /** Off for mandatory events (or ones that just don't need a head count): hides RSVP everywhere. */
+    rsvpEnabled: boolean("rsvp_enabled").notNull().default(true),
     source: text("source").notNull().default("app"), // app | imported
     gcalEventId: text("gcal_event_id"),
     icsUid: text("ics_uid"),
