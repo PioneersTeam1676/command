@@ -500,3 +500,18 @@ export const signupSlotGroups = pgTable(
   },
   (t) => [uniqueIndex("signup_slot_groups_pair_idx").on(t.slotId, t.groupId), index("signup_slot_groups_group_idx").on(t.groupId)],
 );
+
+/**
+ * A private calendar-feed address for one person's shifts. Only the hash of the secret is kept, so the
+ * address can be shown once (when made or reset) and never read back. One per user; resetting replaces it.
+ */
+export const calendarFeeds = pgTable(
+  "calendar_feeds",
+  {
+    userId: uuid("user_id").primaryKey().references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    createdAt: createdAt(),
+    lastFetchedAt: ts("last_fetched_at"),
+  },
+  (t) => [uniqueIndex("calendar_feeds_token_idx").on(t.tokenHash)],
+);

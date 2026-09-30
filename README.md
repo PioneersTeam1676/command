@@ -9,6 +9,7 @@ attendance and export data. One deployment is one team, and any team can run its
 - Installable PWA with web push (Android, and iPhone via Home Screen), offline clock-in queue
 - Roles: Member, Lead, Admin, and read-only Parent
 - Calendar with RSVPs, rotating-code check-in display, backfill with approval, auto clock-out
+- Shift sign-ups on any event (see [Sign-ups](#sign-ups)): capacity, waitlist, member-only or parent-only shifts, groups with priority access, reminders, and a private calendar link
 - Season-based leaderboard (switch it off with an env var), CSV exports, audit log
 - Google sign-in (optional) plus email and password; team-set allowed email domains are auto-approved
 - Google Calendar: ICS import, or API push from Command with past-event import
@@ -91,6 +92,29 @@ when the calendar changes. Imported events are read-only in Command except for h
 4. Admin → Settings → Google Calendar shows the email to share with, has **Test connection**, and an **Import past
 events** tool (choose a date range) so members can add attendance for things that happened before Command.
 Changes made directly in Google Calendar after import are not synced back.
+
+## Sign-ups
+
+Any event can have a sign-up sheet of shifts (pit crew, scouting, a booth, snacks). It is for people with accounts:
+members, leads, admins and approved parents. There is no public link.
+
+- **Leads and admins** add a sheet from the event page, then add shifts: a name, a time range, how many people are needed, and
+  who may sign up (members and parents, members only, or parents only). **Manage sign-ups** on the event places or removes
+  people, adds a whole group at once, shows who hasn't signed up and reminds them (once a day).
+- **Waitlist**: when a shift is full people can queue. If someone leaves, or a lead adds places, the next person in line gets the
+  place and a notification.
+- **Groups** (Admin, then Groups) are named sets of people, like "Super scouts". A shift can be reserved for a group for good, or
+  give a group first pick until a time you choose, after which it opens to everyone.
+- Nobody can hold two overlapping shifts on one sheet. Members can leave a shift until it starts; after that a lead has to.
+- **Reminders** go out a day and an hour before a shift, and everyone else is told when a group's priority window ends. Each type can
+  be switched off per person under Notifications.
+- **My shifts** (under Me, or Parent, then My shifts) lists what you hold and what you could still take, and makes a **private calendar
+  link** you can subscribe to from Google, Apple or Outlook calendar. The link is a secret: it is shown once, can be replaced (the old
+  one stops working immediately) or turned off, and shows only that person's shifts.
+- Admins can download every sign-up as a CSV under Exports.
+
+Sign-up jobs (reminders, "now open" notices) run in the same in-app scheduler as the other reminders, so there is nothing extra to
+configure. They pause while the instance is read-only.
 
 ## Backups
 

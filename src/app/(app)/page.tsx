@@ -11,6 +11,7 @@ import { getCurrentUser, requireUser } from "@/lib/auth/current-user";
 import { isReadOnly } from "@/lib/registry";
 import { RSVP_LABEL } from "@/lib/events";
 import { getHomeData, type EventCard } from "@/lib/home";
+import { myShifts, openShiftsFor } from "@/lib/my-shifts";
 import { pickGreeting } from "@/lib/greetings";
 import { formatInTz } from "@/lib/time";
 import { rsvpQuickAction } from "./calendar/actions";
@@ -20,7 +21,7 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   if (!(await getCurrentUser())) return <Landing />;
   const user = await requireUser();
-  const [home, readOnly] = await Promise.all([getHomeData(user.id), isReadOnly()]);
+  const [home, readOnly, shifts, openShifts] = await Promise.all([getHomeData(user.id), isReadOnly(), myShifts(user.id), openShiftsFor({ id: user.id, role: user.role })]);
   const tz = home.tz;
   const first = user.name.split(" ")[0];
   const greeting = pickGreeting(Number(formatInTz(new Date(), tz, "H")));
@@ -76,6 +77,35 @@ export default async function HomePage() {
           </div>
         )}
       </section>
+
+      {shifts.upcoming.length > 0 || openShifts.length > 0 ? (
+        <section aria-labelledby="shifts-h">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 id="shifts-h" className="text-lg font-semibold">Your shifts</h2>
+            <Button asChild variant="ghost" size="sm"><Link href="/me/shifts">All my shifts</Link></Button>
+          </div>
+          {shifts.upcoming.length > 0 ? (
+            <ul className="space-y-2">
+              {shifts.upcoming.slice(0, 3).map((m) => (
+                <li key={m.entryId}>
+                  <Link href={`/calendar/${m.eventId}`} className="flex items-start justify-between gap-3 rounded-[10px] border p-4 transition-colors duration-150 hover:bg-surface md:rounded-[8px] md:p-3">
+                    <span className="min-w-0">
+                      <span className="block truncate font-medium">{m.slot.title} <span className="font-normal text-muted">· {m.eventTitle}</span></span>
+                      <span className="block font-mono text-[13px] md:text-[12px] text-muted">{formatInTz(m.slot.startsAt, tz, "EEE MMM d, h:mm a")}</span>
+                    </span>
+                    <Badge tone={m.status === "waitlisted" ? "warning" : "success"}>{m.status === "waitlisted" ? `Waitlist ${m.position}` : "You're on it"}</Badge>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {openShifts.length > 0 ? (
+            <p className="mt-3 text-sm md:text-[13px] text-muted">
+              <Link href="/me/shifts" className="font-medium text-foreground underline-offset-4 hover:underline">{openShifts.length} {openShifts.length === 1 ? "shift" : "shifts"} you can take</Link>
+            </p>
+          ) : null}
+        </section>
+      ) : null}
 
       <section aria-labelledby="up-h">
         <div className="mb-3 flex items-center justify-between">

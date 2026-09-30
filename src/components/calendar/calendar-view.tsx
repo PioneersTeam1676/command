@@ -17,6 +17,8 @@ type Props = {
   season: SeasonDays;
   basePath: string;
   mine?: Map<string, RsvpResponse>;
+  /** Per event: shifts this person could take, and shifts they hold. */
+  shifts?: Map<string, { open: number; mine: number }>;
 };
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -75,7 +77,7 @@ function Nav({ range, basePath, tz }: { range: Props["range"]; basePath: string;
   );
 }
 
-export function CalendarView({ events, range, tz, season, basePath, mine }: Props) {
+export function CalendarView({ events, range, tz, season, basePath, mine, shifts }: Props) {
   const today = todayLocal(tz);
   const byDay = new Map<string, EventRow[]>();
   for (const e of events) {
@@ -159,7 +161,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
         <section aria-label="This month's events" className="mt-6 border-t pt-5 md:hidden">
           <h3 className="mb-4 text-sm font-semibold">This month</h3>
           {monthEntries.length ? (
-            <EventList entries={monthEntries} today={today} tz={tz} basePath={basePath} mine={mine} />
+            <EventList entries={monthEntries} today={today} tz={tz} basePath={basePath} mine={mine} shifts={shifts} />
           ) : (
             <div className="py-2">
               <p className="text-sm font-medium">No events this month</p>
@@ -194,14 +196,14 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
         events.length === 0 ? (
           <EmptyState icon={<CalendarDays />} title="Nothing coming up">When events are added, they&apos;ll show up here in order.</EmptyState>
         ) : (
-          <EventList entries={[...byDay.entries()]} today={today} tz={tz} basePath={basePath} mine={mine} />
+          <EventList entries={[...byDay.entries()]} today={today} tz={tz} basePath={basePath} mine={mine} shifts={shifts} />
         )
       ) : null}
     </div>
   );
 }
 
-function EventList({ entries, today, tz, basePath, mine }: Pick<Props, "tz" | "basePath" | "mine"> & { entries: [string, EventRow[]][]; today: string }) {
+function EventList({ entries, today, tz, basePath, mine, shifts }: Pick<Props, "tz" | "basePath" | "mine" | "shifts"> & { entries: [string, EventRow[]][]; today: string }) {
   return (
     <ol className="space-y-5">
       {entries.map(([d, list]) => (
@@ -210,6 +212,7 @@ function EventList({ entries, today, tz, basePath, mine }: Pick<Props, "tz" | "b
           <ul className="space-y-2">
             {list.map((e) => {
               const r = mine?.get(e.id);
+              const sh = e.cancelledAt ? undefined : shifts?.get(e.id);
               return (
                 <li key={e.id}>
                   <Link href={`${basePath}/${e.id}`} className="flex flex-col gap-2 rounded-[8px] border p-3 transition-colors duration-150 hover:bg-surface md:flex-row md:items-center md:justify-between md:gap-3">
@@ -220,8 +223,10 @@ function EventList({ entries, today, tz, basePath, mine }: Pick<Props, "tz" | "b
                         {e.locationText ? ` · ${e.locationText}` : ""}
                       </p>
                     </div>
-                    {e.cancelledAt || r ? <div className="flex shrink-0 flex-wrap gap-1.5">
+                    {e.cancelledAt || r || sh?.open || sh?.mine ? <div className="flex shrink-0 flex-wrap gap-1.5">
                       {e.cancelledAt ? <Badge tone="error">Cancelled</Badge> : null}
+                      {sh?.mine ? <Badge tone="success">{sh.mine === 1 ? "Your shift" : `${sh.mine} shifts`}</Badge> : null}
+                      {sh?.open ? <Badge tone="info">{sh.open} {sh.open === 1 ? "shift" : "shifts"} open</Badge> : null}
                       {r ? <Badge tone={r === "going" ? "success" : r === "maybe" ? "warning" : "neutral"}>{RSVP_LABEL[r]}</Badge> : null}
                     </div> : null}
                   </Link>

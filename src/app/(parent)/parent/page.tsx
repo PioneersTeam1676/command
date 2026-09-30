@@ -55,6 +55,9 @@ export default async function ParentHome() {
           </Card>
         ))
       )}
+      {links.some((l) => l.status === "approved") ? (
+        <Button asChild variant="secondary"><Link href="/parent/shifts">My shifts</Link></Button>
+      ) : null}
       <form action={logoutAction}><Button type="submit" variant="ghost" size="sm">Sign out</Button></form>
     </div>
   );

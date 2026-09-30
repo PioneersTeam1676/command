@@ -35,6 +35,16 @@ export default async function MePage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>My shifts</CardTitle>
+          <CardDescription>The shifts you signed up for, the ones you can still take, and a private link to put them in your calendar.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild variant="secondary"><Link href="/me/shifts">Open my shifts</Link></Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Appearance</CardTitle>
           <CardDescription>System follows your device&apos;s light or dark setting.</CardDescription>
         </CardHeader>

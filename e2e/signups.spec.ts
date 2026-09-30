@@ -209,6 +209,55 @@ test("accessibility: the sign-up sheet and manage page have no serious axe viola
     });
     await scan(`${eventUrl}/signups`);
     await scan("/admin/groups");
+    await scan("/me/shifts");
     await ctx.close();
   }
+});
+
+test("my shifts: Home and calendar show them, and the private calendar link works, resets and turns off", async ({ browser }) => {
+  const ctx = await browser.newContext();
+  const member = await ctx.newPage();
+  await signIn(member, "olly@gmail.com");
+
+  await member.goto("/");
+  await expect(member.getByRole("heading", { name: "Your shifts" })).toBeVisible();
+  await expect(member.getByText("Booth").first()).toBeVisible();
+  await member.goto("/calendar?view=agenda");
+  await expect(member.getByText(/Your shift|\d shifts$/).first()).toBeVisible();
+
+  await member.goto("/me/shifts");
+  await expect(member.getByRole("heading", { name: "My shifts", exact: true })).toBeVisible();
+  const mine = member.getByRole("list").filter({ hasText: "Booth" }).first();
+  await expect(mine).toContainText("Regional");
+  await expect(mine).toContainText("You're on it");
+
+  // Make a private link and actually read it back the way a calendar app would (no cookies, no sign-in).
+  await member.getByRole("button", { name: "Make my calendar link" }).click();
+  const field = member.getByLabel("Your private calendar link");
+  await expect(field).toBeVisible();
+  const first = await field.inputValue();
+  expect(first).toMatch(/\/api\/calendar\/shifts\/[\w-]{20,}\.ics$/);
+  const anon = await browser.newContext();
+  const ok = await anon.request.get(first);
+  expect(ok.status()).toBe(200);
+  expect(ok.headers()["content-type"]).toContain("text/calendar");
+  expect(ok.headers()["x-robots-tag"]).toContain("noindex");
+  const body = await ok.text();
+  expect(body).toContain("BEGIN:VCALENDAR");
+  expect(body).toContain("SUMMARY:Booth (Regional)");
+  expect(body).not.toContain("admin@school.edu");
+
+  // A new link replaces the old one at once.
+  await member.getByRole("button", { name: "Make a new link" }).click();
+  await expect(member.getByLabel("Your private calendar link")).not.toHaveValue(first);
+  const second = await member.getByLabel("Your private calendar link").inputValue();
+  expect((await anon.request.get(first)).status()).toBe(404);
+  expect((await anon.request.get(second)).status()).toBe(200);
+  expect((await anon.request.get(second.replace(/shifts\/.{6}/, "shifts/AAAAAA"))).status()).toBe(404);
+
+  await member.getByRole("button", { name: "Turn off" }).click();
+  await expect(member.getByText("Your calendar link is turned off.")).toBeVisible();
+  expect((await anon.request.get(second)).status()).toBe(404);
+  await anon.close();
+  await ctx.close();
 });

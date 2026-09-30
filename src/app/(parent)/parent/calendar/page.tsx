@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { requireParent } from "@/lib/auth/current-user";
 import { calendarRange } from "@/lib/calendar-view";
 import { listEventsBetween, listUpcomingEvents } from "@/lib/events";
+import { calendarShiftInfo } from "@/lib/my-shifts";
 import { approvedStudentIds } from "@/lib/parent-scope";
 import { getCurrentSeason } from "@/lib/seasons";
 import { getSettings } from "@/lib/settings";
@@ -25,10 +26,11 @@ export default async function ParentCalendar({ searchParams }: { searchParams: P
     range.view === "agenda" ? listUpcomingEvents(range.from, 100) : listEventsBetween(range.from, range.to),
     getCurrentSeason(),
   ]);
+  const shifts = await calendarShiftInfo({ id: parent.id, role: parent.role });
   return (
     <div>
       <h1 className="mb-6 text-[28px] font-semibold">Calendar</h1>
-      <CalendarView events={events} range={range} tz={settings.timezone} season={season} basePath="/parent/calendar" />
+      <CalendarView events={events} range={range} tz={settings.timezone} season={season} basePath="/parent/calendar" shifts={shifts} />
     </div>
   );
 }
