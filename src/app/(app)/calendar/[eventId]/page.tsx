@@ -4,12 +4,14 @@ import { notFound } from "next/navigation";
 import { Monitor, Pencil } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { EventDetails } from "@/components/calendar/event-details";
+import { SignupSection } from "@/components/signups/signup-section";
 import { RsvpForm } from "@/components/calendar/rsvp-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireUser, roleAtLeast } from "@/lib/auth/current-user";
 import { getEvent, getRsvp, isOver, rsvpLists } from "@/lib/events";
+import { getSignupView } from "@/lib/signups";
 import { getSettings } from "@/lib/settings";
 import { uuidSchema } from "@/lib/validation";
 import { cancelEventAction, deleteEventAction, rsvpAction } from "../actions";
@@ -27,7 +29,11 @@ export default async function EventPage({ params, searchParams }: { params: Prom
   const settings = await getSettings();
   const staff = roleAtLeast(user.role, "lead");
   const admin = roleAtLeast(user.role, "admin");
-  const [mine, lists] = await Promise.all([getRsvp(user.id, event.id), staff && event.rsvpEnabled ? rsvpLists(event.id) : null]);
+  const [mine, lists, signups] = await Promise.all([
+    getRsvp(user.id, event.id),
+    staff && event.rsvpEnabled ? rsvpLists(event.id) : null,
+    getSignupView(event.id, { id: user.id, role: user.role }),
+  ]);
   const over = isOver(event);
   const open = !event.cancelledAt && !over && event.rsvpEnabled;
 
@@ -79,6 +85,8 @@ export default async function EventPage({ params, searchParams }: { params: Prom
       ) : !event.rsvpEnabled ? null : mine ? (
         <p className="text-sm text-muted">Your answer: <strong className="text-foreground capitalize">{mine.response === "cant" ? "Can't go" : mine.response}</strong></p>
       ) : null}
+
+      <SignupSection event={event} view={signups} tz={settings.timezone} staff={staff} />
 
       {lists ? (
         <Card>

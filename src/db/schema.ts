@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   index,
   integer,
@@ -397,3 +398,65 @@ export const registryState = pgTable("registry_state", {
   nextHeartbeatAt: ts("next_heartbeat_at"),
   warnedAt: ts("warned_at"),
 });
+
+// ---------- Sign-ups (slots attached to an event) ----------
+
+/** One sign-up sheet per event. Slots hold the shifts people claim. */
+export const signupSheets = pgTable(
+  "signup_sheets",
+  {
+    id: id(),
+    eventId: uuid("event_id").notNull().references(() => events.id, { onDelete: "cascade" }),
+    title: text("title").notNull().default("Sign-ups"),
+    description: text("description"),
+    /** Set when leads close the sheet: nobody can claim or leave on their own after that. */
+    closedAt: ts("closed_at"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("signup_sheets_event_idx").on(t.eventId)],
+);
+
+export const signupAudiences = ["anyone", "members", "parents"] as const;
+export type SignupAudience = (typeof signupAudiences)[number];
+
+export const signupSlots = pgTable(
+  "signup_slots",
+  {
+    id: id(),
+    sheetId: uuid("sheet_id").notNull().references(() => signupSheets.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    description: text("description"),
+    startsAt: ts("starts_at").notNull(),
+    endsAt: ts("ends_at").notNull(),
+    capacity: integer("capacity").notNull(),
+    audience: text("audience").$type<SignupAudience>().notNull().default("anyone"),
+    position: integer("position").notNull().default(0),
+    cancelledAt: ts("cancelled_at"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("signup_slots_sheet_idx").on(t.sheetId, t.startsAt),
+    check("signup_slots_capacity_chk", sql`${t.capacity} between 1 and 500`),
+    check("signup_slots_time_chk", sql`${t.endsAt} > ${t.startsAt}`),
+  ],
+);
+
+export const signupEntries = pgTable(
+  "signup_entries",
+  {
+    id: id(),
+    slotId: uuid("slot_id").notNull().references(() => signupSlots.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("confirmed"), // confirmed | waitlisted
+    source: text("source").notNull().default("self"), // self | admin
+    assignedBy: uuid("assigned_by").references(() => users.id, { onDelete: "set null" }),
+    promotedAt: ts("promoted_at"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    // Nobody holds the same slot twice, even under a double tap.
+    uniqueIndex("signup_entries_slot_user_idx").on(t.slotId, t.userId),
+    index("signup_entries_user_idx").on(t.userId),
+  ],
+);

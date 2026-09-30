@@ -26,6 +26,7 @@ export const PRIVACY: LegalDoc = {
         "Role and status: whether you are a member, lead, admin or parent, and whether your account is approved.",
         "Attendance: when you clock in and out (using the server's clock, plus your device's clock time for taps made offline), the events or days they relate to, notes you or an admin add, and whether entries were edited, backfilled, self-reported or automatically closed. For events that use rotating codes, wrong-code attempts are counted briefly to prevent guessing.",
         "RSVPs: your answer (going, maybe, can't go) and an optional reason.",
+        "Sign-ups: the event shifts you sign up for, and when.",
         "Optional preferences: notification settings, the workdays you personally attend, whether you appear on the leaderboard, and your theme choice.",
         "Parent accounts: a parent's name, relationship to the student, optional phone number and note, and the link to the student they are approved to view.",
         "Access requests: your name, email and optional note when you ask to join.",
@@ -52,10 +53,10 @@ export const PRIVACY: LegalDoc = {
     {
       heading: "Who can see what",
       bullets: [
-        "Members see their own hours, RSVPs and history, the calendar, and the leaderboard (display names and totals).",
-        "Leads and admins see the roster, attendance, RSVPs and who is currently clocked in.",
+        "Members see their own hours, RSVPs, sign-ups and history, the calendar, and the leaderboard (display names and totals). On a sign-up sheet they also see the names of the teammates and parents signed up for each shift.",
+        "Leads and admins see the roster, attendance, RSVPs, sign-ups and who is currently clocked in.",
         "Admins also manage accounts, approvals, settings, exports and the audit log.",
-        "Parents see only the calendar and the hours, attendance and event changes of a student they are approved to view. They cannot see other members.",
+        "Parents see only the calendar and the hours, attendance and event changes of a student they are approved to view. They cannot see other members. Parents can sign up for shifts that are open to parents; they see how many places are filled but not who filled them.",
       ],
     },
     {
@@ -86,7 +87,7 @@ export const PRIVACY: LegalDoc = {
         "Account and attendance data is kept while your team uses Command so seasons and history stay complete.",
         "When an account is deactivated, sign-in and notifications stop but past attendance is kept for reporting.",
         "Sessions expire after 30 days of inactivity. Password reset and invite links expire (1 hour and 7 days). Rate-limit counters are deleted within a day.",
-        "An admin can permanently erase a person's personal data on request. Attendance rows remain, no longer linked to a name, email, login or device.",
+        "An admin can permanently erase a person's personal data on request. Attendance rows remain, no longer linked to a name, email, login or device, and sign-up entries stay under the anonymised name.",
       ],
     },
     {

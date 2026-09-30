@@ -44,7 +44,7 @@ export const TERMS: LegalDoc = {
     {
       heading: "Availability and read-only mode",
       paragraphs: [
-        "The Team runs Command on its own infrastructure, so availability is not guaranteed. As a condition of the software license, if a copy cannot reach the license registry for 7 days or its license-check code has been altered, it switches to a read-only mode. In that mode you can still view your data and export it, but cannot clock in or out, RSVP or edit.",
+        "The Team runs Command on its own infrastructure, so availability is not guaranteed. As a condition of the software license, if a copy cannot reach the license registry for 7 days or its license-check code has been altered, it switches to a read-only mode. In that mode you can still view your data and export it, but cannot clock in or out, RSVP, sign up for shifts or edit.",
       ],
     },
     {

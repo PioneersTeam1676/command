@@ -59,7 +59,7 @@ export async function requireParent(): Promise<SessionUser> {
 }
 
 /** Guard for server actions and route handlers: throws instead of redirecting. */
-export async function requireActionUser(min: "member" | "lead" | "admin" = "member", opts: { allowReadOnly?: boolean } = {}): Promise<SessionUser> {
+export async function requireActionUser(min: "member" | "lead" | "admin" = "member", opts: { allowReadOnly?: boolean; allowParent?: boolean } = {}): Promise<SessionUser> {
   if (!opts.allowReadOnly) {
     try {
       await assertWritable();
@@ -71,6 +71,8 @@ export async function requireActionUser(min: "member" | "lead" | "admin" = "memb
   const user = await getCurrentUser();
   if (!user || user.status !== "active") throw new AuthError("Please sign in again.", "unauthenticated");
   if (user.mustChangePassword) throw new AuthError("Change your temporary password first.");
-  if (!roleAtLeast(user.role, min)) throw new AuthError("You don't have permission to do that.");
+  // Parents sit outside the staff ladder; only actions that opt in (like sign-ups) let them through.
+  const parentOk = opts.allowParent === true && min === "member" && user.role === "parent";
+  if (!parentOk && !roleAtLeast(user.role, min)) throw new AuthError("You don't have permission to do that.");
   return user;
 }
