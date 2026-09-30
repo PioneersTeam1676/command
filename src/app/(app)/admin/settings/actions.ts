@@ -82,6 +82,9 @@ export async function saveAttendanceAction(_: FormState, formData: FormData): Pr
     {
       defaultCheckinVerification: p.data.defaultCheckinVerification,
       backfillRequiresApproval: formData.get("backfillRequiresApproval") === "on",
+      showOffHoursNotice: formData.get("showOffHoursNotice") === "on",
+      clockoutNoteEnabled: formData.get("clockoutNoteEnabled") === "on",
+      clockoutNoteRequired: formData.get("clockoutNoteRequired") === "on",
       autoClockoutTime: p.data.autoClockoutTime,
       eventAutocloseGraceMinutes: p.data.eventAutocloseGraceMinutes,
     },

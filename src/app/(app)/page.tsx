@@ -56,6 +56,8 @@ export default async function HomePage() {
             runningSince={home.openSession?.clockInAt.toISOString() ?? null}
             canClockIn={!readOnly}
             offHours={home.offHours}
+            showOffHoursNotice={home.showOffHoursNotice}
+            noteMode={home.clockoutNote}
             idleMessage={idle}
             cutoffLabel={cutoffLabel}
           />

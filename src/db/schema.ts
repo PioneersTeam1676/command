@@ -38,6 +38,11 @@ export const teamSettings = pgTable("team_settings", {
   allowedDomains: text("allowed_domains").array().notNull().default(sql`'{}'::text[]`),
   defaultCheckinVerification: text("default_checkin_verification").notNull().default("none"),
   backfillRequiresApproval: boolean("backfill_requires_approval").notNull().default(true),
+  /** Show members the "outside build hours" warning when they clock in off-season or after the cutoff. */
+  showOffHoursNotice: boolean("show_off_hours_notice").notNull().default(false),
+  /** Ask "what did you do?" when clocking out of an open session; the answer is saved as the session note. */
+  clockoutNoteEnabled: boolean("clockout_note_enabled").notNull().default(true),
+  clockoutNoteRequired: boolean("clockout_note_required").notNull().default(false),
   autoClockoutTime: time("auto_clockout_time").notNull().default("21:00"),
   dailyReminderTime: time("daily_reminder_time").notNull().default("15:30"),
   clockoutReminderTime: time("clockout_reminder_time").notNull().default("20:30"),

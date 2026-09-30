@@ -23,6 +23,9 @@ export type HomeData = {
   workday: boolean;
   /** Outside build season or past the cutoff: clocking in still works, but a lead has to approve the time. */
   offHours: boolean;
+  /** Team setting: whether members see the off-hours warning at all. */
+  showOffHoursNotice: boolean;
+  clockoutNote: "off" | "optional" | "required";
   openSession: { id: string; clockInAt: Date } | null;
   cutoffLabelAt: Date;
   todayEvents: EventCard[];
@@ -80,6 +83,8 @@ export async function getHomeData(userId: string, now: Date = new Date()): Promi
     buildDay,
     workday: isBuildWorkday(today, season),
     offHours: !buildDay || now >= cutoff,
+    showOffHoursNotice: settings.showOffHoursNotice,
+    clockoutNote: !settings.clockoutNoteEnabled ? "off" : settings.clockoutNoteRequired ? "required" : "optional",
     openSession: stillOpen ? { id: stillOpen.id, clockInAt: stillOpen.clockInAt } : null,
     cutoffLabelAt: cutoff,
     todayEvents: windowEvents.map(card),

@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { enqueueTap, listQueue, newActionId, syncQueue, type QueuedTap } from "@/lib/offline-queue";
 
-export type TapInput = { action: "in" | "out"; kind: "open" | "event"; eventId?: string; code?: string; label: string };
+export type TapInput = { action: "in" | "out"; kind: "open" | "event"; eventId?: string; code?: string; label: string; note?: string };
 export type TapResult = { ok: boolean; queued?: boolean; error?: string; autoClosed?: boolean; offHours?: boolean };
 
 /** Shared clock logic: online taps go straight to the server, offline taps are queued with the device time. */
@@ -61,7 +61,7 @@ export function useClock() {
           res = await fetch("/api/clock", {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ actionId, action: input.action, kind: input.kind, eventId: input.eventId, code: input.code, clientTime }),
+            body: JSON.stringify({ actionId, action: input.action, kind: input.kind, eventId: input.eventId, code: input.code, clientTime, note: input.note }),
           });
         } catch {
           return await queueTap(input, actionId, clientTime); // network dropped mid-request
@@ -87,7 +87,7 @@ export function useClock() {
       return { ok: false, error: "This event needs a check-in code, so you have to be online to check in." };
     }
     try {
-      await enqueueTap({ actionId, action: input.action, kind: input.kind, eventId: input.eventId, clientTime, label: input.label });
+      await enqueueTap({ actionId, action: input.action, kind: input.kind, eventId: input.eventId, clientTime, label: input.label, note: input.note });
     } catch {
       return { ok: false, error: "You're offline and this browser can't save the tap. Try again when you have signal." };
     }

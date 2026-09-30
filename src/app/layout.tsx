@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   applicationName: "Command",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch.png" },
-  appleWebApp: { capable: true, title: "Command", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "Command", statusBarStyle: "black-translucent" },
   formatDetection: { telephone: false },
 };
 

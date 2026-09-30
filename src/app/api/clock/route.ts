@@ -17,6 +17,8 @@ const body = z.object({
   clientTime: z.union([z.string(), z.number()]).optional(),
   /** True for taps that were queued while offline and are being synced now. */
   queued: z.boolean().optional(),
+  /** What the member did; saved on the session when they clock out of an open session. */
+  note: z.string().max(1000).optional(),
 });
 
 /** Clock in/out for the signed-in member. Used by the Home screen, the check-in page and the offline sync. */
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
       b.kind === "open"
         ? b.action === "in"
           ? await clockInOpen(user.id, timing, origin)
-          : await clockOutOpen(user.id, timing, origin)
+          : await clockOutOpen(user.id, timing, origin, b.note)
         : b.action === "in"
           ? await clockInEvent(user.id, b.eventId!, { ...timing, code: b.code }, origin)
           : await clockOutEvent(user.id, b.eventId!, timing, origin);

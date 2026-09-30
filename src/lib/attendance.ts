@@ -91,11 +91,12 @@ export async function clockInOpen(userId: string, t: Timing, origin: Origin = "l
   }
 }
 
-async function closeSession(session: Session, out: Date, opts: { origin: Origin; now: Date; client: Date | null; auto?: boolean }): Promise<Session | undefined> {
+async function closeSession(session: Session, out: Date, opts: { origin: Origin; now: Date; client: Date | null; auto?: boolean; note?: string | null }): Promise<Session | undefined> {
   const [row] = await db
     .update(attendanceSessions)
     .set({
       clockOutAt: out,
+      ...(opts.note ? { note: opts.note } : {}),
       status: opts.auto ? "auto_closed" : "closed",
       reviewState: opts.auto ? "needs_review" : session.reviewState,
       clientTimeOut: opts.client,
@@ -108,10 +109,12 @@ async function closeSession(session: Session, out: Date, opts: { origin: Origin;
   return row;
 }
 
-export async function clockOutOpen(userId: string, t: Timing, origin: Origin = "live"): Promise<Res<{ session: Session; autoClosed: boolean }>> {
+export async function clockOutOpen(userId: string, t: Timing, origin: Origin = "live", rawNote?: string | null): Promise<Res<{ session: Session; autoClosed: boolean }>> {
   const time = resolveTime(t, origin);
   if (!time.ok) return time;
   const settings = await getSettings();
+  const note = settings.clockoutNoteEnabled ? rawNote?.trim().slice(0, 300) || null : null;
+  if (settings.clockoutNoteEnabled && settings.clockoutNoteRequired && !note) return fail("Add a quick note about what you did before clocking out.");
   const [open] = await db
     .select()
     .from(attendanceSessions)
@@ -124,10 +127,10 @@ export async function clockOutOpen(userId: string, t: Timing, origin: Origin = "
   const cutoff = openSessionCloseAt(open, settings);
   if (time.at >= cutoff) {
     // The nightly sweep hasn't run yet: close at the cutoff, flagged, exactly as the sweep would.
-    const row = await closeSession(open, cutoff, { origin, now: t.now, client: time.client, auto: true });
+    const row = await closeSession(open, cutoff, { origin, now: t.now, client: time.client, auto: true, note });
     return { ok: true, session: row ?? open, autoClosed: true };
   }
-  const row = await closeSession(open, time.at, { origin, now: t.now, client: time.client });
+  const row = await closeSession(open, time.at, { origin, now: t.now, client: time.client, note });
   if (!row) return fail("You were already clocked out.", true);
   return { ok: true, session: row, autoClosed: false };
 }

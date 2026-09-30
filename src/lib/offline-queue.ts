@@ -12,6 +12,7 @@ export type QueuedTap = {
   eventId?: string;
   clientTime: string;
   label: string;
+  note?: string;
   error?: string;
 };
 
@@ -55,7 +56,7 @@ export async function syncQueue(): Promise<SyncOutcome> {
       res = await fetch("/api/clock", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ actionId: tap.actionId, action: tap.action, kind: tap.kind, eventId: tap.eventId, clientTime: tap.clientTime, queued: true }),
+        body: JSON.stringify({ actionId: tap.actionId, action: tap.action, kind: tap.kind, eventId: tap.eventId, clientTime: tap.clientTime, queued: true, note: tap.note }),
       });
     } catch {
       out.stillOffline = true;

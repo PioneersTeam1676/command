@@ -79,7 +79,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
       </aside>
 
       <div className="flex min-w-0 flex-col">
-        <header className="pt-safe sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background/90 px-5 backdrop-blur md:hidden">
+        <header className="pt-safe sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-5 md:hidden">
           <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />
           {isStaff ? (
             <Link href="/admin" className="inline-flex min-h-[44px] items-center px-2 text-sm font-medium text-accent">

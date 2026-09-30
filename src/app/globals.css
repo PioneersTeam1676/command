@@ -21,7 +21,7 @@
   --error-subtle: #fdecec;
   --info: #1a56c4;
   --info-subtle: #e8f0fd;
-  --grid-line: rgb(0 0 0 / 0.05);
+  --grid-line: rgb(0 0 0 / 0.1);
   --radius: 8px;
 }
 
@@ -40,7 +40,7 @@
   --error-subtle: #2a1010;
   --info: #7cb0ff;
   --info-subtle: #0d1c33;
-  --grid-line: rgb(255 255 255 / 0.06);
+  --grid-line: rgb(255 255 255 / 0.12);
 }
 
 @theme inline {
@@ -72,10 +72,14 @@
 }
 
 html {
+  /* Paint the iOS standalone safe area and overscroll canvas with the app theme. */
+  background: var(--background);
+  min-height: 100%;
   -webkit-text-size-adjust: 100%;
 }
 
 body {
+  min-height: 100dvh;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);

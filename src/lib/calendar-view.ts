@@ -19,5 +19,7 @@ export function calendarRange(viewParam: string | undefined, dateParam: string |
   }
   const first = monthStart(date);
   const gridStart = startOfWeekLocal(first);
-  return { view, date: first, gridStart, from: startOfLocalDay(gridStart, tz), to: startOfLocalDay(addDaysLocal(gridStart, 42), tz), prev: addMonthsLocal(first, -1), next: addMonthsLocal(first, 1), title: "" };
+  const next = addMonthsLocal(first, 1);
+  const gridEnd = addDaysLocal(startOfWeekLocal(addDaysLocal(next, -1)), 7);
+  return { view, date: first, gridStart, from: startOfLocalDay(gridStart, tz), to: startOfLocalDay(gridEnd, tz), prev: addMonthsLocal(first, -1), next, title: "" };
 }

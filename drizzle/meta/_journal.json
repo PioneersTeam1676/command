@@ -57,6 +57,13 @@
       "when": 1790726701231,
       "tag": "0007_event_rsvp_toggle",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790732543984,
+      "tag": "0008_clockout_note",
+      "breakpoints": true
     }
   ]
 }

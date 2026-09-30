@@ -104,6 +104,27 @@ export default async function SettingsPage() {
                 <span className="block text-sm md:text-[13px] text-muted">When someone adds time they forgot to clock, a lead or admin must approve it before it counts. If you turn this off, it counts right away and is marked “self-reported”.</span>
               </span>
             </label>
+            <label className="flex items-start gap-3 text-sm">
+              <input type="checkbox" name="showOffHoursNotice" defaultChecked={s.showOffHoursNotice} className="mt-1 size-4 accent-[var(--accent)]" />
+              <span>
+                <span className="font-medium">Show an “outside build hours” notice</span>
+                <span className="block text-sm md:text-[13px] text-muted">On the Home screen, warn people when they clock in outside build season or after the automatic clock-out time that a lead will have to approve the time. The time is held for approval either way.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 text-sm">
+              <input type="checkbox" name="clockoutNoteEnabled" defaultChecked={s.clockoutNoteEnabled} className="mt-1 size-4 accent-[var(--accent)]" />
+              <span>
+                <span className="font-medium">Ask what people did when they clock out</span>
+                <span className="block text-sm md:text-[13px] text-muted">Shows a short note box before clocking out. The note is saved with the session and leads can see it.</span>
+              </span>
+            </label>
+            <label className="ml-7 flex items-start gap-3 text-sm">
+              <input type="checkbox" name="clockoutNoteRequired" defaultChecked={s.clockoutNoteRequired} className="mt-1 size-4 accent-[var(--accent)]" />
+              <span>
+                <span className="font-medium">Make the note required</span>
+                <span className="block text-sm md:text-[13px] text-muted">People can&apos;t clock out until they write something. Only applies when the note is turned on.</span>
+              </span>
+            </label>
             <SubmitButton pendingText="Saving…">Save</SubmitButton>
           </ActionForm>
         </CardContent>

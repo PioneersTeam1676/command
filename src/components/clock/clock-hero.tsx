@@ -2,6 +2,9 @@
 import { useEffect, useState } from "react";
 import { ArrowRight, CloudOff, Loader2, ShieldAlert, Square } from "lucide-react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useClock } from "./use-clock";
 
@@ -23,10 +26,16 @@ export type HeroProps = {
   cutoffLabel: string;
   /** Outside build season or past the cutoff: a lead has to approve the time. */
   offHours?: boolean;
+  /** Team setting: only warn about off-hours when this is on. */
+  showOffHoursNotice?: boolean;
+  /** Ask what the member did before clocking out. */
+  noteMode?: "off" | "optional" | "required";
 };
 
-export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, offHours = false }: HeroProps) {
+export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, offHours = false, showOffHoursNotice = false, noteMode = "off" }: HeroProps) {
   const { tap, busy, queue } = useClock();
+  const [noteOpen, setNoteOpen] = useState(false);
+  const [note, setNote] = useState("");
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -42,12 +51,19 @@ export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, 
   const elapsed = localRunning ? now - new Date(localRunning).getTime() : 0;
   const disabled = busy || (!running && !canClockIn && !pending);
 
-  async function onTap() {
-    const r = await tap({ action: running ? "out" : "in", kind: "open", label: running ? "Clock out" : "Clock in" });
+  function onTap() {
+    if (running && noteMode !== "off") setNoteOpen(true);
+    else void submit();
+  }
+
+  async function submit(text?: string) {
+    const r = await tap({ action: running ? "out" : "in", kind: "open", label: running ? "Clock out" : "Clock in", note: text });
     if (!r.ok) toast.error(r.error ?? "That didn't work.");
     else if (r.queued) toast.message("Saved on this phone. It will sync when you're back online.");
-    else if (r.offHours) toast.message("You're clocked in. Since it's outside build hours, a lead will approve this time.");
+    else if (r.offHours && showOffHoursNotice) toast.message("You're clocked in. Since it's outside build hours, a lead will approve this time.");
     else if (r.autoClosed) toast.message(`You were past the ${cutoffLabel} cutoff, so we closed your time there. A lead may review it.`);
+    else if (running) setNote("");
+    if (r.ok) setNoteOpen(false);
   }
 
   return (
@@ -91,7 +107,7 @@ export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, 
           <CloudOff className="size-4 shrink-0" aria-hidden />
           Saved on this phone. Will sync when you&apos;re back online.
         </p>
-      ) : offHours && !running ? (
+      ) : offHours && showOffHoursNotice && !running ? (
         <p className="flex items-center gap-1.5 text-center text-sm text-warning">
           <ShieldAlert className="size-4 shrink-0" aria-hidden />
           Outside build hours. A lead will approve this time.
@@ -99,6 +115,33 @@ export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, 
       ) : running ? (
         <p className="text-center text-sm text-muted">Auto clock-out at {cutoffLabel} if you forget.</p>
       ) : null}
+
+      <Dialog open={noteOpen} onOpenChange={setNoteOpen}>
+        <DialogContent title="What did you work on?" description={noteMode === "required" ? "Add a quick note before you clock out." : "Optional. Leads can see this with your hours."}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void submit(note);
+            }}
+            className="space-y-4"
+          >
+            <Textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={300}
+              rows={3}
+              autoFocus
+              required={noteMode === "required"}
+              aria-label="What did you work on?"
+              placeholder="e.g. Wired the drivetrain, cut the arm brackets"
+            />
+            <Button type="submit" className="w-full" disabled={busy || (noteMode === "required" && !note.trim())}>
+              {busy ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+              Clock out
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
