@@ -23,6 +23,8 @@ export const NOTIFICATION_TYPES: readonly NotificationType[] = [
   { key: "event_checkout_prompt", label: "Event clock-out prompt", description: "When an event ends and you're still checked in.", roles: STAFF_AND_MEMBERS },
   { key: "event_change", label: "New, changed or cancelled events", description: "Whenever the team adds, edits or cancels an event.", roles: ["member", "lead", "admin", "parent"] },
   { key: "signup_change", label: "Shift changes", description: "When a shift you signed up for is cancelled or you are added to or removed from one.", roles: ["member", "lead", "admin", "parent"] },
+  { key: "signup_reminder", label: "Shift reminders", description: "A day before and an hour before a shift you signed up for.", roles: ["member", "lead", "admin", "parent"] },
+  { key: "signup_open", label: "Shifts you can take", description: "When a shift is reserved for you first, a shift opens to everyone, or a lead reminds people to sign up.", roles: ["member", "lead", "admin", "parent"] },
   { key: "access_request", label: "New join requests", description: "When someone asks to join the team.", roles: ["admin"] },
   { key: "parent_request", label: "Parent link requests", description: "When a parent asks to follow a student.", roles: ["admin"] },
   { key: "access_decision", label: "Decision on your join request", description: "When an admin approves your request.", roles: STAFF_AND_MEMBERS },
@@ -33,4 +35,4 @@ export const NOTIFICATION_TYPES: readonly NotificationType[] = [
 export const typesForRole = (role: Role) => NOTIFICATION_TYPES.filter((t) => t.roles.includes(role));
 
 /** Types that never carry an in-app inbox row because they'd just be noise there. */
-export const REMINDER_TYPES = new Set(["daily_reminder", "clockout_reminder", "event_reminder", "event_checkin_prompt", "event_checkout_prompt"]);
+export const REMINDER_TYPES = new Set(["daily_reminder", "clockout_reminder", "event_reminder", "event_checkin_prompt", "event_checkout_prompt", "signup_reminder"]);

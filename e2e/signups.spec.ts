@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+import { expect, test, type Page } from "@playwright/test";
 import { signIn } from "./helpers";
 
 /** Runs after the phase specs (same database): relies on admin@school.edu and olly@gmail.com existing. */
@@ -155,4 +156,59 @@ test("waitlist: a full shift queues the next person, and leaving promotes them",
   await expect(item(page).getByText("You're signed up")).toBeVisible();
   await expect(item(page)).not.toContainText("waitlist ·");
   await mCtx.close();
+});
+
+test("manage page: a lead places and removes people; members can't open it", async ({ page, browser }) => {
+  await signIn(page, "admin@school.edu");
+  await page.goto(eventUrl);
+  await page.getByRole("link", { name: "Manage sign-ups" }).click();
+  await expect(page.getByRole("heading", { name: "Manage sign-ups" })).toBeVisible();
+  await expect(page.getByText(/places filled across/)).toBeVisible();
+
+  const card = page.locator("div.rounded-\\[8px\\].border").filter({ has: page.getByRole("heading", { name: "Pit crew" }) }).first();
+  await card.getByText("Add people", { exact: true }).click();
+  await card.getByLabel(/Olly Outsider/).check();
+  await card.getByRole("button", { name: "Add selected" }).click();
+  await expect(card.getByText("Added 1 person.")).toBeVisible();
+  await page.reload();
+  const list = page.getByRole("list", { name: "On Pit crew" });
+  await expect(list).toContainText("Olly Outsider");
+  await expect(list).toContainText("placed by a lead");
+
+  await list.getByRole("button", { name: "Remove" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Remove" }).click();
+  await expect(page.getByRole("list", { name: "On Pit crew" })).toHaveCount(0);
+
+  const mCtx = await browser.newContext();
+  const member = await mCtx.newPage();
+  await signIn(member, "olly@gmail.com");
+  await member.goto(`${eventUrl}/signups`);
+  await expect(member).not.toHaveURL(/\/signups$/); // redirected away
+  await expect(member.getByRole("heading", { name: "Manage sign-ups" })).toHaveCount(0);
+  await mCtx.close();
+});
+
+test("accessibility: the sign-up sheet and manage page have no serious axe violations, light and dark", async ({ browser }) => {
+  for (const colorScheme of ["light", "dark"] as const) {
+    const ctx = await browser.newContext({ colorScheme });
+    const page = await ctx.newPage();
+    await signIn(page, "admin@school.edu");
+    const scan = async (url: string, open?: (p: Page) => Promise<void>) => {
+      await page.goto(url);
+      await page.waitForLoadState("load");
+      await open?.(page);
+      await page.waitForTimeout(400);
+      const result = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
+      const bad = result.violations.filter((v) => v.impact === "serious" || v.impact === "critical");
+      expect(bad.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).slice(0, 3).join(" | ")}`), `${colorScheme} ${url}`).toEqual([]);
+    };
+    await scan(eventUrl);
+    await scan(eventUrl, async (p) => {
+      await p.getByText("Add a shift").click();
+      await p.getByText("Edit this shift").first().click();
+    });
+    await scan(`${eventUrl}/signups`);
+    await scan("/admin/groups");
+    await ctx.close();
+  }
 });

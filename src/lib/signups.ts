@@ -18,6 +18,9 @@ type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string; field
 export type Viewer = { id: string; role: Role };
 
 const MAX_SLOT_MS = 72 * 3_600_000;
+
+/** Parents live in their own route tree, so a link to the event has to differ by role. */
+export const signupUrl = (role: Role, eventId: string) => (role === "parent" ? `/parent/calendar/${eventId}` : `/calendar/${eventId}`);
 const LOCAL = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
 export const slotFormSchema = z.object({
@@ -191,17 +194,23 @@ export async function cancelSlot(actorId: string, slotId: string): Promise<Resul
   if (slot.cancelledAt) return { ok: true };
   await db.update(signupSlots).set({ cancelledAt: new Date() }).where(eq(signupSlots.id, slotId));
   await audit({ actorId, action: "signup.slot_cancel", targetType: "signup_slot", targetId: slotId, before: { title: slot.title } });
-  const held = await db.select({ userId: signupEntries.userId }).from(signupEntries).where(eq(signupEntries.slotId, slotId));
+  const held = await db
+    .select({ userId: signupEntries.userId, role: users.role })
+    .from(signupEntries)
+    .innerJoin(users, eq(users.id, signupEntries.userId))
+    .where(eq(signupEntries.slotId, slotId));
   const sheet = (await db.select().from(signupSheets).where(eq(signupSheets.id, slot.sheetId)))[0]!;
   const { timezone } = await getSettings();
-  await notify({
-    userIds: held.map((h) => h.userId),
-    type: "signup_change",
-    title: `Shift cancelled: ${slot.title}`,
-    body: formatInTz(slot.startsAt, timezone, "EEE MMM d, h:mm a"),
-    url: `/calendar/${sheet.eventId}`,
-    dedupeKey: `signup:${slotId}:cancelled`,
-  }).catch(() => undefined);
+  for (const isParent of [false, true]) {
+    await notify({
+      userIds: held.filter((h) => (h.role === "parent") === isParent).map((h) => h.userId),
+      type: "signup_change",
+      title: `Shift cancelled: ${slot.title}`,
+      body: formatInTz(slot.startsAt, timezone, "EEE MMM d, h:mm a"),
+      url: signupUrl(isParent ? "parent" : "member", sheet.eventId),
+      dedupeKey: `signup:${slotId}:cancelled`,
+    }).catch(() => undefined);
+  }
   return { ok: true };
 }
 
@@ -296,14 +305,14 @@ export async function leaveSlot(viewer: Viewer, slotId: string, now: Date = new 
 
 // ---------- Waitlist ----------
 
-export type Promoted = { userId: string; entryId: string };
+export type Promoted = { userId: string; entryId: string; role: Role };
 
 /**
  * Fills any free places from the waitlist, oldest first. Call inside the transaction that freed the place,
  * with the slot row already locked. Someone who can no longer take the place (deactivated, audience
  * changed, or now clashing with a shift they hold) is skipped and stays queued rather than blocking the line.
  */
-async function promoteWaitlist(tx: Pick<Db, "select" | "update">, slot: SlotRow): Promise<Promoted[]> {
+export async function promoteWaitlist(tx: Pick<Db, "select" | "update">, slot: SlotRow): Promise<Promoted[]> {
   if (slot.cancelledAt) return [];
   const [held] = await tx
     .select({ n: sql<number>`count(*)::int` })
@@ -328,14 +337,14 @@ async function promoteWaitlist(tx: Pick<Db, "select" | "update">, slot: SlotRow)
       .where(and(eq(signupEntries.userId, q.userId), eq(signupEntries.status, "confirmed"), eq(signupSlots.sheetId, slot.sheetId), ne(signupSlots.id, slot.id), isNull(signupSlots.cancelledAt)));
     if (holds.some((h) => slotsOverlap(h, slot))) continue;
     await tx.update(signupEntries).set({ status: "confirmed", promotedAt: new Date() }).where(eq(signupEntries.id, q.entryId));
-    promoted.push({ userId: q.userId, entryId: q.entryId });
+    promoted.push({ userId: q.userId, entryId: q.entryId, role: q.role });
     free -= 1;
   }
   return promoted;
 }
 
 /** Tells people they got a place. Sent after the transaction commits, and never twice for one entry. */
-async function notifyPromoted(slot: SlotRow, promoted: Promoted[]) {
+export async function notifyPromoted(slot: SlotRow, promoted: Promoted[]) {
   if (promoted.length === 0) return;
   const [sheet] = await db.select({ eventId: signupSheets.eventId }).from(signupSheets).where(eq(signupSheets.id, slot.sheetId));
   const { timezone } = await getSettings();
@@ -345,13 +354,16 @@ async function notifyPromoted(slot: SlotRow, promoted: Promoted[]) {
       type: "signup_change",
       title: `You're in: ${slot.title}`,
       body: `A place opened up. ${formatInTz(slot.startsAt, timezone, "EEE MMM d, h:mm a")}`,
-      url: `/calendar/${sheet!.eventId}`,
+      url: signupUrl(p.role, sheet!.eventId),
       dedupeKey: `signup:${p.entryId}:promoted`,
     }).catch(() => undefined);
   }
 }
 
 // ---------- Reading ----------
+
+/** `entryId` and `source` are only filled in for leads and admins, who manage the list. */
+export type RosterEntry = { userId: string; name: string; entryId?: string; source?: string };
 
 export type SlotView = {
   slot: SlotRow;
@@ -367,9 +379,9 @@ export type SlotView = {
   mine: EntryRow | null;
   closed: SlotClosedReason | null;
   /** Names of people holding a place. Null for parents, who only see counts. */
-  roster: { userId: string; name: string }[] | null;
+  roster: RosterEntry[] | null;
   /** Who is queued, oldest first. Only for leads and admins. */
-  queue: { userId: string; name: string }[] | null;
+  queue: RosterEntry[] | null;
 };
 
 export type SignupView = { sheet: SheetRow; slots: SlotView[] };
@@ -417,10 +429,10 @@ export async function getSignupView(eventId: string, viewer: Viewer, now: Date =
         filled: here.length,
         waitlisted: line.length,
         myPosition: myIndex >= 0 ? myIndex + 1 : null,
-        queue: staff ? line.map((e) => ({ userId: e.entry.userId, name: e.name })) : null,
+        queue: staff ? line.map((e) => ({ userId: e.entry.userId, name: e.name, entryId: e.entry.id, source: e.entry.source })) : null,
         mine: entries.find((e) => e.entry.slotId === slot.id && e.entry.userId === viewer.id)?.entry ?? null,
         closed: slotClosedReason(slot, { sheetClosedAt: sheet.closedAt, eventCancelledAt: event?.cancelledAt ?? null }, now),
-        roster: viewer.role === "parent" ? null : here.map((e) => ({ userId: e.entry.userId, name: e.name })),
+        roster: viewer.role === "parent" ? null : here.map((e) => ({ userId: e.entry.userId, name: e.name, ...(staff ? { entryId: e.entry.id, source: e.entry.source } : {}) })),
       };
     }),
   };

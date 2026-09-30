@@ -3,13 +3,14 @@ import { audit } from "@/lib/audit";
 import { getCurrentUser, roleAtLeast } from "@/lib/auth/current-user";
 import { hit } from "@/lib/auth/rate-limit";
 import { exportAttendance, exportAudit, exportHours, exportMyHours, exportRsvps } from "@/lib/exports";
+import { exportSignups } from "@/lib/signup-admin";
 import { getCurrentSeason } from "@/lib/seasons";
 import { readSettings } from "@/lib/settings";
 import { uuidSchema } from "@/lib/validation";
 
 export const dynamic = "force-dynamic";
 
-const ADMIN_KINDS = new Set(["hours", "attendance", "rsvps", "audit"]);
+const ADMIN_KINDS = new Set(["hours", "attendance", "rsvps", "signups", "audit"]);
 
 /**
  * CSV downloads. `my-hours` is for the signed-in member and (by design) is never blocked, even when the
@@ -41,7 +42,9 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
         ? await exportAttendance(seasonId, tz)
         : kind === "rsvps"
           ? await exportRsvps(seasonId, tz)
-          : await exportAudit({
+          : kind === "signups"
+            ? await exportSignups(seasonId, tz)
+            : await exportAudit({
               from: /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("from") ?? "") ? new Date(`${url.searchParams.get("from")}T00:00:00Z`) : undefined,
               to: /^\d{4}-\d{2}-\d{2}$/.test(url.searchParams.get("to") ?? "") ? new Date(new Date(`${url.searchParams.get("to")}T00:00:00Z`).getTime() + 86_400_000) : undefined,
             });

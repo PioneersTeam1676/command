@@ -2,6 +2,7 @@ import { purgeOldRateLimits } from "@/lib/auth/rate-limit";
 import { purgeExpiredSessions } from "@/lib/auth/session-cleanup";
 import { sweepAutoClose } from "@/lib/attendance";
 import { runReminders } from "@/lib/reminders";
+import { runSignupNotices } from "@/lib/signup-admin";
 import { getEnv } from "@/lib/env";
 import { pushEventToGoogle } from "@/lib/gcal/api";
 import { runIcsSync } from "@/lib/gcal/ics";
@@ -20,6 +21,7 @@ export function registerAllJobs() {
   registerJob("attendance.sweep", async (_job, now) => void (await sweepAutoClose(now)), { everySeconds: 60 });
   // Read-only instances pause reminders and calendar syncing (nobody can clock in or change anything).
   registerJob("reminders.tick", async (_job, now) => void ((await isReadOnly()) || (await runReminders(now))), { everySeconds: 60 });
+  registerJob("signups.tick", async (_job, now) => void ((await isReadOnly()) || (await runSignupNotices(now))), { everySeconds: 60 });
   registerJob(
     "registry.heartbeat",
     async () => {

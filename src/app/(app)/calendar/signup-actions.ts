@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActionUser } from "@/lib/auth/current-user";
 import { parseForm, type FormState } from "@/lib/form";
+import { assignGroup, assignPeople, notifyFirstPickById, nudgeSheet, removeEntry } from "@/lib/signup-admin";
 import { addSlot, cancelSlot, claimSlot, createSheet, leaveSlot, setSheetClosed, slotFormSchema, updateSlot } from "@/lib/signups";
 import { uuidSchema } from "@/lib/validation";
 
@@ -71,6 +72,7 @@ export async function addSlotAction(_: FormState, fd: FormData): Promise<FormSta
   if (!groupIds.success) return { error: "Pick groups from the list." };
   const r = await addSlot(user.id, sheetId.data, { ...parsed.data, groupIds: groupIds.data });
   if (!r.ok) return { error: r.error, fieldErrors: r.field ? { [r.field]: r.error } : undefined, values: keptValues(fd) };
+  await notifyFirstPickById(r.id).catch(() => undefined);
   refresh(eventId.data);
   return { success: "Shift added." };
 }
@@ -97,4 +99,48 @@ export async function cancelSlotAction(formData: FormData) {
   if (!slotId.success || !eventId.success) return;
   await cancelSlot(user.id, slotId.data);
   refresh(eventId.data);
+}
+
+// ---------- Managing who's on a shift (leads and admins) ----------
+
+const summarise = (assigned: number, skipped: { name: string; reason: string }[]) => {
+  const head = assigned === 0 ? "Nobody was added." : `Added ${assigned} ${assigned === 1 ? "person" : "people"}.`;
+  return skipped.length === 0 ? head : `${head} Skipped: ${skipped.map((s) => `${s.name} (${s.reason})`).join("; ")}.`;
+};
+
+export async function assignPeopleAction(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireActionUser("lead");
+  const p = z.object({ slotId: uuidSchema, eventId: uuidSchema, userIds: z.array(uuidSchema).max(500) }).safeParse({ slotId: fd.get("slotId"), eventId: fd.get("eventId"), userIds: fd.getAll("userIds") });
+  if (!p.success) return { error: "Tick at least one person." };
+  if (p.data.userIds.length === 0) return { error: "Tick at least one person." };
+  const r = await assignPeople(user.id, p.data.slotId, p.data.userIds, { overbook: fd.get("overbook") === "on" });
+  refresh(p.data.eventId);
+  return r.ok ? { success: summarise(r.assigned, r.skipped) } : { error: r.error };
+}
+
+export async function assignGroupAction(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireActionUser("lead");
+  const p = z.object({ slotId: uuidSchema, eventId: uuidSchema, groupId: uuidSchema }).safeParse(Object.fromEntries(fd));
+  if (!p.success) return { error: "Choose a group." };
+  const r = await assignGroup(user.id, p.data.slotId, p.data.groupId, { overbook: fd.get("overbook") === "on" });
+  refresh(p.data.eventId);
+  return r.ok ? { success: summarise(r.assigned, r.skipped) } : { error: r.error };
+}
+
+export async function removeEntryAction(formData: FormData) {
+  const user = await requireActionUser("lead");
+  const p = z.object({ entryId: uuidSchema, eventId: uuidSchema }).safeParse(Object.fromEntries(formData));
+  if (!p.success) return;
+  await removeEntry(user.id, p.data.entryId);
+  refresh(p.data.eventId);
+}
+
+export async function nudgeAction(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireActionUser("lead");
+  const p = z.object({ sheetId: uuidSchema, eventId: uuidSchema }).safeParse(Object.fromEntries(fd));
+  if (!p.success) return { error: "Unknown sign-up sheet." };
+  const r = await nudgeSheet(user.id, p.data.sheetId);
+  if (!r.ok) return { error: r.error };
+  if (r.alreadyToday) return { success: "Everyone who hasn't signed up was already reminded today. Try again tomorrow." };
+  return { success: r.reminded === 0 ? "Everyone who can sign up already has." : `Reminded ${r.reminded} ${r.reminded === 1 ? "person" : "people"}.` };
 }

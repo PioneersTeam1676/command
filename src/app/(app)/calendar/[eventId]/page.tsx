@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Monitor, Pencil } from "lucide-react";
+import { ClipboardList, Monitor, Pencil } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { EventDetails } from "@/components/calendar/event-details";
 import { SignupSection } from "@/components/signups/signup-section";
@@ -53,6 +53,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
       {staff ? (
         <div className="flex flex-wrap gap-2">
           <Button asChild variant="secondary"><Link href={`/calendar/${event.id}/edit`}><Pencil aria-hidden />Edit</Link></Button>
+          {signups ? <Button asChild variant="secondary"><Link href={`/calendar/${event.id}/signups`}><ClipboardList aria-hidden />Manage sign-ups</Link></Button> : null}
           {!event.cancelledAt ? (
             <ConfirmAction
               label="Cancel event"

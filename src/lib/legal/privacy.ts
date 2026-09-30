@@ -26,7 +26,7 @@ export const PRIVACY: LegalDoc = {
         "Role and status: whether you are a member, lead, admin or parent, and whether your account is approved.",
         "Attendance: when you clock in and out (using the server's clock, plus your device's clock time for taps made offline), the events or days they relate to, notes you or an admin add, and whether entries were edited, backfilled, self-reported or automatically closed. For events that use rotating codes, wrong-code attempts are counted briefly to prevent guessing.",
         "RSVPs: your answer (going, maybe, can't go) and an optional reason.",
-        "Sign-ups: the event shifts you sign up for or queue for on a waitlist, and when.",
+        "Sign-ups: the event shifts you sign up for or queue for on a waitlist, when, and whether a lead placed you there. Leads and admins can place people on or remove them from shifts, and you are notified when they do.",
         "Groups: if an admin puts you in a named group (for example a scouting group), that membership, so shifts can be reserved for or offered first to that group.",
         "Optional preferences: notification settings, the workdays you personally attend, whether you appear on the leaderboard, and your theme choice.",
         "Parent accounts: a parent's name, relationship to the student, optional phone number and note, and the link to the student they are approved to view.",
@@ -47,7 +47,7 @@ export const PRIVACY: LegalDoc = {
       heading: "How your information is used",
       bullets: [
         "To run the team: sign-in, approvals, attendance and hours, calendar, reminders.",
-        "To send notifications you enabled and, when the team has set up email, account and approval messages.",
+        "To send notifications you enabled, including reminders a day and an hour before a shift you signed up for, and, when the team has set up email, account and approval messages.",
         "To keep the service secure, prevent abuse and keep an accountable record of admin actions.",
       ],
     },
@@ -56,7 +56,7 @@ export const PRIVACY: LegalDoc = {
       bullets: [
         "Members see their own hours, RSVPs, sign-ups and history, the calendar, and the leaderboard (display names and totals). On a sign-up sheet they also see the names of the teammates and parents signed up for each shift.",
         "Leads and admins see the roster, attendance, RSVPs, sign-ups and who is currently clocked in.",
-        "Admins also manage accounts, approvals, groups and who is in them, settings, exports and the audit log. Members see which groups a shift is reserved for, but not who is in a group.",
+        "Admins also manage accounts, approvals, groups and who is in them, settings, exports (including who signed up for which shift) and the audit log. Members see which groups a shift is reserved for, but not who is in a group.",
         "Parents see only the calendar and the hours, attendance and event changes of a student they are approved to view. They cannot see other members. Parents can sign up for shifts that are open to parents; they see how many places are filled but not who filled them.",
       ],
     },
