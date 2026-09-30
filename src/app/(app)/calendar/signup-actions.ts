@@ -1,12 +1,15 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { requireActionUser } from "@/lib/auth/current-user";
 import { parseForm, type FormState } from "@/lib/form";
 import { addSlot, cancelSlot, claimSlot, createSheet, leaveSlot, setSheetClosed, slotFormSchema, updateSlot } from "@/lib/signups";
 import { uuidSchema } from "@/lib/validation";
 
-const KEEP = ["title", "description", "startsAt", "endsAt", "capacity", "audience"];
+const KEEP = ["title", "description", "startsAt", "endsAt", "capacity", "audience", "opensToAllAt"];
+const groupIdsSchema = z.array(uuidSchema).max(20);
+const groupIdsOf = (fd: FormData) => groupIdsSchema.safeParse(fd.getAll("groupIds").filter((v): v is string => typeof v === "string"));
 
 function refresh(eventId: string) {
   revalidatePath(`/calendar/${eventId}`);
@@ -63,7 +66,9 @@ export async function addSlotAction(_: FormState, fd: FormData): Promise<FormSta
   if (!sheetId.success || !eventId.success) return { error: "Unknown sign-up sheet." };
   const parsed = parseForm(slotFormSchema, fd, { keepValues: KEEP });
   if (!parsed.ok) return parsed.state;
-  const r = await addSlot(user.id, sheetId.data, parsed.data);
+  const groupIds = groupIdsOf(fd);
+  if (!groupIds.success) return { error: "Pick groups from the list." };
+  const r = await addSlot(user.id, sheetId.data, { ...parsed.data, groupIds: groupIds.data });
   if (!r.ok) return { error: r.error, fieldErrors: r.field ? { [r.field]: r.error } : undefined, values: keptValues(fd) };
   refresh(eventId.data);
   return { success: "Shift added." };
@@ -76,7 +81,9 @@ export async function updateSlotAction(_: FormState, fd: FormData): Promise<Form
   if (!slotId.success || !eventId.success) return { error: "Unknown shift." };
   const parsed = parseForm(slotFormSchema, fd, { keepValues: KEEP });
   if (!parsed.ok) return parsed.state;
-  const r = await updateSlot(user.id, slotId.data, parsed.data);
+  const groupIds = groupIdsOf(fd);
+  if (!groupIds.success) return { error: "Pick groups from the list." };
+  const r = await updateSlot(user.id, slotId.data, { ...parsed.data, groupIds: groupIds.data });
   if (!r.ok) return { error: r.error, fieldErrors: r.field ? { [r.field]: r.error } : undefined, values: keptValues(fd) };
   refresh(eventId.data);
   return { success: "Saved." };

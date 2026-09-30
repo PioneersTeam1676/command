@@ -71,6 +71,13 @@
       "when": 1790782001864,
       "tag": "0009_signups",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790782539132,
+      "tag": "0010_groups_priority",
+      "breakpoints": true
     }
   ]
 }

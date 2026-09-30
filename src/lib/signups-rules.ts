@@ -38,3 +38,22 @@ export const CLOSED_MESSAGE: Record<SlotClosedReason, string> = {
   sheet_closed: "Sign-ups are closed for this event.",
   slot_over: "This shift is already over.",
 };
+
+export type GateResult =
+  | { state: "open" }
+  /** Reserved for a group, and stays that way. People outside it never see or take it. */
+  | { state: "group_only" }
+  /** The group has first pick until `opensAt`; after that it's open to everyone the audience allows. */
+  | { state: "early_access"; opensAt: Date };
+
+/**
+ * Group gate for one slot and one person. A slot with no groups is always open. A slot with groups is
+ * open to their members; everyone else waits for `opensToAllAt`, or never gets in when there isn't one.
+ */
+export function claimGate(input: { slotGroupIds: readonly string[]; opensToAllAt: Date | null; userGroupIds: readonly string[]; now: Date }): GateResult {
+  const { slotGroupIds, opensToAllAt, userGroupIds, now } = input;
+  if (slotGroupIds.length === 0) return { state: "open" };
+  if (slotGroupIds.some((g) => userGroupIds.includes(g))) return { state: "open" };
+  if (!opensToAllAt) return { state: "group_only" };
+  return now >= opensToAllAt ? { state: "open" } : { state: "early_access", opensAt: opensToAllAt };
+}

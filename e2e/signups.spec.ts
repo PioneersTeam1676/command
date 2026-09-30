@@ -4,6 +4,8 @@ import { signIn } from "./helpers";
 /** Runs after the phase specs (same database): relies on admin@school.edu and olly@gmail.com existing. */
 test.describe.configure({ mode: "serial" });
 
+let eventUrl = "";
+
 test("sign-up sheet: a lead builds shifts, a member claims, hits the overlap and full rules, and leaves", async ({ page, browser }) => {
   await signIn(page, "admin@school.edu");
   await page.goto("/calendar/new");
@@ -12,7 +14,7 @@ test("sign-up sheet: a lead builds shifts, a member claims, hits the overlap and
   await page.getByLabel("Ends").fill("2031-03-10T18:00");
   await page.getByRole("button", { name: "Create event" }).click();
   await expect(page.getByRole("heading", { name: "Regional" })).toBeVisible();
-  const eventUrl = page.url();
+  eventUrl = page.url();
 
   await page.getByRole("button", { name: "Add a sign-up sheet" }).click();
   await page.getByText("Add a shift").click();
@@ -65,4 +67,53 @@ test("sign-up sheet: a lead builds shifts, a member claims, hits the overlap and
   await member.reload();
   await expect(member.getByRole("button", { name: "Sign up" })).toHaveCount(0);
   await mCtx.close();
+});
+
+test("groups: an admin makes a group, reserves a shift with early access, and each person sees the right thing", async ({ page, browser }) => {
+  await signIn(page, "admin@school.edu");
+  await page.goto("/admin/groups");
+  await page.getByLabel("Name").fill("Super scouts");
+  await page.getByRole("button", { name: "Create group" }).click();
+  await expect(page.getByText("Group created")).toBeVisible();
+  await page.getByText("Add people", { exact: true }).click();
+  await page.getByLabel(/Olly Outsider/).check();
+  await page.getByRole("button", { name: "Add selected" }).click();
+  await expect(page.getByText("1 person", { exact: true })).toBeVisible();
+
+  // Team-wide names are unique, whatever the case.
+  await page.getByLabel("Name").first().fill("super SCOUTS");
+  await page.getByRole("button", { name: "Create group" }).click();
+  await expect(page.getByText("There's already a group with that name.").first()).toBeVisible();
+
+  await page.goto(eventUrl);
+  await page.getByRole("button", { name: "Reopen sign-ups" }).click();
+  await page.getByText("Add a shift").click();
+  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add shift" }) });
+  await form.getByLabel("Shift name").fill("Scouting lead");
+  await form.getByLabel("Starts").fill("2031-03-10T14:00");
+  await form.getByLabel("Ends").fill("2031-03-10T16:00");
+  await form.getByLabel("People needed").fill("2");
+  await form.getByLabel("Super scouts").check();
+  await form.getByLabel("Open to everyone at (optional)").fill("2031-03-09T08:00");
+  await form.getByRole("button", { name: "Add shift" }).click();
+  const item = (p: import("@playwright/test").Page) => p.getByRole("listitem").filter({ hasText: "Scouting lead" }).first();
+  await expect(item(page)).toBeVisible();
+  // The admin isn't in the group, so they see who has first pick and no sign-up button.
+  await expect(item(page)).toContainText("Super scouts has first pick");
+  await expect(item(page).getByRole("button", { name: "Sign up" })).toHaveCount(0);
+
+  const mCtx = await browser.newContext();
+  const member = await mCtx.newPage();
+  await signIn(member, "olly@gmail.com");
+  await member.goto(eventUrl);
+  await expect(item(member)).toContainText("Super scouts");
+  await item(member).getByRole("button", { name: "Sign up" }).click();
+  await expect(item(member).getByText("You're signed up")).toBeVisible();
+  await mCtx.close();
+
+  // A group can't be deleted while a shift is still reserved for it.
+  await page.goto("/admin/groups");
+  await page.getByRole("button", { name: "Delete group" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Delete group" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "still set on 1 shift" })).toBeVisible();
 });

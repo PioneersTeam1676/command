@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { roleFitsAudience, slotClosedReason, slotsOverlap } from "./signups-rules";
+import { claimGate, roleFitsAudience, slotClosedReason, slotsOverlap } from "./signups-rules";
 
 const at = (h: number, m = 0) => new Date(Date.UTC(2026, 6, 10, h, m));
 
@@ -43,5 +43,25 @@ describe("slotClosedReason", () => {
     expect(slotClosedReason({ ...slot, cancelledAt: at(1) }, { sheetClosedAt: at(1), eventCancelledAt: null }, at(8))).toBe("slot_cancelled");
     expect(slotClosedReason(slot, { sheetClosedAt: at(1), eventCancelledAt: at(1) }, at(8))).toBe("event_cancelled");
     expect(slotClosedReason(slot, { sheetClosedAt: at(1), eventCancelledAt: null }, at(8))).toBe("sheet_closed");
+  });
+});
+
+describe("claimGate", () => {
+  const base = { slotGroupIds: ["scouts"], opensToAllAt: null as Date | null, userGroupIds: [] as string[], now: at(9) };
+  it("is open when the slot has no groups", () => {
+    expect(claimGate({ ...base, slotGroupIds: [] })).toEqual({ state: "open" });
+  });
+  it("is open to a member of any listed group, before or after the window", () => {
+    expect(claimGate({ ...base, slotGroupIds: ["scouts", "drive"], userGroupIds: ["drive"], opensToAllAt: at(12) })).toEqual({ state: "open" });
+    expect(claimGate({ ...base, userGroupIds: ["scouts"] })).toEqual({ state: "open" });
+  });
+  it("keeps outsiders out for good when there is no opening time", () => {
+    expect(claimGate(base)).toEqual({ state: "group_only" });
+    expect(claimGate({ ...base, userGroupIds: ["other"] })).toEqual({ state: "group_only" });
+  });
+  it("gives the group first pick, then opens to everyone at the opening time", () => {
+    expect(claimGate({ ...base, opensToAllAt: at(12) })).toEqual({ state: "early_access", opensAt: at(12) });
+    expect(claimGate({ ...base, opensToAllAt: at(12), now: at(12) })).toEqual({ state: "open" });
+    expect(claimGate({ ...base, opensToAllAt: at(12), now: at(13) })).toEqual({ state: "open" });
   });
 });

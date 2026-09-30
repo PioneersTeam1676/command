@@ -431,6 +431,11 @@ export const signupSlots = pgTable(
     endsAt: ts("ends_at").notNull(),
     capacity: integer("capacity").notNull(),
     audience: text("audience").$type<SignupAudience>().notNull().default("anyone"),
+    /**
+     * With groups set: those groups get the slot first. Before this time only they can claim; after it
+     * everyone the audience allows can. Null means the slot stays group-only for good.
+     */
+    opensToAllAt: ts("opens_to_all_at"),
     position: integer("position").notNull().default(0),
     cancelledAt: ts("cancelled_at"),
     createdAt: createdAt(),
@@ -459,4 +464,37 @@ export const signupEntries = pgTable(
     uniqueIndex("signup_entries_slot_user_idx").on(t.slotId, t.userId),
     index("signup_entries_user_idx").on(t.userId),
   ],
+);
+
+/** Named sets of people (e.g. "Super scouts") that admins keep, used to give slots to certain people first. */
+export const groups = pgTable(
+  "groups",
+  {
+    id: id(),
+    name: text("name").notNull(),
+    description: text("description"),
+    createdAt: createdAt(),
+  },
+  (t) => [uniqueIndex("groups_name_lower_idx").on(sql`lower(${t.name})`)],
+);
+
+export const groupMembers = pgTable(
+  "group_members",
+  {
+    groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    addedAt: ts("added_at").notNull().defaultNow(),
+  },
+  (t) => [uniqueIndex("group_members_pair_idx").on(t.groupId, t.userId), index("group_members_user_idx").on(t.userId)],
+);
+
+/** Which groups a slot is reserved for. No rows means the slot isn't group-restricted. */
+export const signupSlotGroups = pgTable(
+  "signup_slot_groups",
+  {
+    slotId: uuid("slot_id").notNull().references(() => signupSlots.id, { onDelete: "cascade" }),
+    // No cascade on purpose: deleting a group that still gates a shift would silently open that shift to everyone.
+    groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "restrict" }),
+  },
+  (t) => [uniqueIndex("signup_slot_groups_pair_idx").on(t.slotId, t.groupId), index("signup_slot_groups_group_idx").on(t.groupId)],
 );

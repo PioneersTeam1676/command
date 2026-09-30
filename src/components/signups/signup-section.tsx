@@ -1,4 +1,4 @@
-import { ClipboardList, Lock, Users } from "lucide-react";
+import { ClipboardList, Lock, Star, Users } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -17,10 +17,11 @@ function slotTime(s: SlotView["slot"], tz: string) {
   return `${formatInTz(s.startsAt, tz, "EEE MMM d, h:mm a")} – ${sameDay ? formatInTz(s.endsAt, tz, "h:mm a") : formatInTz(s.endsAt, tz, "EEE MMM d, h:mm a")}`;
 }
 
-function Slot({ v, event, tz, staff }: { v: SlotView; event: EventRow; tz: string; staff: boolean }) {
+function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; tz: string; staff: boolean; groups: { id: string; name: string }[] }) {
   const { slot } = v;
   const full = v.filled >= slot.capacity;
   const cancelled = Boolean(slot.cancelledAt);
+  const groupNames = v.groups.map((g) => g.name).join(", ");
   return (
     <li className="space-y-3 rounded-[8px] border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -32,6 +33,7 @@ function Slot({ v, event, tz, staff }: { v: SlotView; event: EventRow; tz: strin
         <div className="flex flex-wrap items-center gap-2">
           {cancelled ? <Badge tone="error">Cancelled</Badge> : null}
           {slot.audience !== "anyone" ? <Badge tone="info">{AUDIENCE_LABEL[slot.audience]}</Badge> : null}
+          {v.groups.length > 0 ? <Badge tone="accent"><Star className="size-3" aria-hidden />{groupNames}</Badge> : null}
           <Badge tone={full ? "warning" : "success"}>
             <Users className="size-3" aria-hidden />
             {v.filled} of {slot.capacity}
@@ -48,6 +50,12 @@ function Slot({ v, event, tz, staff }: { v: SlotView; event: EventRow; tz: strin
             <Badge tone="success">You&apos;re signed up</Badge>
             <SlotButton action={leaveSlotAction} slotId={slot.id} eventId={event.id} label="Leave this shift" variant="secondary" />
           </div>
+        ) : v.gate.state === "early_access" ? (
+          <p className="text-sm md:text-[13px] text-muted">
+            <strong className="text-foreground">{groupNames}</strong> {v.groups.length === 1 ? "has" : "have"} first pick. Opens to everyone {formatInTz(v.gate.opensAt, tz, "EEE MMM d 'at' h:mm a")}.
+          </p>
+        ) : v.gate.state === "group_only" ? (
+          <p className="text-sm md:text-[13px] text-muted">Reserved for {groupNames}. Only they can sign up.</p>
         ) : full ? (
           <p className="text-sm md:text-[13px] text-muted">This shift is full.</p>
         ) : (
@@ -71,7 +79,17 @@ function Slot({ v, event, tz, staff }: { v: SlotView; event: EventRow; tz: strin
                 hidden={{ slotId: slot.id, eventId: event.id }}
                 tz={tz}
                 submitLabel="Save changes"
-                defaults={{ title: slot.title, description: slot.description ?? "", startsAt: toDatetimeLocal(slot.startsAt, tz), endsAt: toDatetimeLocal(slot.endsAt, tz), capacity: slot.capacity, audience: slot.audience }}
+                groups={groups}
+                defaults={{
+                  title: slot.title,
+                  description: slot.description ?? "",
+                  startsAt: toDatetimeLocal(slot.startsAt, tz),
+                  endsAt: toDatetimeLocal(slot.endsAt, tz),
+                  capacity: slot.capacity,
+                  audience: slot.audience,
+                  groupIds: v.groups.map((g) => g.id),
+                  opensToAllAt: slot.opensToAllAt ? toDatetimeLocal(slot.opensToAllAt, tz) : "",
+                }}
               />
             </div>
           </details>
@@ -94,7 +112,7 @@ function Slot({ v, event, tz, staff }: { v: SlotView; event: EventRow; tz: strin
  * The sign-up sheet on an event page. Members and parents see the shifts they may take; leads and
  * admins also see cancelled shifts and get the controls to build and close the sheet.
  */
-export function SignupSection({ event, view, tz, staff }: { event: EventRow; view: SignupView | null; tz: string; staff: boolean }) {
+export function SignupSection({ event, view, tz, staff, groups = [] }: { event: EventRow; view: SignupView | null; tz: string; staff: boolean; groups?: { id: string; name: string }[] }) {
   if (!view) {
     if (!staff || event.cancelledAt) return null;
     return (
@@ -131,7 +149,7 @@ export function SignupSection({ event, view, tz, staff }: { event: EventRow; vie
           </EmptyState>
         ) : (
           <ul className="space-y-3">
-            {slots.map((v) => <Slot key={v.slot.id} v={v} event={event} tz={tz} staff={staff} />)}
+            {slots.map((v) => <Slot key={v.slot.id} v={v} event={event} tz={tz} staff={staff} groups={groups} />)}
           </ul>
         )}
 
@@ -145,6 +163,7 @@ export function SignupSection({ event, view, tz, staff }: { event: EventRow; vie
                   hidden={{ sheetId: sheet.id, eventId: event.id }}
                   tz={tz}
                   submitLabel="Add shift"
+                  groups={groups}
                   resetOnSuccess
                   defaults={{ startsAt: toDatetimeLocal(event.startsAt, tz), endsAt: toDatetimeLocal(event.endsAt, tz) }}
                 />

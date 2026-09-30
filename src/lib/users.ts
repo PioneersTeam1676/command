@@ -1,6 +1,6 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { accessRequests, parentInvites, parentLinks, pushSubscriptions, sessions, users, type Role } from "@/db/schema";
+import { accessRequests, groupMembers, parentInvites, parentLinks, pushSubscriptions, sessions, users, type Role } from "@/db/schema";
 import { audit } from "@/lib/audit";
 import { smtpConfigured } from "@/lib/env";
 import { sendMail } from "@/lib/mail";
@@ -98,6 +98,7 @@ export async function erasePersonalData(actorId: string, userId: string): Promis
       .where(eq(users.id, userId));
     await tx.delete(sessions).where(eq(sessions.userId, userId));
     await tx.delete(pushSubscriptions).where(eq(pushSubscriptions.userId, userId));
+    await tx.delete(groupMembers).where(eq(groupMembers.userId, userId));
     await tx.delete(parentInvites).where(eq(parentInvites.studentId, userId));
     await tx
       .update(parentLinks)

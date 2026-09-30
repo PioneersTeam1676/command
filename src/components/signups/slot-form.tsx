@@ -11,6 +11,8 @@ export type SlotFormDefaults = {
   endsAt: string;
   capacity?: number;
   audience?: string;
+  groupIds?: string[];
+  opensToAllAt?: string;
 };
 
 /** Add or edit one shift. `hidden` carries the ids (sheetId/eventId, or slotId/eventId when editing). */
@@ -20,6 +22,7 @@ export function SlotForm({
   defaults,
   tz,
   submitLabel,
+  groups = [],
   resetOnSuccess = false,
 }: {
   action: (prev: FormState, fd: FormData) => Promise<FormState>;
@@ -27,6 +30,8 @@ export function SlotForm({
   defaults: SlotFormDefaults;
   tz: string;
   submitLabel: string;
+  /** Every group an admin has made. Empty hides the group controls. */
+  groups?: { id: string; name: string }[];
   resetOnSuccess?: boolean;
 }) {
   return (
@@ -48,6 +53,26 @@ export function SlotForm({
           options={(["anyone", "members", "parents"] as const).map((v) => ({ value: v, label: AUDIENCE_LABEL[v] }))}
         />
       </div>
+      {groups.length > 0 ? (
+        <fieldset className="space-y-3 rounded-[8px] border p-3">
+          <legend className="px-1 text-sm font-medium">Reserve for a group (optional)</legend>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            {groups.map((g) => (
+              <label key={g.id} className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="groupIds" value={g.id} defaultChecked={defaults.groupIds?.includes(g.id)} className="size-4 accent-[var(--accent)]" />
+                {g.name}
+              </label>
+            ))}
+          </div>
+          <TextField
+            name="opensToAllAt"
+            label="Open to everyone at (optional)"
+            type="datetime-local"
+            defaultValue={defaults.opensToAllAt}
+            help={`In ${tz}. Until then only the chosen groups can sign up. Leave blank to keep this shift just for them.`}
+          />
+        </fieldset>
+      ) : null}
       <TextAreaField name="description" label="Details (optional)" defaultValue={defaults.description} maxLength={1000} rows={2} />
       <SubmitButton pendingText="Saving…">{submitLabel}</SubmitButton>
     </ActionForm>
