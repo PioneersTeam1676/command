@@ -22,7 +22,6 @@ export function LicenseCard({ o, action }: { o: Overview; action: (prev: FormSta
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
           <div><dt className="text-sm md:text-[13px] text-muted">Last successful check</dt><dd className="font-mono text-sm md:text-[13px]">{o.lastSuccessAt ? format(o.lastSuccessAt, "MMM d, yyyy h:mm a") : "Never"}</dd></div>
           <div><dt className="text-sm md:text-[13px] text-muted">Next check</dt><dd className="font-mono text-sm md:text-[13px]">{o.nextHeartbeatAt ? format(o.nextHeartbeatAt, "MMM d, h:mm a") : "Soon"}</dd></div>
-          <div><dt className="text-sm md:text-[13px] text-muted">Registry</dt><dd className="font-mono text-sm md:text-[13px]">{o.registryHost}</dd></div>
           <div><dt className="text-sm md:text-[13px] text-muted">Version</dt><dd className="font-mono text-sm md:text-[13px]">{o.version}</dd></div>
           <div><dt className="text-sm md:text-[13px] text-muted">Checked files</dt><dd className="text-sm md:text-[13px]">{o.integrity.status === "ok" ? "Match this build" : o.integrity.status === "manifest_missing" ? "No build manifest (not a release build)" : `Changed: ${o.integrity.changed.join(", ")}`}</dd></div>
           <div><dt className="text-sm md:text-[13px] text-muted">Failed attempts in a row</dt><dd className="font-mono text-sm md:text-[13px]">{o.consecutiveFailures}</dd></div>
