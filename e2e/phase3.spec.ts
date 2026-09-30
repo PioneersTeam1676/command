@@ -5,9 +5,8 @@ import { signIn } from "./helpers";
 test.describe.configure({ mode: "serial" });
 
 async function teamTimezone(page: Page): Promise<string> {
-  await page.goto("/calendar");
-  const text = await page.getByText(/Times are shown in your team/).innerText();
-  return /\(([^)]+)\)/.exec(text)![1]!;
+  await page.goto("/admin/settings");
+  return page.getByLabel("Team timezone").inputValue();
 }
 
 /** `datetime-local` value for `now + minutes` in the given timezone. */
@@ -27,11 +26,16 @@ test("open clock-in and clock-out from the Home screen", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "Clock in" }).click();
   await expect(page.getByRole("button", { name: "Clock out" })).toBeVisible();
-  await expect(page.getByText(/automatically at/)).toBeVisible();
+  await expect(page.getByText(/Auto clock-out at/)).toBeVisible();
   await page.getByRole("button", { name: "Clock out" }).click();
-  await expect(page.getByText(/You already clocked out today/)).toBeVisible();
+  const note = page.getByRole("dialog", { name: "What did you work on?" });
+  await note.getByRole("textbox").fill("Wired the drivetrain");
+  await note.getByRole("button", { name: "Clock out" }).click();
+  await expect(page.getByText("Clocked out", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Clock in", exact: true })).toBeEnabled();
   await page.goto("/me/hours");
   await expect(page.getByText("Build season clock-in")).toBeVisible();
+  await expect(page.getByText("Wired the drivetrain")).toBeVisible();
 });
 
 test("rotating-code event check-in with a wrong code, the right code, then clock-out", async ({ page, browser }) => {
@@ -59,7 +63,8 @@ test("rotating-code event check-in with a wrong code, the right code, then clock
   const member = await mCtx.newPage();
   await signIn(member, "olly@gmail.com");
   await member.goto("/");
-  const card = member.locator("div.rounded-\\[8px\\]", { hasText: "Code Night" }).first();
+  const card = member.getByRole("region", { name: "Today", exact: true })
+    .locator("div.border", { has: member.getByRole("link", { name: /^Code Night/ }) });
   await card.getByLabel("Check-in code").fill(codeText === "000000" ? "111111" : "000000");
   await card.getByRole("button", { name: "Check in" }).click();
   await expect(member.getByText(/That code isn't right/)).toBeVisible();

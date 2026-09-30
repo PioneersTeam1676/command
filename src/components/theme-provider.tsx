@@ -1,28 +1,26 @@
 "use client";
-import { useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { ThemeProvider as NextThemes, useTheme } from "next-themes";
 
+const subscribe = () => () => undefined;
+const clientSnapshot = () => true;
+const serverSnapshot = () => false;
+
 /**
- * The static theme-color tags follow the phone's setting, not the theme picked in the app,
- * so a dark app on a light phone got a white status bar. Keep a single tag in step with the real theme.
+ * React owns this tag, including its updates during navigation. Removing metadata
+ * nodes imperatively breaks React's next commit and leaves the previous page on screen.
  */
 function ThemeColorSync() {
   const { resolvedTheme } = useTheme();
-  useEffect(() => {
-    if (!resolvedTheme) return;
-    const color = resolvedTheme === "dark" ? "#000000" : "#ffffff";
-    document.querySelectorAll('meta[name="theme-color"]').forEach((m) => m.remove());
-    const meta = document.createElement("meta");
-    meta.name = "theme-color";
-    meta.content = color;
-    document.head.appendChild(meta);
-  }, [resolvedTheme]);
-  return null;
+  // The saved theme is only known in the browser. Match the server on hydration
+  // so React adopts the existing tag instead of inserting a second one.
+  const mounted = useSyncExternalStore(subscribe, clientSnapshot, serverSnapshot);
+  return <meta name="theme-color" content={mounted && resolvedTheme === "dark" ? "#000000" : "#ffffff"} />;
 }
 
-export function ThemeProvider({ children }: { children: React.ReactNode }) {
+export function ThemeProvider({ children, nonce }: { children: React.ReactNode; nonce?: string }) {
   return (
-    <NextThemes attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <NextThemes attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange nonce={nonce}>
       <ThemeColorSync />
       {children}
     </NextThemes>

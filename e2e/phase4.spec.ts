@@ -65,6 +65,7 @@ test("notification preferences persist", async ({ page }) => {
   await expect(sw).toBeChecked();
   await sw.click();
   await expect(sw).not.toBeChecked();
+  await expect(sw).toBeEnabled(); // optimistic state appears before the save finishes
   await page.reload();
   await expect(page.getByRole("switch", { name: "Event reminder" })).not.toBeChecked();
   // Admin-only types are not offered to members.
@@ -79,13 +80,13 @@ test("the service worker serves recent pages offline and the offline page for un
   });
   // Visit again under the worker's control so the page is cached, and warm the calendar too.
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Hi, Olly/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /, Olly!$/ })).toBeVisible();
   await page.goto("/calendar");
   await expect(page.getByRole("heading", { name: "Calendar", exact: true })).toBeVisible();
 
   await context.setOffline(true);
   await page.goto("/");
-  await expect(page.getByRole("heading", { name: /Hi, Olly/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /, Olly!$/ })).toBeVisible();
   await page.goto("/calendar");
   await expect(page.getByRole("heading", { name: "Calendar", exact: true })).toBeVisible();
   await page.goto("/admin/people").catch(() => undefined);

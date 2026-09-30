@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
@@ -112,6 +112,9 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       toggle();
+    } else if (e.key === "ArrowLeft" || e.key === "ArrowRight") {
+      e.preventDefault();
+      save(e.key === "ArrowLeft");
     }
   };
   const items = navItems({ leaderboardEnabled, isStaff, isParent });
@@ -157,6 +160,10 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
           tabIndex={0}
           aria-orientation="vertical"
           aria-label="Resize sidebar"
+          aria-valuemin={RAIL}
+          aria-valuemax={FULL}
+          aria-valuenow={stored ? RAIL : FULL}
+          aria-valuetext={stored ? "Collapsed" : "Expanded"}
           onPointerDown={onDown}
           onPointerMove={onMove}
           onPointerUp={onUp}

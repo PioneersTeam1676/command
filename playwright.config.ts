@@ -9,6 +9,11 @@ const baseEnv = {
   SETUP_TOKEN: "e2e-setup-token-1234",
   DATA_DIR: "/tmp/command-e2e-data",
   NODE_ENV: "production",
+  // Keep local .env integrations out of the test app.
+  SMTP_HOST: "",
+  SMTP_FROM: "",
+  GOOGLE_CLIENT_ID: "",
+  GOOGLE_CLIENT_SECRET: "",
 };
 
 export default defineConfig({

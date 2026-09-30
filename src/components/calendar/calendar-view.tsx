@@ -124,7 +124,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine }: Prop
                     aria-current={d === today ? "date" : undefined}
                     className="flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-[6px] transition-colors hover:bg-surface md:mb-1 md:inline-flex md:min-h-0"
                   >
-                    <span className={cn("inline-flex size-8 items-center justify-center rounded-full text-sm tabular-nums md:size-6 md:text-xs", d === today ? "bg-accent font-semibold text-accent-fg" : inMonth ? "text-foreground" : "text-muted/60")}>
+                    <span className={cn("inline-flex size-8 items-center justify-center rounded-full text-sm tabular-nums md:size-6 md:text-xs", d === today ? "bg-accent font-semibold text-accent-fg" : inMonth ? "text-foreground" : "text-muted")}>
                       {Number(d.slice(8))}
                     </span>
                     <span aria-hidden className="flex h-1.5 items-center justify-center gap-0.5 md:hidden">

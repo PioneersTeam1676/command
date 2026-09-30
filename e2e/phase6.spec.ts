@@ -76,7 +76,7 @@ test("starting a new season archives the old one and resets the board", async ({
 test("LEADERBOARD_ENABLED=false hides it everywhere, including navigation", async ({ page }) => {
   await signIn(page, "olly@gmail.com"); // cookies are shared across ports and both servers use one database
   await page.goto(`${OFF}/`);
-  await expect(page.getByRole("heading", { name: /Hi, Olly/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /, Olly!$/ })).toBeVisible();
   await expect(page.getByRole("link", { name: "Leaderboard" })).toHaveCount(0);
   const res = await page.goto(`${OFF}/leaderboard`);
   expect(res?.status()).toBe(404);

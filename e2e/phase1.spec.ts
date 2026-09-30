@@ -38,7 +38,7 @@ test("setup wizard creates the first admin, then /setup is gone", async ({ page 
   await expect(page.getByText("The registry check (required)")).toBeVisible();
   await page.getByLabel(/I.ve read the license/).check();
   await page.getByRole("button", { name: "Finish setup" }).click();
-  await expect(page.getByRole("heading", { name: /Hi, Ada/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /, Ada!$/ })).toBeVisible();
 
   expect((await page.request.get("/setup")).status()).toBe(404);
 });
@@ -63,7 +63,7 @@ test("outsider signs up, waits, admin approves, outsider gets in", async ({ page
   await expect(admin.getByText("You're all caught up")).toBeVisible();
 
   await page.getByRole("link", { name: "Check status" }).click();
-  await expect(page.getByRole("heading", { name: /Hi, Olly/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /, Olly!$/ })).toBeVisible();
   await adminCtx.close();
 });
 
