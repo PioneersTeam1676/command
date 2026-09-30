@@ -117,3 +117,42 @@ test("groups: an admin makes a group, reserves a shift with early access, and ea
   await page.getByRole("dialog").getByRole("button", { name: "Delete group" }).click();
   await expect(page.getByRole("alert").filter({ hasText: "still set on 1 shift" })).toBeVisible();
 });
+
+test("waitlist: a full shift queues the next person, and leaving promotes them", async ({ page, browser }) => {
+  await signIn(page, "admin@school.edu");
+  await page.goto(eventUrl);
+  await page.getByText("Add a shift").click();
+  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add shift" }) });
+  await form.getByLabel("Shift name").fill("Last one");
+  await form.getByLabel("Starts").fill("2031-03-10T17:00");
+  await form.getByLabel("Ends").fill("2031-03-10T18:00");
+  await form.getByLabel("People needed").fill("1");
+  await expect(form.getByLabel("Keep a waitlist")).toBeChecked();
+  await form.getByRole("button", { name: "Add shift" }).click();
+  const item = (p: import("@playwright/test").Page) => p.getByRole("listitem").filter({ hasText: "Last one" }).first();
+  await expect(item(page)).toBeVisible();
+
+  const mCtx = await browser.newContext();
+  const member = await mCtx.newPage();
+  await signIn(member, "olly@gmail.com");
+  await member.goto(eventUrl);
+  await item(member).getByRole("button", { name: "Sign up" }).click();
+  await expect(item(member).getByText("You're signed up")).toBeVisible();
+
+  await page.reload();
+  await expect(item(page)).toContainText("1 of 1 · Full");
+  await item(page).getByRole("button", { name: "Join the waitlist" }).click();
+  await expect(item(page).getByText("On the waitlist · number 1")).toBeVisible();
+  await page.reload();
+  await expect(item(page).getByText("On the waitlist · number 1")).toBeVisible();
+
+  await member.reload();
+  await item(member).getByRole("button", { name: "Leave this shift" }).click();
+  // Once the leave has landed the admin holds the place, so the member is offered the waitlist.
+  await expect(item(member).getByRole("button", { name: "Join the waitlist" })).toBeVisible();
+
+  await page.reload();
+  await expect(item(page).getByText("You're signed up")).toBeVisible();
+  await expect(item(page)).not.toContainText("waitlist ·");
+  await mCtx.close();
+});

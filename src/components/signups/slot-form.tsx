@@ -13,6 +13,7 @@ export type SlotFormDefaults = {
   audience?: string;
   groupIds?: string[];
   opensToAllAt?: string;
+  waitlistEnabled?: boolean;
 };
 
 /** Add or edit one shift. `hidden` carries the ids (sheetId/eventId, or slotId/eventId when editing). */
@@ -73,6 +74,13 @@ export function SlotForm({
           />
         </fieldset>
       ) : null}
+      <label className="flex items-start gap-3 text-sm">
+        <input type="checkbox" name="waitlistEnabled" defaultChecked={defaults.waitlistEnabled ?? true} className="mt-1 size-4 accent-[var(--accent)]" />
+        <span>
+          <span className="font-medium">Keep a waitlist</span>
+          <span className="block text-sm md:text-[13px] text-muted">When the shift is full, people can queue. If someone drops out, the next person in line gets the place and a notification.</span>
+        </span>
+      </label>
       <TextAreaField name="description" label="Details (optional)" defaultValue={defaults.description} maxLength={1000} rows={2} />
       <SubmitButton pendingText="Saving…">{submitLabel}</SubmitButton>
     </ActionForm>

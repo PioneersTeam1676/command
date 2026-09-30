@@ -39,17 +39,27 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
             {v.filled} of {slot.capacity}
             {full ? " · Full" : ""}
           </Badge>
+          {v.waitlisted > 0 ? <Badge>{v.waitlisted} waiting</Badge> : null}
         </div>
       </div>
 
       {!cancelled ? (
-        v.closed ? (
-          <p className="text-sm md:text-[13px] text-muted">{v.mine ? "You're signed up. " : ""}{CLOSED_MESSAGE[v.closed]}</p>
-        ) : v.mine ? (
-          <div className="flex flex-wrap items-center gap-3">
-            <Badge tone="success">You&apos;re signed up</Badge>
-            <SlotButton action={leaveSlotAction} slotId={slot.id} eventId={event.id} label="Leave this shift" variant="secondary" />
-          </div>
+        v.mine ? (
+          v.closed ? (
+            <p className="text-sm md:text-[13px] text-muted">{v.mine.status === "waitlisted" ? "You're on the waitlist. " : "You're signed up. "}{CLOSED_MESSAGE[v.closed]}</p>
+          ) : v.mine.status === "waitlisted" ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge tone="warning">On the waitlist · number {v.myPosition}</Badge>
+              <SlotButton action={leaveSlotAction} slotId={slot.id} eventId={event.id} label="Leave the waitlist" variant="secondary" />
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge tone="success">You&apos;re signed up</Badge>
+              <SlotButton action={leaveSlotAction} slotId={slot.id} eventId={event.id} label="Leave this shift" variant="secondary" />
+            </div>
+          )
+        ) : v.closed ? (
+          <p className="text-sm md:text-[13px] text-muted">{CLOSED_MESSAGE[v.closed]}</p>
         ) : v.gate.state === "early_access" ? (
           <p className="text-sm md:text-[13px] text-muted">
             <strong className="text-foreground">{groupNames}</strong> {v.groups.length === 1 ? "has" : "have"} first pick. Opens to everyone {formatInTz(v.gate.opensAt, tz, "EEE MMM d 'at' h:mm a")}.
@@ -57,10 +67,23 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
         ) : v.gate.state === "group_only" ? (
           <p className="text-sm md:text-[13px] text-muted">Reserved for {groupNames}. Only they can sign up.</p>
         ) : full ? (
-          <p className="text-sm md:text-[13px] text-muted">This shift is full.</p>
+          slot.waitlistEnabled ? (
+            <div className="space-y-1">
+              <SlotButton action={claimSlotAction} slotId={slot.id} eventId={event.id} label="Join the waitlist" variant="secondary" />
+              <p className="text-sm md:text-[13px] text-muted">It&apos;s full. If someone drops out, the next person in line gets the place.</p>
+            </div>
+          ) : (
+            <p className="text-sm md:text-[13px] text-muted">This shift is full.</p>
+          )
         ) : (
           <SlotButton action={claimSlotAction} slotId={slot.id} eventId={event.id} label="Sign up" />
         )
+      ) : null}
+
+      {v.queue && v.queue.length > 0 ? (
+        <p className="text-sm md:text-[13px] text-muted">
+          <span className="font-medium text-foreground">Waitlist:</span> {v.queue.map((q, i) => `${i + 1}. ${q.name}`).join(", ")}
+        </p>
       ) : null}
 
       {v.roster && v.roster.length > 0 ? (
@@ -89,6 +112,7 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
                   audience: slot.audience,
                   groupIds: v.groups.map((g) => g.id),
                   opensToAllAt: slot.opensToAllAt ? toDatetimeLocal(slot.opensToAllAt, tz) : "",
+                  waitlistEnabled: slot.waitlistEnabled,
                 }}
               />
             </div>

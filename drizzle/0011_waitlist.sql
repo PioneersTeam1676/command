@@ -1,0 +1,1 @@
+ALTER TABLE "signup_slots" ADD COLUMN "waitlist_enabled" boolean DEFAULT true NOT NULL;

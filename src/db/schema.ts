@@ -436,6 +436,8 @@ export const signupSlots = pgTable(
      * everyone the audience allows can. Null means the slot stays group-only for good.
      */
     opensToAllAt: ts("opens_to_all_at"),
+    /** When full, new people can queue. Turning it off keeps whoever is already queued (they still get promoted). */
+    waitlistEnabled: boolean("waitlist_enabled").notNull().default(true),
     position: integer("position").notNull().default(0),
     cancelledAt: ts("cancelled_at"),
     createdAt: createdAt(),

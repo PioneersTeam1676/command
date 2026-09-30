@@ -64,7 +64,7 @@ describe.skipIf(!hasTestDb)("sign-ups: sheets, slots, claiming", () => {
 
   it("lets members claim up to capacity, then says it's full", async () => {
     const s = await import("./signups");
-    const slot = await s.addSlot(u.lead!, sheetId, slotInput({ title: "Morning", capacity: 2 }));
+    const slot = await s.addSlot(u.lead!, sheetId, slotInput({ title: "Morning", capacity: 2, waitlistEnabled: false }));
     if (!slot.ok) throw new Error("slot");
     expect((await s.claimSlot(viewer("m1"), slot.id)).ok).toBe(true);
     expect((await s.claimSlot(viewer("m2"), slot.id)).ok).toBe(true);
@@ -74,7 +74,7 @@ describe.skipIf(!hasTestDb)("sign-ups: sheets, slots, claiming", () => {
 
   it("never gives the last place to two people racing for it", async () => {
     const s = await import("./signups");
-    const slot = await s.addSlot(u.lead!, sheetId, slotInput({ title: "Race", startsAt: inDays(5, 14), endsAt: inDays(5, 15), capacity: 1 }));
+    const slot = await s.addSlot(u.lead!, sheetId, slotInput({ title: "Race", startsAt: inDays(5, 14), endsAt: inDays(5, 15), capacity: 1, waitlistEnabled: false }));
     if (!slot.ok) throw new Error("slot");
     const results = await Promise.all([s.claimSlot(viewer("m1"), slot.id), s.claimSlot(viewer("m2"), slot.id), s.claimSlot(viewer("m3"), slot.id)]);
     expect(results.filter((r) => r.ok)).toHaveLength(1);
@@ -132,7 +132,7 @@ describe.skipIf(!hasTestDb)("sign-ups: sheets, slots, claiming", () => {
 
   it("lets people leave until the shift starts, and frees the place", async () => {
     const s = await import("./signups");
-    const slot = await s.addSlot(u.lead!, sheetId, slotInput({ title: "Leave", startsAt: inDays(8, 9), endsAt: inDays(8, 10), capacity: 1 }));
+    const slot = await s.addSlot(u.lead!, sheetId, slotInput({ title: "Leave", startsAt: inDays(8, 9), endsAt: inDays(8, 10), capacity: 1, waitlistEnabled: false }));
     if (!slot.ok) throw new Error("slot");
     await s.claimSlot(viewer("m1"), slot.id);
     expect((await s.claimSlot(viewer("m2"), slot.id)).ok).toBe(false);

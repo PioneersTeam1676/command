@@ -27,7 +27,8 @@ export async function claimSlotAction(_: FormState, fd: FormData): Promise<FormS
   if (!slotId.success || !eventId.success) return { error: "Unknown shift." };
   const r = await claimSlot({ id: user.id, role: user.role }, slotId.data);
   refresh(eventId.data);
-  return r.ok ? { success: "You're signed up." } : { error: r.error };
+  if (!r.ok) return { error: r.error };
+  return { success: r.status === "waitlisted" ? `This shift is full, so you're number ${r.position} on the waitlist. We'll let you know if a place opens.` : "You're signed up." };
 }
 
 export async function leaveSlotAction(_: FormState, fd: FormData): Promise<FormState> {
@@ -37,7 +38,7 @@ export async function leaveSlotAction(_: FormState, fd: FormData): Promise<FormS
   if (!slotId.success || !eventId.success) return { error: "Unknown shift." };
   const r = await leaveSlot({ id: user.id, role: user.role }, slotId.data);
   refresh(eventId.data);
-  return r.ok ? { success: "You've been taken off this shift." } : { error: r.error };
+  return r.ok ? { success: "Done. You're no longer on this shift." } : { error: r.error };
 }
 
 // ---------- Leads and admins ----------
