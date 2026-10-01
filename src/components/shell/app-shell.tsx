@@ -52,19 +52,20 @@ function Brand({ teamName, logoUrl, href = "/" }: { teamName: string; logoUrl?: 
   );
 }
 
-function SidebarLink({ item, active }: { item: NavItem; active: boolean }) {
+function SidebarLink({ item, active, rail }: { item: NavItem; active: boolean; rail: boolean }) {
   return (
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
       title={item.label}
       className={cn(
-        "flex min-h-10 items-center gap-3 whitespace-nowrap rounded-[6px] px-4 text-sm transition-colors duration-150",
+        "flex min-h-10 items-center gap-3 whitespace-nowrap rounded-[6px] text-sm transition-colors duration-150",
+        rail ? "justify-center px-0" : "px-4",
         active ? "bg-accent-subtle font-medium text-foreground" : "text-muted hover:bg-surface hover:text-foreground",
       )}
     >
       <item.Icon className="size-4 shrink-0" aria-hidden />
-      {item.label}
+      <span className={rail ? "sr-only" : undefined}>{item.label}</span>
     </Link>
   );
 }
@@ -130,8 +131,8 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
         Skip to content
       </a>
       <aside className="sticky top-0 hidden h-dvh min-w-0 flex-col gap-6 overflow-hidden border-r bg-surface/50 px-2 py-4 md:flex">
-        <div className="flex items-center justify-between gap-2 pl-2.5">
-          <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />
+        <div className={cn("flex items-center gap-2", stored ? "justify-center" : "justify-between pl-2.5")}>
+          {stored ? null : <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />}
           <button
             type="button"
             onClick={toggle}
@@ -144,14 +145,14 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
         </div>
         <nav aria-label="Main" className="flex flex-col gap-1">
           {all.map((item) => (
-            <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} />
+            <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} rail={stored} />
           ))}
         </nav>
         {isParent ? (
           <form action={logoutAction} className="mt-auto">
-            <button type="submit" title="Sign out" className="flex min-h-10 w-full items-center gap-3 whitespace-nowrap rounded-[6px] px-4 text-sm text-muted transition-colors duration-150 hover:bg-surface hover:text-foreground">
+            <button type="submit" title="Sign out" className={cn("flex min-h-10 w-full items-center gap-3 whitespace-nowrap rounded-[6px] text-sm text-muted transition-colors duration-150 hover:bg-surface hover:text-foreground", stored ? "justify-center px-0" : "px-4")}>
               <LogOut className="size-4 shrink-0" aria-hidden />
-              Sign out
+              <span className={stored ? "sr-only" : undefined}>Sign out</span>
             </button>
           </form>
         ) : null}
