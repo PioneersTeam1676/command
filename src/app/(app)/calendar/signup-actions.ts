@@ -4,11 +4,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActionUser } from "@/lib/auth/current-user";
 import { parseForm, type FormState } from "@/lib/form";
+import { addSlotsBulk, bulkSchema, copySheet } from "@/lib/signup-tools";
 import { assignGroup, assignPeople, notifyFirstPickById, nudgeSheet, removeEntry } from "@/lib/signup-admin";
 import { addSlot, cancelSlot, claimSlot, createSheet, leaveSlot, setSheetClosed, slotFormSchema, updateSlot } from "@/lib/signups";
 import { uuidSchema } from "@/lib/validation";
 
-const KEEP = ["title", "description", "startsAt", "endsAt", "capacity", "audience", "opensToAllAt"];
+const KEEP = ["kind", "title", "description", "startsAt", "endsAt", "capacity", "audience", "opensToAllAt"];
 const groupIdsSchema = z.array(uuidSchema).max(20);
 const groupIdsOf = (fd: FormData) => groupIdsSchema.safeParse(fd.getAll("groupIds").filter((v): v is string => typeof v === "string"));
 
@@ -26,7 +27,8 @@ export async function claimSlotAction(_: FormState, fd: FormData): Promise<FormS
   const slotId = uuidSchema.safeParse(fd.get("slotId"));
   const eventId = uuidSchema.safeParse(fd.get("eventId"));
   if (!slotId.success || !eventId.success) return { error: "Unknown shift." };
-  const r = await claimSlot({ id: user.id, role: user.role }, slotId.data);
+  const note = typeof fd.get("note") === "string" ? String(fd.get("note")) : undefined;
+  const r = await claimSlot({ id: user.id, role: user.role }, slotId.data, new Date(), note);
   refresh(eventId.data);
   if (!r.ok) return { error: r.error };
   return { success: r.status === "waitlisted" ? `This shift is full, so you're number ${r.position} on the waitlist. We'll let you know if a place opens.` : "You're signed up." };
@@ -143,4 +145,27 @@ export async function nudgeAction(_: FormState, fd: FormData): Promise<FormState
   if (!r.ok) return { error: r.error };
   if (r.alreadyToday) return { success: "Everyone who hasn't signed up was already reminded today. Try again tomorrow." };
   return { success: r.reminded === 0 ? "Everyone who can sign up already has." : `Reminded ${r.reminded} ${r.reminded === 1 ? "person" : "people"}.` };
+}
+
+export async function addSlotsBulkAction(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireActionUser("lead");
+  const sheetId = uuidSchema.safeParse(fd.get("sheetId"));
+  const eventId = uuidSchema.safeParse(fd.get("eventId"));
+  if (!sheetId.success || !eventId.success) return { error: "Unknown sign-up sheet." };
+  const keep = ["title", "startsAt", "endsAt", "minutes", "capacity", "audience"];
+  const parsed = parseForm(bulkSchema, fd, { keepValues: keep });
+  if (!parsed.ok) return parsed.state;
+  const r = await addSlotsBulk(user.id, sheetId.data, parsed.data);
+  refresh(eventId.data);
+  if (!r.ok) return { error: r.error, fieldErrors: r.field ? { [r.field]: r.error } : undefined, values: Object.fromEntries(keep.map((k) => [k, String(fd.get(k) ?? "")])) };
+  return { success: `Added ${r.count} shifts.` };
+}
+
+export async function copySheetAction(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireActionUser("lead");
+  const p = z.object({ fromEventId: uuidSchema, toEventId: uuidSchema }).safeParse(Object.fromEntries(fd));
+  if (!p.success) return { error: "Pick an event to copy from." };
+  const r = await copySheet(user.id, p.data.fromEventId, p.data.toEventId);
+  refresh(p.data.toEventId);
+  return r.ok ? { success: `Copied ${r.count} ${r.count === 1 ? "spot" : "spots"}.` } : { error: r.error };
 }

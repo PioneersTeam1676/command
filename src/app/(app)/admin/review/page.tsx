@@ -137,7 +137,7 @@ export default async function ReviewPage() {
                       <div className="space-y-1.5">
                         <Label htmlFor={`role-${r.id}`}>Role</Label>
                         <Select id={`role-${r.id}`} name="role" defaultValue="member">
-                          <option value="member">Member: can clock in and RSVP</option>
+                          <option value="member">Member: can clock in and sign up</option>
                           <option value="lead">Lead: can also manage events and attendance</option>
                           <option value="admin">Admin: can manage everything</option>
                         </Select>

@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 const ITEMS = [
   { kind: "hours", title: "Hours per member", text: "One row per member with their total hours, days and events for the season." },
   { kind: "attendance", title: "Attendance per event", text: "Every clock-in and check-in, one row each, with who, when, and whether it counted." },
-  { kind: "rsvps", title: "RSVPs per event", text: "Who said Going, Maybe or Can't go for each event, and why." },
+  { kind: "rsvps", title: "Who's coming, per event", text: "Everyone who signed up to attend each event, with the note they left." },
   { kind: "signups", title: "Shift sign-ups", text: "Every shift on every event with who holds a place or is on the waitlist, and whether they signed up or a lead placed them." },
 ] as const;
 

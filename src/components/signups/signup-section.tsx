@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SlotButton } from "@/components/signups/slot-button";
+import { BulkForm } from "@/components/signups/bulk-form";
+import { CopyForm } from "@/components/signups/copy-form";
 import { SlotForm } from "@/components/signups/slot-form";
-import { addSlotAction, cancelSlotAction, claimSlotAction, createSheetAction, leaveSlotAction, toggleSheetAction, updateSlotAction } from "@/app/(app)/calendar/signup-actions";
+import { addSlotAction, addSlotsBulkAction, cancelSlotAction, copySheetAction, claimSlotAction, createSheetAction, leaveSlotAction, toggleSheetAction, updateSlotAction } from "@/app/(app)/calendar/signup-actions";
 import type { EventRow } from "@/lib/events";
 import type { SignupView, SlotView } from "@/lib/signups";
 import { AUDIENCE_LABEL, CLOSED_MESSAGE } from "@/lib/signups-rules";
@@ -19,6 +21,7 @@ function slotTime(s: SlotView["slot"], tz: string) {
 
 function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; tz: string; staff: boolean; groups: { id: string; name: string }[] }) {
   const { slot } = v;
+  const item = slot.kind === "item";
   const full = v.filled >= slot.capacity;
   const cancelled = Boolean(slot.cancelledAt);
   const groupNames = v.groups.map((g) => g.name).join(", ");
@@ -27,7 +30,7 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <p className={`text-[15px] font-medium ${cancelled ? "text-muted line-through" : ""}`}>{slot.title}</p>
-          <p className="font-mono text-sm md:text-[13px] text-muted">{slotTime(slot, tz)}</p>
+          {item ? null : <p className="font-mono text-sm md:text-[13px] text-muted">{slotTime(slot, tz)}</p>}
           {slot.description ? <p className="text-sm md:text-[13px] text-foreground/90">{slot.description}</p> : null}
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -36,8 +39,8 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
           {v.groups.length > 0 ? <Badge tone="accent"><Star className="size-3" aria-hidden />{groupNames}</Badge> : null}
           <Badge tone={full ? "warning" : "success"}>
             <Users className="size-3" aria-hidden />
-            {v.filled} of {slot.capacity}
-            {full ? " · Full" : ""}
+            {v.filled} of {slot.capacity}{item ? " claimed" : ""}
+            {full ? (item ? " · Covered" : " · Full") : ""}
           </Badge>
           {v.waitlisted > 0 ? <Badge>{v.waitlisted} waiting</Badge> : null}
         </div>
@@ -54,8 +57,8 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-3">
-              <Badge tone="success">You&apos;re signed up</Badge>
-              <SlotButton action={leaveSlotAction} slotId={slot.id} eventId={event.id} label="Leave this shift" variant="secondary" />
+              <Badge tone="success">{item ? "You're bringing this" : "You're signed up"}</Badge>
+              <SlotButton action={leaveSlotAction} slotId={slot.id} eventId={event.id} label={item ? "I can't bring this" : "Leave this shift"} variant="secondary" />
             </div>
           )
         ) : v.closed ? (
@@ -73,10 +76,10 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
               <p className="text-sm md:text-[13px] text-muted">It&apos;s full. If someone drops out, the next person in line gets the place.</p>
             </div>
           ) : (
-            <p className="text-sm md:text-[13px] text-muted">This shift is full.</p>
+            <p className="text-sm md:text-[13px] text-muted">{item ? "Someone is already bringing this." : "This shift is full."}</p>
           )
         ) : (
-          <SlotButton action={claimSlotAction} slotId={slot.id} eventId={event.id} label="Sign up" />
+          <SlotButton action={claimSlotAction} slotId={slot.id} eventId={event.id} label={item ? "I'll bring this" : "Sign up"} withNote />
         )
       ) : null}
 
@@ -88,14 +91,14 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
 
       {v.roster && v.roster.length > 0 ? (
         <p className="text-sm md:text-[13px] text-muted">
-          <span className="font-medium text-foreground">Signed up:</span> {v.roster.map((r) => r.name).join(", ")}
+          <span className="font-medium text-foreground">{item ? "Bringing:" : "Signed up:"}</span> {v.roster.map((r) => (r.note ? `${r.name} (${r.note})` : r.name)).join(", ")}
         </p>
       ) : null}
 
       {staff && !cancelled ? (
         <div className="flex flex-wrap items-start gap-2 border-t pt-3">
           <details className="w-full">
-            <summary className="cursor-pointer text-sm md:text-[13px] text-muted hover:text-foreground">Edit this shift</summary>
+            <summary className="cursor-pointer text-sm md:text-[13px] text-muted hover:text-foreground">{item ? "Edit this item" : "Edit this shift"}</summary>
             <div className="mt-3">
               <SlotForm
                 action={updateSlotAction}
@@ -103,7 +106,9 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
                 tz={tz}
                 submitLabel="Save changes"
                 groups={groups}
+                lockKind
                 defaults={{
+                  kind: slot.kind === "item" ? "item" : "shift",
                   title: slot.title,
                   description: slot.description ?? "",
                   startsAt: toDatetimeLocal(slot.startsAt, tz),
@@ -118,11 +123,11 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
             </div>
           </details>
           <ConfirmAction
-            label="Cancel shift"
+            label={item ? "Remove item" : "Cancel shift"}
             danger
-            title={`Cancel “${slot.title}”?`}
+            title={`${item ? "Remove" : "Cancel"} “${slot.title}”?`}
             description={v.filled > 0 ? `${v.filled} ${v.filled === 1 ? "person is" : "people are"} signed up. They'll all get a notification. This can't be undone.` : "Nobody has signed up yet. This can't be undone."}
-            confirmLabel="Cancel shift"
+            confirmLabel={item ? "Remove item" : "Cancel shift"}
             action={cancelSlotAction}
             fields={{ slotId: slot.id, eventId: event.id }}
           />
@@ -133,66 +138,95 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
 }
 
 /**
- * The sign-up sheet on an event page. Members and parents see the shifts they may take; leads and
- * admins also see cancelled shifts and get the controls to build and close the sheet.
+ * Shifts and things to bring on an event page (the "I'm going" spot has its own card). Members and parents see what they
+ * may take; leads and admins also see cancelled spots and get the controls to build, copy and close the sheet.
  */
-export function SignupSection({ event, view, tz, staff, groups = [] }: { event: EventRow; view: SignupView | null; tz: string; staff: boolean; groups?: { id: string; name: string }[] }) {
-  if (!view) {
+export function SignupSection({
+  event,
+  view,
+  tz,
+  staff,
+  groups = [],
+  copySources = [],
+}: {
+  event: EventRow;
+  view: SignupView | null;
+  tz: string;
+  staff: boolean;
+  groups?: { id: string; name: string }[];
+  copySources?: { value: string; label: string }[];
+}) {
+  const spots = view?.slots.filter((v) => v.slot.kind !== "attend") ?? [];
+  if (!view || (spots.length === 0 && !staff) || (staff && event.cancelledAt && spots.length === 0)) {
     if (!staff || event.cancelledAt) return null;
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><ClipboardList className="size-4" aria-hidden />Sign-ups</CardTitle>
-          <CardDescription>Need people for shifts, like pit crew or a booth? Add a sign-up sheet and let the team and parents pick their spots.</CardDescription>
+          <CardTitle className="flex items-center gap-2"><ClipboardList className="size-4" aria-hidden />Need helpers?</CardTitle>
+          <CardDescription>Set up shifts (pit crew, a booth) or things to bring (drinks, a table). People pick their spots, you see who&apos;s covered.</CardDescription>
         </CardHeader>
         <CardContent>
           <form action={createSheetAction}>
             <input type="hidden" name="eventId" value={event.id} />
-            <Button type="submit" variant="secondary">Add a sign-up sheet</Button>
+            <Button type="submit" variant="secondary">Add shifts or things to bring</Button>
           </form>
         </CardContent>
       </Card>
     );
   }
 
-  const { sheet, slots } = view;
+  const { sheet } = view;
   const closed = Boolean(sheet.closedAt);
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2"><ClipboardList className="size-4" aria-hidden />{sheet.title}</CardTitle>
+          <CardTitle className="flex items-center gap-2"><ClipboardList className="size-4" aria-hidden />Shifts &amp; things to bring</CardTitle>
           {closed ? <Badge tone="warning"><Lock className="size-3" aria-hidden />Closed</Badge> : null}
         </div>
         {sheet.description ? <CardDescription>{sheet.description}</CardDescription> : null}
       </CardHeader>
       <CardContent className="space-y-4">
-        {slots.length === 0 ? (
-          <EmptyState icon={<ClipboardList aria-hidden />} title="No shifts yet">
-            {staff ? "Add the first shift below." : "Check back soon. Shifts you can take will show up here."}
+        {spots.length === 0 ? (
+          <EmptyState icon={<ClipboardList aria-hidden />} title="Nothing here yet">
+            Add the first shift or item below.
           </EmptyState>
         ) : (
           <ul className="space-y-3">
-            {slots.map((v) => <Slot key={v.slot.id} v={v} event={event} tz={tz} staff={staff} groups={groups} />)}
+            {spots.map((v) => <Slot key={v.slot.id} v={v} event={event} tz={tz} staff={staff} groups={groups} />)}
           </ul>
         )}
 
         {staff && !event.cancelledAt ? (
           <div className="space-y-3 border-t pt-4">
             <details>
-              <summary className="cursor-pointer text-sm font-medium">Add a shift</summary>
+              <summary className="cursor-pointer text-sm font-medium">Add one shift or item</summary>
               <div className="mt-3">
                 <SlotForm
                   action={addSlotAction}
                   hidden={{ sheetId: sheet.id, eventId: event.id }}
                   tz={tz}
-                  submitLabel="Add shift"
+                  submitLabel="Add"
                   groups={groups}
                   resetOnSuccess
                   defaults={{ startsAt: toDatetimeLocal(event.startsAt, tz), endsAt: toDatetimeLocal(event.endsAt, tz) }}
                 />
               </div>
             </details>
+            <details>
+              <summary className="cursor-pointer text-sm font-medium">Add many shifts at once</summary>
+              <div className="mt-3">
+                <BulkForm action={addSlotsBulkAction} hidden={{ sheetId: sheet.id, eventId: event.id }} tz={tz} defaults={{ startsAt: toDatetimeLocal(event.startsAt, tz), endsAt: toDatetimeLocal(event.endsAt, tz) }} />
+              </div>
+            </details>
+            {copySources.length > 0 ? (
+              <details>
+                <summary className="cursor-pointer text-sm font-medium">Copy from another event</summary>
+                <div className="mt-3">
+                  <CopyForm action={copySheetAction} toEventId={event.id} sources={copySources} />
+                </div>
+              </details>
+            ) : null}
             <form action={toggleSheetAction}>
               <input type="hidden" name="sheetId" value={sheet.id} />
               <input type="hidden" name="eventId" value={event.id} />

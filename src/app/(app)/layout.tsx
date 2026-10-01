@@ -6,6 +6,7 @@ import { getCurrentUser, requireUser, isStaff, roleAtLeast } from "@/lib/auth/cu
 import { getEnv } from "@/lib/env";
 import { myDeviceCount } from "@/lib/push-devices";
 import { getSettings, isSetupComplete } from "@/lib/settings";
+import { isShopOpen } from "@/lib/shop-rules";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   // The home URL is public for signed-out visitors (the page renders the landing content itself).
@@ -19,6 +20,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       logoUrl={settings.logoPath ? "/api/logo" : null}
       leaderboardEnabled={getEnv().LEADERBOARD_ENABLED}
       isStaff={isStaff(user)}
+      shopOpen={isShopOpen(settings)}
       banner={
         <>
           <RegistryBanner isAdmin={roleAtLeast(user.role, "admin")} />

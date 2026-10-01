@@ -26,7 +26,7 @@ export function Landing() {
         <ul className="grid gap-4 sm:grid-cols-3">
           {[
             { Icon: Clock, title: "Attendance & hours", body: "Members clock in and out, and leads approve time." },
-            { Icon: CalendarDays, title: "Events & RSVPs", body: "A shared calendar with reminders and check-in." },
+            { Icon: CalendarDays, title: "Events & sign-ups", body: "A shared calendar with reminders and check-in." },
             { Icon: Users, title: "Members & parents", body: "Rosters, approvals and updates for families." },
           ].map(({ Icon, title, body }) => (
             <li key={title} className="rounded-[10px] border bg-background p-4">

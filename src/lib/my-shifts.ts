@@ -1,4 +1,4 @@
-import { and, asc, eq, gt, inArray, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { events, parentLinks, signupEntries, signupSheets, signupSlotGroups, signupSlots, users, type Role } from "@/db/schema";
 import { groupIdsForUser } from "@/lib/groups";
@@ -28,7 +28,7 @@ export async function myShifts(userId: string, now: Date = new Date()): Promise<
     .innerJoin(signupSlots, eq(signupSlots.id, signupEntries.slotId))
     .innerJoin(signupSheets, eq(signupSheets.id, signupSlots.sheetId))
     .innerJoin(events, eq(events.id, signupSheets.eventId))
-    .where(and(eq(signupEntries.userId, userId), isNull(signupSlots.cancelledAt)))
+    .where(and(eq(signupEntries.userId, userId), isNull(signupSlots.cancelledAt), ne(signupSlots.kind, "attend")))
     .orderBy(asc(signupSlots.startsAt));
   const live = rows.filter((r) => !r.eventCancelledAt);
 
@@ -78,7 +78,7 @@ export async function openShiftsFor(viewer: { id: string; role: Role }, now: Dat
     .from(signupSlots)
     .innerJoin(signupSheets, eq(signupSheets.id, signupSlots.sheetId))
     .innerJoin(events, eq(events.id, signupSheets.eventId))
-    .where(and(isNull(signupSlots.cancelledAt), isNull(signupSheets.closedAt), isNull(events.cancelledAt), gt(signupSlots.endsAt, now)))
+    .where(and(isNull(signupSlots.cancelledAt), ne(signupSlots.kind, "attend"), isNull(signupSheets.closedAt), isNull(events.cancelledAt), gt(signupSlots.endsAt, now)))
     .orderBy(asc(signupSlots.startsAt));
   const fits = rows.filter((r) => roleFitsAudience(viewer.role, r.slot.audience));
   if (fits.length === 0) return [];
@@ -90,17 +90,17 @@ export async function openShiftsFor(viewer: { id: string; role: Role }, now: Dat
     .where(and(inArray(signupEntries.slotId, ids), eq(signupEntries.status, "confirmed")))
     .groupBy(signupEntries.slotId);
   const mine = await db
-    .select({ slotId: signupEntries.slotId, sheetId: signupSlots.sheetId, startsAt: signupSlots.startsAt, endsAt: signupSlots.endsAt })
+    .select({ slotId: signupEntries.slotId, sheetId: signupSlots.sheetId, kind: signupSlots.kind, startsAt: signupSlots.startsAt, endsAt: signupSlots.endsAt })
     .from(signupEntries)
     .innerJoin(signupSlots, eq(signupSlots.id, signupEntries.slotId))
-    .where(and(eq(signupEntries.userId, viewer.id), isNull(signupSlots.cancelledAt)));
+    .where(and(eq(signupEntries.userId, viewer.id), isNull(signupSlots.cancelledAt), ne(signupSlots.kind, "attend")));
   const slotGroups = await db.select({ slotId: signupSlotGroups.slotId, groupId: signupSlotGroups.groupId }).from(signupSlotGroups).where(inArray(signupSlotGroups.slotId, ids));
   const myGroups = slotGroups.length ? await groupIdsForUser(viewer.id) : [];
 
   const out: OpenShift[] = [];
   for (const r of fits) {
     if (mine.some((m) => m.slotId === r.slot.id)) continue;
-    if (mine.some((m) => m.sheetId === r.sheetId && slotsOverlap(m, r.slot))) continue;
+    if (r.slot.kind === "shift" && mine.some((m) => m.kind === "shift" && m.sheetId === r.sheetId && slotsOverlap(m, r.slot))) continue;
     const gate = claimGate({ slotGroupIds: slotGroups.filter((g) => g.slotId === r.slot.id).map((g) => g.groupId), opensToAllAt: r.slot.opensToAllAt, userGroupIds: myGroups, now });
     if (gate.state !== "open") continue;
     const spotsLeft = Math.max(r.slot.capacity - (counts.find((c) => c.slotId === r.slot.id)?.n ?? 0), 0);

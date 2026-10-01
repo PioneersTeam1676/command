@@ -25,6 +25,7 @@ export const NOTIFICATION_TYPES: readonly NotificationType[] = [
   { key: "signup_change", label: "Shift changes", description: "When a shift you signed up for is cancelled or you are added to or removed from one.", roles: ["member", "lead", "admin", "parent"] },
   { key: "signup_reminder", label: "Shift reminders", description: "A day before and an hour before a shift you signed up for.", roles: ["member", "lead", "admin", "parent"] },
   { key: "signup_open", label: "Shifts you can take", description: "When a shift is reserved for you first, a shift opens to everyone, or a lead reminds people to sign up.", roles: ["member", "lead", "admin", "parent"] },
+  { key: "shop_order", label: "New shop orders", description: "When someone orders from the merch shop.", roles: ["admin"] },
   { key: "access_request", label: "New join requests", description: "When someone asks to join the team.", roles: ["admin"] },
   { key: "parent_request", label: "Parent link requests", description: "When a parent asks to follow a student.", roles: ["admin"] },
   { key: "access_decision", label: "Decision on your join request", description: "When an admin approves your request.", roles: STAFF_AND_MEMBERS },

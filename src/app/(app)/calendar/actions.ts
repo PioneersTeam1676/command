@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireActionUser } from "@/lib/auth/current-user";
-import { cancelEvent, createEvent, deleteEvent, eventFormSchema, RSVP_RESPONSES, setRsvp, updateEvent } from "@/lib/events";
+import { setAttending } from "@/lib/attend";
+import { cancelEvent, createEvent, deleteEvent, eventFormSchema, updateEvent } from "@/lib/events";
 import { parseForm, type FormState } from "@/lib/form";
 import { uuidSchema } from "@/lib/validation";
 
@@ -41,24 +42,28 @@ export async function cancelEventAction(formData: FormData) {
   revalidatePath(`/calendar/${id.data}`);
 }
 
-const rsvpSchema = z.object({ eventId: uuidSchema, response: z.enum(RSVP_RESPONSES), reason: z.string().max(300).optional() });
+const attendSchema = z.object({ eventId: uuidSchema, going: z.enum(["true", "false"]), note: z.string().max(300).optional() });
 
-export async function rsvpAction(_: FormState, formData: FormData): Promise<FormState> {
+/** "I'm going" / "I can't make it" from the event page, with an optional note for leads. */
+export async function attendAction(_: FormState, formData: FormData): Promise<FormState> {
   const user = await requireActionUser("member");
-  const p = rsvpSchema.safeParse(Object.fromEntries(formData));
-  if (!p.success) return { error: "Choose Going, Maybe or Can't go." };
-  const r = await setRsvp(user.id, p.data.eventId, p.data.response, p.data.reason);
+  const p = attendSchema.safeParse(Object.fromEntries(formData));
+  if (!p.success) return { error: "Something went wrong. Reload the page and try again." };
+  const going = p.data.going === "true";
+  const r = await setAttending({ id: user.id, role: user.role }, p.data.eventId, going, p.data.note);
   if (!r.ok) return { error: r.error };
   revalidatePath(`/calendar/${p.data.eventId}`);
-  return { success: "Saved. You can change your answer any time before the event ends." };
+  revalidatePath("/calendar");
+  revalidatePath("/");
+  return { success: going ? "You're signed up. You can change this any time before the event ends." : "Okay, you're off the list." };
 }
 
-/** One-tap RSVP from the Home screen (no reason field). */
-export async function rsvpQuickAction(formData: FormData): Promise<void> {
+/** One-tap toggle from the Home screen. */
+export async function attendQuickAction(formData: FormData): Promise<void> {
   const user = await requireActionUser("member");
-  const p = z.object({ eventId: uuidSchema, response: z.enum(RSVP_RESPONSES) }).safeParse(Object.fromEntries(formData));
+  const p = attendSchema.omit({ note: true }).safeParse(Object.fromEntries(formData));
   if (!p.success) return;
-  await setRsvp(user.id, p.data.eventId, p.data.response);
+  await setAttending({ id: user.id, role: user.role }, p.data.eventId, p.data.going === "true");
   revalidatePath("/");
   revalidatePath("/calendar");
 }

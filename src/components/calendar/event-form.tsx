@@ -67,8 +67,8 @@ export function EventForm({
       <label className="flex items-start gap-3 text-sm">
         <input type="checkbox" name="rsvpEnabled" defaultChecked={defaults.rsvpEnabled ?? true} className="mt-1 size-4 accent-[var(--accent)]" />
         <span>
-          <span className="font-medium">Ask people to RSVP</span>
-          <span className="block text-sm md:text-[13px] text-muted">Turn off for mandatory events or ones where you don&apos;t need a head count. Everyone is then reminded, not just people who said Going or Maybe.</span>
+          <span className="font-medium">Let people sign up to come</span>
+          <span className="block text-sm md:text-[13px] text-muted">Adds an “I&apos;m going” button so you can see who&apos;s coming, and only they get reminders. Turn off for mandatory events: everyone is then reminded.</span>
         </span>
       </label>
       <SubmitButton size="lg" pendingText="Saving…">{defaults.id ? "Save changes" : "Create event"}</SubmitButton>

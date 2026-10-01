@@ -4,8 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CalendarDays } from "lucide-react";
-import type { EventRow, RsvpResponse } from "@/lib/events";
-import { RSVP_LABEL } from "@/lib/events";
+import type { EventRow } from "@/lib/events";
 import { calendarRange, VIEWS } from "@/lib/calendar-view";
 import { addDaysLocal, daysBetween, formatInTz, inBuildSeason, isBuildWorkday, localDateOf, startOfWeekLocal, todayLocal, type SeasonDays } from "@/lib/time";
 import { cn } from "@/lib/utils";
@@ -16,14 +15,15 @@ type Props = {
   tz: string;
   season: SeasonDays;
   basePath: string;
-  mine?: Map<string, RsvpResponse>;
+  /** Events this person has signed up to attend. */
+  mine?: Set<string>;
   /** Per event: shifts this person could take, and shifts they hold. */
   shifts?: Map<string, { open: number; mine: number }>;
 };
 
 const DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-function EventPill({ e, tz, basePath, mine, compact }: { e: EventRow; tz: string; basePath: string; mine?: RsvpResponse; compact?: boolean }) {
+function EventPill({ e, tz, basePath, mine, compact }: { e: EventRow; tz: string; basePath: string; mine?: boolean; compact?: boolean }) {
   const cancelled = Boolean(e.cancelledAt);
   return (
     <Link
@@ -31,7 +31,7 @@ function EventPill({ e, tz, basePath, mine, compact }: { e: EventRow; tz: string
       className={cn(
         "block truncate rounded-[6px] border bg-background px-1.5 py-0.5 text-[13px] md:text-[12px] leading-tight transition-colors duration-150 hover:bg-surface",
         cancelled && "text-muted line-through",
-        mine === "going" && !cancelled && "border-accent",
+        mine && !cancelled && "border-accent",
       )}
       title={`${e.title} · ${formatInTz(e.startsAt, tz, "h:mm a")}${cancelled ? " (cancelled)" : ""}`}
     >
@@ -135,7 +135,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine, shifts
                   </Link>
                   <div className="hidden space-y-0.5 md:block">
                     {list.slice(0, 3).map((e) => (
-                      <EventPill key={e.id} e={e} tz={tz} basePath={basePath} mine={mine?.get(e.id)} compact />
+                      <EventPill key={e.id} e={e} tz={tz} basePath={basePath} mine={mine?.has(e.id)} compact />
                     ))}
                     {list.length > 3 ? (
                       <Link href={`${basePath}?view=week&date=${d}`} className="block px-1 text-xs md:text-[11px] text-muted underline-offset-2 hover:underline">
@@ -184,7 +184,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine, shifts
                   <span className={cn("font-mono", d === today ? "text-accent" : "text-muted")}>{formatInTz(new Date(`${d}T12:00:00Z`), "UTC", "MMM d")}</span>
                 </h3>
                 <div className="space-y-1">
-                  {list.length === 0 ? <p className="text-[13px] md:text-[12px] text-muted">No events</p> : list.map((e) => <EventPill key={e.id} e={e} tz={tz} basePath={basePath} mine={mine?.get(e.id)} />)}
+                  {list.length === 0 ? <p className="text-[13px] md:text-[12px] text-muted">No events</p> : list.map((e) => <EventPill key={e.id} e={e} tz={tz} basePath={basePath} mine={mine?.has(e.id)} />)}
                 </div>
               </section>
             );
@@ -211,7 +211,7 @@ function EventList({ entries, today, tz, basePath, mine, shifts }: Pick<Props, "
           <h3 className="mb-2 text-sm md:text-[13px] font-medium text-muted">{d === today ? "Today · " : ""}{formatInTz(new Date(`${d}T12:00:00Z`), "UTC", "EEEE, MMMM d")}</h3>
           <ul className="space-y-2">
             {list.map((e) => {
-              const r = mine?.get(e.id);
+              const r = mine?.has(e.id);
               const sh = e.cancelledAt ? undefined : shifts?.get(e.id);
               return (
                 <li key={e.id}>
@@ -227,7 +227,7 @@ function EventList({ entries, today, tz, basePath, mine, shifts }: Pick<Props, "
                       {e.cancelledAt ? <Badge tone="error">Cancelled</Badge> : null}
                       {sh?.mine ? <Badge tone="success">{sh.mine === 1 ? "Your shift" : `${sh.mine} shifts`}</Badge> : null}
                       {sh?.open ? <Badge tone="info">{sh.open} {sh.open === 1 ? "shift" : "shifts"} open</Badge> : null}
-                      {r ? <Badge tone={r === "going" ? "success" : r === "maybe" ? "warning" : "neutral"}>{RSVP_LABEL[r]}</Badge> : null}
+                      {r ? <Badge tone="success">Going</Badge> : null}
                     </div> : null}
                   </Link>
                 </li>

@@ -17,15 +17,14 @@ test("sign-up sheet: a lead builds shifts, a member claims, hits the overlap and
   await expect(page.getByRole("heading", { name: "Regional" })).toBeVisible();
   eventUrl = page.url();
 
-  await page.getByRole("button", { name: "Add a sign-up sheet" }).click();
-  await page.getByText("Add a shift").click();
+  await page.getByText("Add one shift or item").click();
   const add = async (title: string, start: string, end: string, capacity: string) => {
-    const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add shift" }) });
+    const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add", exact: true }) });
     await form.getByLabel("Shift name").fill(title);
     await form.getByLabel("Starts").fill(start);
     await form.getByLabel("Ends").fill(end);
     await form.getByLabel("People needed").fill(capacity);
-    await form.getByRole("button", { name: "Add shift" }).click();
+    await form.getByRole("button", { name: "Add", exact: true }).click();
     await expect(page.getByRole("listitem").filter({ hasText: title }).first()).toBeVisible();
   };
   await add("Pit crew", "2031-03-10T09:00", "2031-03-10T11:00", "1");
@@ -52,7 +51,7 @@ test("sign-up sheet: a lead builds shifts, a member claims, hits the overlap and
 
   // Members can't see the lead controls or call lead actions.
   await expect(member.getByRole("button", { name: "Cancel shift" })).toHaveCount(0);
-  await expect(member.getByText("Add a shift")).toHaveCount(0);
+  await expect(member.getByText("Add one shift or item")).toHaveCount(0);
 
   // The lead sees who signed up.
   await page.goto(eventUrl);
@@ -88,15 +87,15 @@ test("groups: an admin makes a group, reserves a shift with early access, and ea
 
   await page.goto(eventUrl);
   await page.getByRole("button", { name: "Reopen sign-ups" }).click();
-  await page.getByText("Add a shift").click();
-  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add shift" }) });
+  await page.getByText("Add one shift or item").click();
+  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add", exact: true }) });
   await form.getByLabel("Shift name").fill("Scouting lead");
   await form.getByLabel("Starts").fill("2031-03-10T14:00");
   await form.getByLabel("Ends").fill("2031-03-10T16:00");
   await form.getByLabel("People needed").fill("2");
   await form.getByLabel("Super scouts").check();
   await form.getByLabel("Open to everyone at (optional)").fill("2031-03-09T08:00");
-  await form.getByRole("button", { name: "Add shift" }).click();
+  await form.getByRole("button", { name: "Add", exact: true }).click();
   const item = (p: import("@playwright/test").Page) => p.getByRole("listitem").filter({ hasText: "Scouting lead" }).first();
   await expect(item(page)).toBeVisible();
   // The admin isn't in the group, so they see who has first pick and no sign-up button.
@@ -122,14 +121,14 @@ test("groups: an admin makes a group, reserves a shift with early access, and ea
 test("waitlist: a full shift queues the next person, and leaving promotes them", async ({ page, browser }) => {
   await signIn(page, "admin@school.edu");
   await page.goto(eventUrl);
-  await page.getByText("Add a shift").click();
-  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add shift" }) });
+  await page.getByText("Add one shift or item").click();
+  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add", exact: true }) });
   await form.getByLabel("Shift name").fill("Last one");
   await form.getByLabel("Starts").fill("2031-03-10T17:00");
   await form.getByLabel("Ends").fill("2031-03-10T18:00");
   await form.getByLabel("People needed").fill("1");
   await expect(form.getByLabel("Keep a waitlist")).toBeChecked();
-  await form.getByRole("button", { name: "Add shift" }).click();
+  await form.getByRole("button", { name: "Add", exact: true }).click();
   const item = (p: import("@playwright/test").Page) => p.getByRole("listitem").filter({ hasText: "Last one" }).first();
   await expect(item(page)).toBeVisible();
 
@@ -204,7 +203,7 @@ test("accessibility: the sign-up sheet and manage page have no serious axe viola
     };
     await scan(eventUrl);
     await scan(eventUrl, async (p) => {
-      await p.getByText("Add a shift").click();
+      await p.getByText("Add one shift or item").click();
       await p.getByText("Edit this shift").first().click();
     });
     await scan(`${eventUrl}/signups`);
@@ -260,4 +259,65 @@ test("my shifts: Home and calendar show them, and the private calendar link work
   expect((await anon.request.get(second)).status()).toBe(404);
   await anon.close();
   await ctx.close();
+});
+
+test("things to bring, many shifts at once, copying a sheet, and the event page passes axe", async ({ page, browser }) => {
+  await signIn(page, "admin@school.edu");
+  await page.goto("/calendar/new");
+  await page.getByLabel("Title").fill("Bake sale");
+  await page.getByLabel("Starts").fill("2031-04-12T09:00");
+  await page.getByLabel("Ends").fill("2031-04-12T17:00");
+  await page.getByRole("button", { name: "Create event" }).click();
+  await expect(page.getByRole("heading", { name: "Bake sale" })).toBeVisible();
+  const saleUrl = page.url();
+
+  // A thing to bring: no times to fill in.
+  await page.getByText("Add one shift or item").click();
+  const form = page.locator("form").filter({ has: page.getByRole("button", { name: "Add", exact: true }) });
+  await form.getByText("Something to bring").click();
+  await expect(form.getByLabel("Starts")).toHaveCount(0);
+  await form.getByLabel("What to bring").fill("Cold drinks");
+  await form.getByLabel("How many are needed").fill("2");
+  await form.getByRole("button", { name: "Add", exact: true }).click();
+  const drinks = (p: import("@playwright/test").Page) => p.getByRole("listitem").filter({ hasText: "Cold drinks" }).first();
+  await expect(drinks(page)).toContainText("0 of 2 claimed");
+
+  // Many shifts at once: 9 to 5 every 2 hours = 4 shifts.
+  await page.getByText("Add many shifts at once").click();
+  const bulk = page.locator("form").filter({ has: page.getByRole("button", { name: "Add all the shifts" }) });
+  await bulk.getByLabel("Shift name").fill("Cashier");
+  await bulk.getByRole("button", { name: "Add all the shifts" }).click();
+  await expect(page.getByText("Added 4 shifts.")).toBeVisible();
+  await expect(page.getByRole("listitem").filter({ hasText: "Cashier" })).toHaveCount(4);
+
+  // A member claims the drinks with a note, and the lead sees it.
+  const mCtx = await browser.newContext();
+  const member = await mCtx.newPage();
+  await signIn(member, "olly@gmail.com");
+  await member.goto(saleUrl);
+  await expect(member.getByText("Add many shifts at once")).toHaveCount(0);
+  await drinks(member).getByLabel("Note (optional)").fill("Two cases of soda");
+  await drinks(member).getByRole("button", { name: "I'll bring this" }).click();
+  await expect(drinks(member).getByText("You're bringing this")).toBeVisible();
+  await expect(drinks(member).getByRole("button", { name: "I can't bring this" })).toBeVisible();
+  await page.goto(saleUrl);
+  await expect(drinks(page)).toContainText("Bringing:");
+  await expect(drinks(page)).toContainText("Two cases of soda");
+  const axe = await new AxeBuilder({ page: member }).analyze();
+  expect(axe.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
+  await mCtx.close();
+
+  // Copy it all to next week's sale: same spots, nobody's name.
+  await page.goto("/calendar/new");
+  await page.getByLabel("Title").fill("Bake sale (next)");
+  await page.getByLabel("Starts").fill("2031-04-19T09:00");
+  await page.getByLabel("Ends").fill("2031-04-19T17:00");
+  await page.getByRole("button", { name: "Create event" }).click();
+  await expect(page.getByRole("heading", { name: "Bake sale (next)" })).toBeVisible();
+  await page.getByText("Copy from another event").click();
+  await page.getByLabel("Copy from").selectOption({ label: "Bake sale · Apr 12" });
+  await page.getByRole("button", { name: "Copy these spots here" }).click();
+  await expect(page.getByText(/Copied 5 spots/)).toBeVisible();
+  await expect(drinks(page)).toContainText("0 of 2 claimed");
+  await expect(page.getByRole("listitem").filter({ hasText: "Cashier" })).toHaveCount(4);
 });

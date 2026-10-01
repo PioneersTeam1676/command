@@ -1,4 +1,4 @@
-import { and, asc, eq, gt } from "drizzle-orm";
+import { and, asc, eq, gt, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { calendarFeeds, events, signupEntries, signupSheets, signupSlots, users, type Role } from "@/db/schema";
 import { hashToken, randomToken } from "@/lib/auth/tokens";
@@ -58,7 +58,7 @@ export async function shiftsIcs(user: { id: string; role: Role }, now: Date = ne
     .innerJoin(signupSlots, eq(signupSlots.id, signupEntries.slotId))
     .innerJoin(signupSheets, eq(signupSheets.id, signupSlots.sheetId))
     .innerJoin(events, eq(events.id, signupSheets.eventId))
-    .where(and(eq(signupEntries.userId, user.id), gt(signupSlots.endsAt, new Date(now.getTime() - KEEP_MS))))
+    .where(and(eq(signupEntries.userId, user.id), ne(signupSlots.kind, "attend"), gt(signupSlots.endsAt, new Date(now.getTime() - KEEP_MS))))
     .orderBy(asc(signupSlots.startsAt));
 
   const items: IcsEvent[] = rows.map((r) => {

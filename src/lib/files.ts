@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
+import { mkdir, readFile, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 export const dataDir = () => process.env.DATA_DIR ?? path.join(process.cwd(), "data");
@@ -28,4 +29,29 @@ export async function readLogo(name: string): Promise<Buffer | null> {
   } catch {
     return null;
   }
+}
+
+export const MAX_SHOP_PHOTO_BYTES = 3 * 1024 * 1024;
+
+/** Shop photos live next to the logo, under DATA_DIR/shop, named by a random id so a name can't be guessed or reused. */
+export async function saveShopPhoto(buf: Buffer, ext: string): Promise<string> {
+  const dir = path.join(dataDir(), "shop");
+  await mkdir(dir, { recursive: true });
+  const name = `${randomUUID()}.${ext}`;
+  await writeFile(path.join(dir, name), buf);
+  return name;
+}
+
+export async function readShopPhoto(name: string): Promise<Buffer | null> {
+  if (!/^[0-9a-f-]{36}\.(png|jpg|webp)$/.test(name)) return null;
+  try {
+    return await readFile(path.join(dataDir(), "shop", name));
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteShopPhoto(name: string): Promise<void> {
+  if (!/^[0-9a-f-]{36}\.(png|jpg|webp)$/.test(name)) return;
+  await unlink(path.join(dataDir(), "shop", name)).catch(() => undefined);
 }

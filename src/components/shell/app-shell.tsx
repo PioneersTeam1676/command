@@ -2,10 +2,11 @@
 import { useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Ellipsis, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { logoutAction } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
-import { adminItem, navItems, type NavItem } from "./nav";
+import { adminItem, mobileNav, navItems, type NavItem } from "./nav";
 
 type Props = {
   teamName: string;
@@ -13,11 +14,12 @@ type Props = {
   leaderboardEnabled: boolean;
   isStaff: boolean;
   isParent?: boolean;
+  shopOpen?: boolean;
   banner?: React.ReactNode;
   children: React.ReactNode;
 };
 
-const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : href === "/parent" ? pathname === "/parent" || /^\/parent\/(?!calendar)/.test(pathname) : pathname.startsWith(href));
+const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : href === "/me" ? pathname === "/me" || (pathname.startsWith("/me/") && !pathname.startsWith("/me/shifts")) : href === "/parent" ? pathname === "/parent" || /^\/parent\/(?!calendar)/.test(pathname) : pathname.startsWith(href));
 
 const KEY = "sidebar-collapsed";
 const FULL = 240;
@@ -71,7 +73,7 @@ function SidebarLink({ item, active, rail }: { item: NavItem; active: boolean; r
 }
 
 /** Phone: bottom tab bar. Desktop: 240px sidebar with the same items plus Admin. */
-export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isParent, banner, children }: Props) {
+export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isParent, shopOpen, banner, children }: Props) {
   const pathname = usePathname();
   const stored = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
   const shell = useRef<HTMLDivElement>(null);
@@ -118,8 +120,10 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
       save(e.key === "ArrowLeft");
     }
   };
-  const items = navItems({ leaderboardEnabled, isStaff, isParent });
+  const items = navItems({ leaderboardEnabled, isStaff, isParent, shopOpen });
   const all = isStaff ? [...items.slice(0, -1), adminItem, ...items.slice(-1)] : items;
+  const { bar, more } = mobileNav(items);
+  const slots = bar.length + (more.length ? 1 : 0);
 
   return (
     <div
@@ -203,9 +207,9 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
       <nav
         aria-label="Main"
         className="pb-safe fixed inset-x-0 bottom-0 z-40 grid border-t bg-background/95 backdrop-blur md:hidden"
-        style={{ gridTemplateColumns: `repeat(${items.length}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${slots}, minmax(0, 1fr))` }}
       >
-        {items.map((item) => {
+        {bar.map((item) => {
           const active = isActive(pathname, item.href);
           return (
             <Link
@@ -222,6 +226,33 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
             </Link>
           );
         })}
+        {more.length ? (
+          <Dialog>
+            <DialogTrigger asChild>
+              <button
+                type="button"
+                className={cn("flex min-h-[64px] flex-col items-center justify-center gap-1 text-xs transition-colors duration-150", more.some((m) => isActive(pathname, m.href)) ? "font-medium text-accent" : "text-muted")}
+              >
+                <Ellipsis className="size-6" aria-hidden />
+                More
+              </button>
+            </DialogTrigger>
+            <DialogContent title="More">
+              <ul className="-mx-2 space-y-1">
+                {more.map((item) => (
+                  <li key={item.href}>
+                    <DialogClose asChild>
+                      <Link href={item.href} className="flex min-h-12 items-center gap-3 rounded-[8px] px-3 text-[15px] hover:bg-surface">
+                        <item.Icon className="size-5 text-muted" aria-hidden />
+                        {item.label}
+                      </Link>
+                    </DialogClose>
+                  </li>
+                ))}
+              </ul>
+            </DialogContent>
+          </Dialog>
+        ) : null}
       </nav>
     </div>
   );

@@ -9,12 +9,11 @@ import { GridBackground } from "@/components/ui/grid-background";
 import { Landing } from "@/components/landing/landing";
 import { getCurrentUser, requireUser } from "@/lib/auth/current-user";
 import { isReadOnly } from "@/lib/registry";
-import { RSVP_LABEL } from "@/lib/events";
 import { getHomeData, type EventCard } from "@/lib/home";
 import { myShifts, openShiftsFor } from "@/lib/my-shifts";
 import { pickGreeting } from "@/lib/greetings";
 import { formatInTz } from "@/lib/time";
-import { rsvpQuickAction } from "./calendar/actions";
+import { attendQuickAction } from "./calendar/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +35,7 @@ export default async function HomePage() {
     cancelled: Boolean(c.event.cancelledAt),
     canCheckIn: c.canCheckIn,
     needsCode: c.verification === "code",
-    rsvpLabel: c.rsvp ? RSVP_LABEL[c.rsvp] : undefined,
+    goingLabel: c.going ? "Going" : undefined,
     session: c.session
       ? {
           clockedOut: c.session.status !== "open",
@@ -113,7 +112,7 @@ export default async function HomePage() {
           <Button asChild variant="ghost" size="sm"><Link href="/calendar?view=agenda">See all</Link></Button>
         </div>
         {home.upcoming.length === 0 ? (
-          <EmptyState icon={<CalendarDays />} title="Nothing scheduled yet">When your team adds events, you&apos;ll be able to RSVP right here.</EmptyState>
+          <EmptyState icon={<CalendarDays />} title="Nothing scheduled yet">When your team adds events, you&apos;ll be able to sign up right here.</EmptyState>
         ) : (
           <ul className="space-y-3">
             {home.upcoming.map((c) => (
@@ -126,13 +125,12 @@ export default async function HomePage() {
                   {c.event.cancelledAt ? <Badge tone="error">Cancelled</Badge> : null}
                 </div>
                 {c.event.cancelledAt || !c.event.rsvpEnabled ? null : (
-                  <form action={rsvpQuickAction} className="mt-3 grid grid-cols-3 gap-2">
+                  <form action={attendQuickAction} className="mt-3">
                     <input type="hidden" name="eventId" value={c.event.id} />
-                    {(["going", "maybe", "cant"] as const).map((r) => (
-                      <Button key={r} type="submit" name="response" value={r} size="sm" variant={c.rsvp === r ? "primary" : "secondary"} aria-pressed={c.rsvp === r}>
-                        {RSVP_LABEL[r]}
-                      </Button>
-                    ))}
+                    <input type="hidden" name="going" value={c.going ? "false" : "true"} />
+                    <Button type="submit" size="sm" variant={c.going ? "secondary" : "primary"} className="w-full sm:w-auto">
+                      {c.going ? "You're going · Undo" : "I'm going"}
+                    </Button>
                   </form>
                 )}
               </li>

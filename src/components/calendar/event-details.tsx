@@ -30,7 +30,7 @@ export function EventDetails({ event, tz, showVerification = false }: { event: E
         </p>
       ) : null}
       {event.description ? <p className="whitespace-pre-wrap text-[15px] text-foreground/90">{event.description}</p> : null}
-      {!event.rsvpEnabled ? <p className="text-sm md:text-[13px] text-muted">No RSVP needed for this one.</p> : null}
+      {!event.rsvpEnabled ? <p className="text-sm md:text-[13px] text-muted">Nothing to sign up for. Just show up.</p> : null}
       {showVerification ? (
         <p className="text-sm md:text-[13px] text-muted">
           Check-in: {event.verification === "code" ? "rotating code" : event.verification === "none" ? "one tap" : "team default"}

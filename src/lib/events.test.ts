@@ -1,7 +1,8 @@
+import { eq } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createTestDb, hasTestDb } from "@/test/db";
 
-describe.skipIf(!hasTestDb)("events, RSVPs, notifications", () => {
+describe.skipIf(!hasTestDb)("events, attendance sign-ups, notifications", () => {
   let drop: () => Promise<void>;
   const ids: Record<string, string> = {};
 
@@ -90,13 +91,14 @@ describe.skipIf(!hasTestDb)("events, RSVPs, notifications", () => {
   });
 
   it("delete removes an event, including its check-ins", async () => {
-    const { createEvent, deleteEvent, getEvent, setRsvp } = await import("./events");
+    const { createEvent, deleteEvent, getEvent } = await import("./events");
+    const { setAttending } = await import("./attend");
     const { db } = await import("@/db");
     const { attendanceSessions, seasons } = await import("@/db/schema");
     const [season] = await db.select().from(seasons);
     const empty = await createEvent(ids.lead!, { title: "Oops duplicate", startsAt: future(6), endsAt: future(6, 20), verification: "none" });
     if (!empty.ok) throw new Error("create failed");
-    await setRsvp(ids.m1!, empty.id, "going");
+    await setAttending({ id: ids.m1!, role: "member" }, empty.id, true);
     expect((await deleteEvent(ids.lead!, empty.id)).ok).toBe(true);
     expect(await getEvent(empty.id)).toBeUndefined();
 
@@ -120,28 +122,48 @@ describe.skipIf(!hasTestDb)("events, RSVPs, notifications", () => {
     expect(after!.verification).toBe("code");
   });
 
-  it("RSVPs: upsert, closed after the event ends or is cancelled, and lists show no-response members", async () => {
-    const { createEvent, setRsvp, rsvpLists, cancelEvent } = await import("./events");
+  it("attending: sign up, change the note, leave, closed once over or cancelled; lists show who hasn't signed up", async () => {
+    const { createEvent, cancelEvent } = await import("./events");
+    const { attendLists, attendingCounts, myAttending, setAttending } = await import("./attend");
     const { db } = await import("@/db");
     const { events, seasons } = await import("@/db/schema");
-    const r = await createEvent(ids.lead!, { title: "RSVP me", startsAt: future(6), endsAt: future(6, 20), verification: "inherit" });
+    const r = await createEvent(ids.lead!, { title: "Sign up for me", startsAt: future(6), endsAt: future(6, 20), verification: "inherit" });
     if (!r.ok) throw new Error("create failed");
-    expect((await setRsvp(ids.m1!, r.id, "going")).ok).toBe(true);
-    expect((await setRsvp(ids.m1!, r.id, "cant", "sick")).ok).toBe(true); // change answer
-    expect((await setRsvp(ids.m2!, r.id, "maybe")).ok).toBe(true);
-    const lists = await rsvpLists(r.id);
-    expect(lists.going).toHaveLength(0);
-    expect(lists.cant.map((p) => p.name)).toEqual(["m1"]);
-    expect(lists.cant[0]!.reason).toBe("sick");
-    expect(lists.maybe.map((p) => p.name)).toEqual(["m2"]);
-    const noResp = lists.noResponse.map((p) => p.name).sort();
-    expect(noResp).toEqual(["admin", "lead"]); // active members only, no parents/pending/deactivated
+    const m1 = { id: ids.m1!, role: "member" as const };
+    const m2 = { id: ids.m2!, role: "member" as const };
+    expect((await setAttending(m1, r.id, true, "late")).ok).toBe(true);
+    expect((await setAttending(m1, r.id, true, "  on time  ")).ok).toBe(true); // already going: just updates the note
+    expect((await setAttending(m2, r.id, true)).ok).toBe(true);
+    const lists = await attendLists(r.id);
+    expect(lists.going.map((p) => p.name)).toEqual(["m1", "m2"]);
+    expect(lists.going[0]!.note).toBe("on time");
+    expect(lists.notYet.map((p) => p.name).sort()).toEqual(["admin", "lead"]); // active members only, no parents/pending/deactivated
+    expect((await attendingCounts([r.id])).get(r.id)).toBe(2);
+    expect([...(await myAttending(ids.m1!, [r.id]))]).toEqual([r.id]);
+
+    expect((await setAttending(m1, r.id, false)).ok).toBe(true);
+    expect((await attendLists(r.id)).going.map((p) => p.name)).toEqual(["m2"]);
+    expect((await setAttending(m1, r.id, false)).ok).toBe(true); // leaving twice is harmless
+
+    // A parent can't sign up to attend.
+    const { users } = await import("@/db/schema");
+    const [parent] = await db.select().from(users).where(eq(users.role, "parent"));
+    if (parent) expect((await setAttending({ id: parent.id, role: "parent" }, r.id, true)).ok).toBe(false);
+
     // Ended event
     const [season] = await db.select().from(seasons);
     const [past] = await db.insert(events).values({ seasonId: season!.id, title: "Old", startsAt: new Date(Date.now() - 7_200_000), endsAt: new Date(Date.now() - 3_600_000) }).returning();
-    expect((await setRsvp(ids.m1!, past!.id, "going")).ok).toBe(false);
+    expect((await setAttending(m1, past!.id, true)).ok).toBe(false);
     // Cancelled event
     await cancelEvent(ids.lead!, r.id);
-    expect((await setRsvp(ids.m1!, r.id, "going")).ok).toBe(false);
+    expect((await setAttending(m1, r.id, true)).ok).toBe(false);
+  });
+
+  it("an event that doesn't take sign-ups has no attend spot", async () => {
+    const { createEvent } = await import("./events");
+    const { setAttending } = await import("./attend");
+    const r = await createEvent(ids.lead!, { title: "Mandatory", startsAt: future(8), endsAt: future(8, 20), verification: "inherit", rsvpEnabled: false });
+    if (!r.ok) throw new Error("create failed");
+    expect((await setAttending({ id: ids.m1!, role: "member" }, r.id, true)).ok).toBe(false);
   });
 });

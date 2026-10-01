@@ -1,9 +1,10 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { accessRequests, calendarFeeds, groupMembers, parentInvites, parentLinks, pushSubscriptions, sessions, users, type Role } from "@/db/schema";
+import { accessRequests, calendarFeeds, groupMembers, parentInvites, parentLinks, pushSubscriptions, sessions, signupEntries, users, type Role } from "@/db/schema";
 import { audit } from "@/lib/audit";
 import { smtpConfigured } from "@/lib/env";
 import { sendMail } from "@/lib/mail";
+import { anonymizeOrders } from "@/lib/shop";
 import { readSettings } from "@/lib/settings";
 import { buildAdminWelcome } from "@/lib/team-emails";
 
@@ -107,6 +108,8 @@ export async function erasePersonalData(actorId: string, userId: string): Promis
       .where(eq(parentLinks.parentId, userId));
     await tx.update(parentLinks).set({ revokedAt: new Date() }).where(eq(parentLinks.studentId, userId));
     await tx.update(accessRequests).set({ note: null }).where(eq(accessRequests.userId, userId));
+    await tx.update(signupEntries).set({ note: null }).where(eq(signupEntries.userId, userId));
+    await anonymizeOrders(tx, userId);
     await audit({ actorId, action: "user.erase_personal_data", targetType: "user", targetId: userId }, tx);
   });
   return { ok: true };
@@ -124,6 +127,7 @@ export async function deleteUser(actorId: string, userId: string): Promise<Resul
     return { ok: false, error: "You can't delete the only admin." };
   }
   await db.transaction(async (tx) => {
+    await anonymizeOrders(tx, userId);
     await tx.delete(users).where(eq(users.id, userId));
     await audit({ actorId, action: "user.delete", targetType: "user", targetId: userId, before: { name: u.name, email: u.email, role: u.role, status: u.status } }, tx);
   });

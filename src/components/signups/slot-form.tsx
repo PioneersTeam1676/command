@@ -1,10 +1,12 @@
 "use client";
+import { useState } from "react";
 import { ActionForm, SubmitButton } from "@/components/form";
 import { SelectField, TextAreaField, TextField } from "@/components/form-fields";
 import type { FormState } from "@/lib/form";
 import { AUDIENCE_LABEL } from "@/lib/signups-rules";
 
 export type SlotFormDefaults = {
+  kind?: "shift" | "item";
   title?: string;
   description?: string;
   startsAt: string;
@@ -25,6 +27,7 @@ export function SlotForm({
   submitLabel,
   groups = [],
   resetOnSuccess = false,
+  lockKind = false,
 }: {
   action: (prev: FormState, fd: FormData) => Promise<FormState>;
   hidden: Record<string, string>;
@@ -34,19 +37,36 @@ export function SlotForm({
   /** Every group an admin has made. Empty hides the group controls. */
   groups?: { id: string; name: string }[];
   resetOnSuccess?: boolean;
+  /** When editing, a shift stays a shift and an item stays an item. */
+  lockKind?: boolean;
 }) {
+  const [kind, setKind] = useState<"shift" | "item">(defaults.kind ?? "shift");
+  const item = kind === "item";
   return (
     <ActionForm action={action} className="space-y-4" resetOnSuccess={resetOnSuccess}>
       {Object.entries(hidden).map(([k, v]) => (
         <input key={k} type="hidden" name={k} value={v} />
       ))}
-      <TextField name="title" label="Shift name" defaultValue={defaults.title} required maxLength={120} help="For example: Pit crew, Scouting, Booth greeter." />
+      <input type="hidden" name="kind" value={kind} />
+      {lockKind ? null : (
+        <fieldset className="flex flex-wrap gap-2" aria-label="What kind of spot is this?">
+          {([["shift", "A shift (a time to be there)"], ["item", "Something to bring"]] as const).map(([v, l]) => (
+            <label key={v} className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm ${kind === v ? "border-accent bg-accent-subtle font-medium" : "text-muted"}`}>
+              <input type="radio" name="kindChoice" value={v} checked={kind === v} onChange={() => setKind(v)} className="sr-only" />
+              {l}
+            </label>
+          ))}
+        </fieldset>
+      )}
+      <TextField name="title" label={item ? "What to bring" : "Shift name"} defaultValue={defaults.title} required maxLength={120} help={item ? "For example: Drinks, Paper plates, Folding table." : "For example: Pit crew, Scouting, Booth greeter."} />
+      {item ? null : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          <TextField name="startsAt" label="Starts" type="datetime-local" defaultValue={defaults.startsAt} required help={`In ${tz}`} />
+          <TextField name="endsAt" label="Ends" type="datetime-local" defaultValue={defaults.endsAt} required />
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <TextField name="startsAt" label="Starts" type="datetime-local" defaultValue={defaults.startsAt} required help={`In ${tz}`} />
-        <TextField name="endsAt" label="Ends" type="datetime-local" defaultValue={defaults.endsAt} required />
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <TextField name="capacity" label="People needed" type="number" inputMode="numeric" min={1} max={500} defaultValue={String(defaults.capacity ?? 2)} required />
+        <TextField name="capacity" label={item ? "How many are needed" : "People needed"} type="number" inputMode="numeric" min={1} max={500} defaultValue={String(defaults.capacity ?? 2)} required help={item ? "Each person who signs up brings one." : undefined} />
         <SelectField
           name="audience"
           label="Who can sign up?"

@@ -44,7 +44,7 @@ export async function assignPeople(actorId: string, slotId: string, userIds: str
       .select({ userId: signupEntries.userId, title: signupSlots.title, startsAt: signupSlots.startsAt, endsAt: signupSlots.endsAt })
       .from(signupEntries)
       .innerJoin(signupSlots, eq(signupSlots.id, signupEntries.slotId))
-      .where(and(inArray(signupEntries.userId, ids), eq(signupSlots.sheetId, slot.sheetId), ne(signupSlots.id, slotId), isNull(signupSlots.cancelledAt)));
+      .where(and(inArray(signupEntries.userId, ids), eq(signupSlots.sheetId, slot.sheetId), eq(signupSlots.kind, "shift"), ne(signupSlots.id, slotId), isNull(signupSlots.cancelledAt)));
 
     const skipped: Skipped[] = [];
     const eligible: typeof people = [];
@@ -55,7 +55,7 @@ export async function assignPeople(actorId: string, slotId: string, userIds: str
       else if (p.role === "parent" && !approved.has(p.id)) skip("their link to a student isn't approved");
       else if (here.some((e) => e.userId === p.id && e.status === "confirmed")) skip("already on this shift");
       else {
-        const clash = elsewhere.find((e) => e.userId === p.id && slotsOverlap(e, slot));
+        const clash = slot.kind === "shift" ? elsewhere.find((e) => e.userId === p.id && slotsOverlap(e, slot)) : undefined;
         if (clash) skip(`clashes with “${clash.title}”`);
         else eligible.push(p);
       }
@@ -172,10 +172,10 @@ export async function unsignedPeople(sheetId: string, now: Date = new Date()): P
   if (!sheet || sheet.closedAt) return [];
   const [event] = await db.select({ cancelledAt: events.cancelledAt }).from(events).where(eq(events.id, sheet.eventId));
   if (event?.cancelledAt) return [];
-  const slots = await db.select().from(signupSlots).where(and(eq(signupSlots.sheetId, sheetId), isNull(signupSlots.cancelledAt), gt(signupSlots.endsAt, now)));
+  const slots = await db.select().from(signupSlots).where(and(eq(signupSlots.sheetId, sheetId), ne(signupSlots.kind, "attend"), isNull(signupSlots.cancelledAt), gt(signupSlots.endsAt, now)));
   if (slots.length === 0) return [];
   const slotIds = slots.map((s) => s.id);
-  const entries = await db.select({ slotId: signupEntries.slotId, userId: signupEntries.userId, status: signupEntries.status }).from(signupEntries).innerJoin(signupSlots, eq(signupSlots.id, signupEntries.slotId)).where(and(eq(signupSlots.sheetId, sheetId), isNull(signupSlots.cancelledAt)));
+  const entries = await db.select({ slotId: signupEntries.slotId, userId: signupEntries.userId, status: signupEntries.status }).from(signupEntries).innerJoin(signupSlots, eq(signupSlots.id, signupEntries.slotId)).where(and(eq(signupSlots.sheetId, sheetId), ne(signupSlots.kind, "attend"), isNull(signupSlots.cancelledAt)));
   const holders = new Set(entries.map((e) => e.userId));
   const open = slots.filter((s) => entries.filter((e) => e.slotId === s.id && e.status === "confirmed").length < s.capacity || s.waitlistEnabled);
   if (open.length === 0) return [];
@@ -246,7 +246,7 @@ export async function runSignupNotices(now: Date = new Date()): Promise<{ remind
     .from(signupSlots)
     .innerJoin(signupSheets, eq(signupSheets.id, signupSlots.sheetId))
     .innerJoin(events, eq(events.id, signupSheets.eventId))
-    .where(and(isNull(signupSlots.cancelledAt), gt(signupSlots.startsAt, now), lte(signupSlots.startsAt, new Date(now.getTime() + 24 * HOUR))));
+    .where(and(isNull(signupSlots.cancelledAt), ne(signupSlots.kind, "attend"), gt(signupSlots.startsAt, now), lte(signupSlots.startsAt, new Date(now.getTime() + 24 * HOUR))));
   for (const { slot, eventId, eventCancelledAt } of soon) {
     if (eventCancelledAt) continue;
     const held = await db
@@ -277,7 +277,7 @@ export async function runSignupNotices(now: Date = new Date()): Promise<{ remind
     .from(signupSlots)
     .innerJoin(signupSheets, eq(signupSheets.id, signupSlots.sheetId))
     .innerJoin(events, eq(events.id, signupSheets.eventId))
-    .where(and(isNull(signupSlots.cancelledAt), gt(signupSlots.endsAt, now), lte(signupSlots.opensToAllAt, now), gte(signupSlots.opensToAllAt, new Date(now.getTime() - 6 * HOUR))));
+    .where(and(isNull(signupSlots.cancelledAt), ne(signupSlots.kind, "attend"), gt(signupSlots.endsAt, now), lte(signupSlots.opensToAllAt, now), gte(signupSlots.opensToAllAt, new Date(now.getTime() - 6 * HOUR))));
   for (const { slot, sheetClosedAt, eventId, eventCancelledAt } of opening) {
     if (sheetClosedAt || eventCancelledAt) continue;
     const [taken] = await db.select({ n: sql<number>`count(*)::int` }).from(signupEntries).where(and(eq(signupEntries.slotId, slot.id), eq(signupEntries.status, "confirmed")));
@@ -352,7 +352,7 @@ export async function exportSignups(seasonId: string, tz: string) {
     .innerJoin(signupSheets, eq(signupSheets.id, signupSlots.sheetId))
     .innerJoin(events, eq(events.id, signupSheets.eventId))
     .innerJoin(users, eq(users.id, signupEntries.userId))
-    .where(eq(events.seasonId, seasonId))
+    .where(and(eq(events.seasonId, seasonId), ne(signupSlots.kind, "attend")))
     .orderBy(asc(events.startsAt), asc(signupSlots.startsAt), asc(signupEntries.status), asc(signupEntries.createdAt));
   const body = rows.map(({ e, slot, entry, name, role }) => [
     e.title,

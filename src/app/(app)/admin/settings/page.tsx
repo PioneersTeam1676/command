@@ -141,7 +141,7 @@ export default async function SettingsPage() {
               <TextField name="dailyReminderTime" label="Clock-in reminder" type="time" defaultValue={s.dailyReminderTime.slice(0, 5)} required help="Sent only to people who haven't clocked in." />
               <TextField name="clockoutReminderTime" label="Clock-out reminder" type="time" defaultValue={s.clockoutReminderTime.slice(0, 5)} required help="Sent only to people still clocked in." />
             </div>
-            <TextField name="eventReminderMinutesBefore" label="Event reminder (minutes before)" type="number" min={5} max={1440} defaultValue={s.eventReminderMinutesBefore} help="Sent to people who said Going or Maybe." />
+            <TextField name="eventReminderMinutesBefore" label="Event reminder (minutes before)" type="number" min={5} max={1440} defaultValue={s.eventReminderMinutesBefore} help="Sent to people who signed up to come (everyone, for events without sign-ups)." />
             <SubmitButton pendingText="Saving…">Save reminder times</SubmitButton>
           </ActionForm>
         </CardContent>

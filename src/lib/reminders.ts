@@ -1,6 +1,6 @@
 import { and, eq, gte, inArray, isNull, lte } from "drizzle-orm";
 import { db } from "@/db";
-import { attendanceSessions, events, memberDays, rsvps, users } from "@/db/schema";
+import { attendanceSessions, events, memberDays, signupEntries, signupSheets, signupSlots, users } from "@/db/schema";
 import { autoCloseAt } from "@/lib/attendance";
 import { notify } from "@/lib/notify";
 import { getCurrentSeason } from "@/lib/seasons";
@@ -77,12 +77,14 @@ export async function runReminders(now: Date = new Date()): Promise<ReminderSumm
     .where(and(isNull(events.cancelledAt), lte(events.startsAt, new Date(now.getTime() + lead)), gte(events.endsAt, new Date(now.getTime() - grace))));
 
   for (const e of nearby) {
-    const answered = await db
-      .select({ userId: rsvps.userId })
-      .from(rsvps)
-      .where(and(eq(rsvps.eventId, e.id), inArray(rsvps.response, ["going", "maybe"])));
-    // No-RSVP (e.g. mandatory) events go to everyone; otherwise only people who said Going or Maybe.
-    const coming = e.rsvpEnabled ? answered.map((r) => r.userId).filter((id) => activeIds.includes(id)) : activeIds;
+    const signedUp = await db
+      .select({ userId: signupEntries.userId })
+      .from(signupEntries)
+      .innerJoin(signupSlots, eq(signupSlots.id, signupEntries.slotId))
+      .innerJoin(signupSheets, eq(signupSheets.id, signupSlots.sheetId))
+      .where(and(eq(signupSheets.eventId, e.id), eq(signupSlots.kind, "attend"), eq(signupEntries.status, "confirmed")));
+    // Events that don't take sign-ups (e.g. mandatory ones) go to everyone; otherwise only people who signed up to attend.
+    const coming = e.rsvpEnabled ? signedUp.map((r) => r.userId).filter((id) => activeIds.includes(id)) : activeIds;
 
     if (now >= new Date(e.startsAt.getTime() - lead) && now < e.startsAt) {
       out.eventReminder += await notify({

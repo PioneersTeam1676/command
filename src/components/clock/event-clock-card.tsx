@@ -16,7 +16,7 @@ export type EventClockProps = {
   cancelled: boolean;
   canCheckIn: boolean;
   needsCode: boolean;
-  rsvpLabel?: string;
+  goingLabel?: string;
   /** null = not checked in; otherwise the session state. */
   session: { clockedOut: boolean; inLabel: string; outLabel?: string } | null;
   opensLabel?: string;
@@ -46,7 +46,7 @@ export function EventClockCard(p: EventClockProps) {
         </Link>
         <div className="flex shrink-0 flex-col items-end gap-1">
           {p.cancelled ? <Badge tone="error">Cancelled</Badge> : null}
-          {p.rsvpLabel ? <Badge>{p.rsvpLabel}</Badge> : null}
+          {p.goingLabel ? <Badge>{p.goingLabel}</Badge> : null}
           {checkedIn ? <Badge tone="success">Checked in</Badge> : null}
           {done ? <Badge tone="success">Done</Badge> : null}
         </div>

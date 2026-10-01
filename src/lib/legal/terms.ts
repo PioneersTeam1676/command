@@ -3,7 +3,7 @@ import type { LegalDoc } from "./types";
 /** KEEP IN SYNC with LICENSE, README and behaviour. Bump `updated` on every change. */
 export const TERMS: LegalDoc = {
   title: "Terms of Service",
-  updated: "2026-09-29",
+  updated: "2026-10-01",
   intro:
     "These terms apply to everyone who uses this copy of Command, a team-management app run by your robotics team. By creating an account or signing in you agree to them.",
   sections: [
@@ -36,6 +36,12 @@ export const TERMS: LegalDoc = {
       ],
     },
     {
+      heading: "Team shop",
+      paragraphs: [
+        "If your team turns on its merch shop, an order is a request to the team, not a purchase through Command. Command takes no payment: you pay a mentor in person by the date shown. Items, prices, stock and the text you ask to have printed are the team's responsibility, text you type must be appropriate, and the team may cancel or refuse any order. Printed items made with your text are usually not returnable.",
+      ],
+    },
+    {
       heading: "Notifications",
       paragraphs: [
         "Push notifications are optional and depend on your device and browser. Reminders are a convenience and may be delayed or fail; do not rely on them for anything safety-critical.",
@@ -44,7 +50,7 @@ export const TERMS: LegalDoc = {
     {
       heading: "Availability and read-only mode",
       paragraphs: [
-        "The Team runs Command on its own infrastructure, so availability is not guaranteed. As a condition of the software license, if a copy cannot reach the license registry for 7 days or its license-check code has been altered, it switches to a read-only mode. In that mode you can still view your data and export it, but cannot clock in or out, RSVP, sign up for shifts or edit.",
+        "The Team runs Command on its own infrastructure, so availability is not guaranteed. As a condition of the software license, if a copy cannot reach the license registry for 7 days or its license-check code has been altered, it switches to a read-only mode. In that mode you can still view your data and export it, but cannot clock in or out, sign up for events or shifts, or edit.",
       ],
     },
     {

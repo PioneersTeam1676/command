@@ -2,14 +2,16 @@ import { and, asc, eq, gt, gte, inArray, lt, or } from "drizzle-orm";
 import { db } from "@/db";
 import { attendanceSessions, events } from "@/db/schema";
 import { EVENT_CLOCKIN_LEAD_MS, autoCloseAt, effectiveVerification } from "@/lib/attendance";
-import { myRsvps, type EventRow, type RsvpResponse } from "@/lib/events";
+import { myAttending } from "@/lib/attend";
+import type { EventRow } from "@/lib/events";
 import { getCurrentSeason } from "@/lib/seasons";
 import { getSettings } from "@/lib/settings";
 import { endOfLocalDay, inBuildSeason, isBuildWorkday, localDateOf, startOfLocalDay } from "@/lib/time";
 
 export type EventCard = {
   event: EventRow;
-  rsvp?: RsvpResponse;
+  /** True when this person has signed up to attend. */
+  going: boolean;
   verification: "none" | "code";
   /** Can the member check in right now (window open, not cancelled)? */
   canCheckIn: boolean;
@@ -57,8 +59,8 @@ export async function getHomeData(userId: string, now: Date = new Date()): Promi
 
   const all = [...windowEvents, ...upcomingEvents];
   const ids = all.map((e) => e.id);
-  const [rsvps, sessions] = await Promise.all([
-    myRsvps(userId, ids),
+  const [attending, sessions] = await Promise.all([
+    myAttending(userId, ids),
     ids.length
       ? db.select().from(attendanceSessions).where(and(eq(attendanceSessions.userId, userId), inArray(attendanceSessions.eventId, ids)))
       : Promise.resolve([]),
@@ -70,7 +72,7 @@ export async function getHomeData(userId: string, now: Date = new Date()): Promi
     const opens = e.startsAt.getTime() - EVENT_CLOCKIN_LEAD_MS;
     return {
       event: e,
-      rsvp: rsvps.get(e.id),
+      going: attending.has(e.id),
       verification: effectiveVerification(e, settings),
       canCheckIn: !e.cancelledAt && now.getTime() >= opens && now < e.endsAt,
       session: s ? { id: s.id, clockInAt: s.clockInAt, clockOutAt: s.clockOutAt, status: s.status } : undefined,

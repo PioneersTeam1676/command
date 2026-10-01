@@ -96,3 +96,65 @@ export function adminWelcomeEmail(input: { name: string; promotedBy?: string; ap
 
   return { subject, text, html };
 }
+
+export type ShopEmailOrder = {
+  id: string;
+  buyerName: string;
+  buyerEmail: string;
+  totalLabel: string;
+  lines: { itemName: string; sizeLabel: string; qty: number; priceLabel: string; printText: string | null }[];
+};
+
+/**
+ * Order emails. `kind: "buyer"` tells the buyer to hand a mentor the money; `kind: "admin"` tells admins what was ordered.
+ * `payBy` is already formatted in the team timezone, or null when the shop has no end date.
+ */
+export function shopOrderEmail(input: { kind: "buyer" | "admin"; order: ShopEmailOrder; payBy: string | null; appUrl: string; team: EmailTeam }) {
+  const { order, team } = input;
+  const scale = deriveAccent(team.accent);
+  const buyer = input.kind === "buyer";
+  const when = input.payBy ? `by ${input.payBy}` : "as soon as you can";
+  const subject = buyer ? `Your ${team.name} shop order: ${order.totalLabel}` : `New shop order from ${order.buyerName} (${order.totalLabel})`;
+  const lineText = order.lines.map((l) => `- ${l.qty} × ${l.itemName}, ${l.sizeLabel} (${l.priceLabel} each)${l.printText ? ` — print: “${l.printText}”` : ""}`);
+  const url = `${input.appUrl}${buyer ? "/shop/orders" : "/admin/shop"}`;
+  const text = [
+    buyer ? `Hi ${order.buyerName},` : `${order.buyerName} (${order.buyerEmail}) placed an order.`,
+    "",
+    buyer ? "Thanks! We got your order:" : "Order:",
+    ...lineText,
+    "",
+    `Total: ${order.totalLabel}`,
+    "",
+    ...(buyer
+      ? [`How to pay: hand a mentor ${order.totalLabel} in cash ${when}. There's no online payment.`, "", `See or cancel your order: ${url}`]
+      : [`They were told to hand a mentor the money ${when}.`, `Mark it paid and delivered here: ${url}`]),
+  ].join("\n");
+
+  const rows = order.lines
+    .map(
+      (l) =>
+        `<tr><td class="bd" style="padding:10px 0;border-top:1px solid ${L.border};font-family:${SANS};font-size:14px;line-height:20px;color:${L.fg};"><span class="fg"><strong>${l.qty} × ${esc(l.itemName)}</strong>, ${esc(l.sizeLabel)}</span>${l.printText ? `<br><span class="mu" style="color:${L.muted};font-size:13px;">Print: <span style="font-family:${MONO};">${esc(l.printText)}</span></span>` : ""}</td><td class="bd" align="right" style="padding:10px 0;border-top:1px solid ${L.border};font-family:${MONO};font-size:13px;color:${L.fg};white-space:nowrap;"><span class="fg">${esc(l.priceLabel)}</span></td></tr>`,
+    )
+    .join("");
+  const html = `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light dark"><title>${esc(subject)}</title>
+<style>@media (prefers-color-scheme: dark){.page{background:${D.surface} !important}.card{background:${D.bg} !important;border-color:${D.border} !important}.bd{border-color:${D.border} !important}.fg{color:${D.fg} !important}.mu{color:${D.muted} !important}.surface{background:${D.surface} !important;border-color:${D.border} !important}}</style></head>
+<body class="page" style="margin:0;padding:0;background:${L.surface};">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" class="page" style="background:${L.surface};"><tr><td align="center" style="padding:40px 16px;">
+  <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="width:100%;max-width:480px;">
+    <tr><td class="fg" style="padding:0 0 16px 0;font-family:${SANS};font-size:15px;font-weight:600;color:${L.fg};">${esc(team.name)} shop</td></tr>
+    <tr><td class="card" style="background:${L.bg};border:1px solid ${L.border};border-radius:8px;padding:28px;">
+      <div class="fg" style="font-family:${SANS};font-size:22px;line-height:28px;font-weight:600;color:${L.fg};">${buyer ? "We got your order." : `New order from ${esc(order.buyerName)}`}</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:16px;">${rows}
+        <tr><td class="bd" style="padding:12px 0 0 0;border-top:1px solid ${L.border};font-family:${SANS};font-size:15px;font-weight:600;color:${L.fg};"><span class="fg">Total</span></td><td class="bd" align="right" style="padding:12px 0 0 0;border-top:1px solid ${L.border};font-family:${MONO};font-size:15px;font-weight:600;color:${L.fg};"><span class="fg">${esc(order.totalLabel)}</span></td></tr>
+      </table>
+      <div class="surface" style="margin-top:18px;background:${L.surface};border:1px solid ${L.border};border-radius:6px;padding:12px 14px;font-family:${SANS};font-size:14px;line-height:21px;color:${L.fg};"><span class="fg">${
+        buyer ? `<strong>How to pay:</strong> hand a mentor ${esc(order.totalLabel)} in cash ${esc(when)}. There is no online payment.` : `${esc(order.buyerName)} (${esc(order.buyerEmail)}) was told to hand a mentor the money ${esc(when)}.`
+      }</span></div>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin-top:22px;"><tr><td style="background:${scale.base};border-radius:8px;"><a href="${esc(url)}" style="display:inline-block;padding:12px 20px;font-family:${SANS};font-size:15px;font-weight:500;color:${scale.foreground};text-decoration:none;border-radius:8px;">${buyer ? "View my orders" : "Open orders"}</a></td></tr></table>
+    </td></tr>
+  </table>
+</td></tr></table>
+</body></html>`;
+  return { subject, text, html };
+}

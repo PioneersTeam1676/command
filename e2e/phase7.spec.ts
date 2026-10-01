@@ -63,9 +63,9 @@ test("ICS mode imports, updates and cancels events without duplicating, and impo
   await page.getByRole("link", { name: /Robot Demo \(updated\)/ }).click();
   await expect(page.getByText("Check-in: rotating code")).toBeVisible();
 
-  // Members can RSVP to imported events like any other.
-  await page.getByRole("button", { name: "Going" }).click();
-  await expect(page.getByText("Saved.")).toBeVisible();
+  // Members can sign up to attend imported events like any other.
+  await page.getByRole("button", { name: "I'm going" }).click();
+  await expect(page.getByText("You're signed up.")).toBeVisible();
 });
 
 test("a broken calendar address gives a readable error, not a crash", async ({ page, request }) => {

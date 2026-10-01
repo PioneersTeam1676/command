@@ -59,6 +59,11 @@ export const teamSettings = pgTable("team_settings", {
   setupTokenHash: text("setup_token_hash"),
   setupCompletedAt: ts("setup_completed_at"),
   registryRegistered: boolean("registry_registered").notNull().default(false),
+  /** Merch shop: off by default. When on, it shows in the navigation until `shopClosesAt` passes. */
+  shopEnabled: boolean("shop_enabled").notNull().default(false),
+  shopClosesAt: ts("shop_closes_at"),
+  /** Shown above the items (pickup details, who to pay, etc.). */
+  shopNote: text("shop_note"),
   createdAt: createdAt(),
 });
 
@@ -215,19 +220,6 @@ export const events = pgTable(
     uniqueIndex("events_gcal_idx").on(t.gcalEventId).where(sql`${t.gcalEventId} is not null`),
     uniqueIndex("events_ics_uid_idx").on(t.icsUid).where(sql`${t.icsUid} is not null`),
   ],
-);
-
-export const rsvps = pgTable(
-  "rsvps",
-  {
-    id: id(),
-    eventId: uuid("event_id").notNull().references(() => events.id, { onDelete: "cascade" }),
-    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
-    response: text("response").notNull(), // going | maybe | cant
-    reason: text("reason"),
-    updatedAt: ts("updated_at").notNull().defaultNow(),
-  },
-  (t) => [uniqueIndex("rsvps_event_user_idx").on(t.eventId, t.userId)],
 );
 
 export const attendanceSessions = pgTable(
@@ -418,6 +410,13 @@ export const signupSheets = pgTable(
 );
 
 export const signupAudiences = ["anyone", "members", "parents"] as const;
+
+/**
+ * What a slot is: a `shift` is a stretch of time to staff; an `item` is something to bring (capacity = how many
+ * are needed, one per person); `attend` is the event's own "I'm going" spot, which replaced RSVPs.
+ */
+export const signupSlotKinds = ["shift", "item", "attend"] as const;
+export type SignupSlotKind = (typeof signupSlotKinds)[number];
 export type SignupAudience = (typeof signupAudiences)[number];
 
 export const signupSlots = pgTable(
@@ -431,6 +430,7 @@ export const signupSlots = pgTable(
     endsAt: ts("ends_at").notNull(),
     capacity: integer("capacity").notNull(),
     audience: text("audience").$type<SignupAudience>().notNull().default("anyone"),
+    kind: text("kind").$type<SignupSlotKind>().notNull().default("shift"),
     /**
      * With groups set: those groups get the slot first. Before this time only they can claim; after it
      * everyone the audience allows can. Null means the slot stays group-only for good.
@@ -444,6 +444,8 @@ export const signupSlots = pgTable(
   },
   (t) => [
     index("signup_slots_sheet_idx").on(t.sheetId, t.startsAt),
+    // One "I'm going" spot per sheet, even if two requests try to make it at once.
+    uniqueIndex("signup_slots_attend_idx").on(t.sheetId).where(sql`${t.kind} = 'attend'`),
     check("signup_slots_capacity_chk", sql`${t.capacity} between 1 and 500`),
     check("signup_slots_time_chk", sql`${t.endsAt} > ${t.startsAt}`),
   ],
@@ -457,6 +459,8 @@ export const signupEntries = pgTable(
     userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
     status: text("status").notNull().default("confirmed"), // confirmed | waitlisted
     source: text("source").notNull().default("self"), // self | admin
+    /** Optional comment from the person ("allergic to nuts", "can bring two"). Leads and admins see it. */
+    note: text("note"),
     assignedBy: uuid("assigned_by").references(() => users.id, { onDelete: "set null" }),
     promotedAt: ts("promoted_at"),
     createdAt: createdAt(),
@@ -514,4 +518,76 @@ export const calendarFeeds = pgTable(
     lastFetchedAt: ts("last_fetched_at"),
   },
   (t) => [uniqueIndex("calendar_feeds_token_idx").on(t.tokenHash)],
+);
+
+export const shopPersonalizeModes = ["none", "optional", "required"] as const;
+export type ShopPersonalizeMode = (typeof shopPersonalizeModes)[number];
+
+export const shopItems = pgTable("shop_items", {
+  id: id(),
+  name: text("name").notNull(),
+  description: text("description"),
+  priceCents: integer("price_cents").notNull(),
+  /** File name under DATA_DIR/shop (see lib/files.ts). */
+  photoPath: text("photo_path"),
+  /** Whether the buyer can type what gets printed (for example their name). */
+  personalize: text("personalize").$type<ShopPersonalizeMode>().notNull().default("none"),
+  personalizeLabel: text("personalize_label").notNull().default("Name to print"),
+  personalizeMax: integer("personalize_max").notNull().default(30),
+  /** Hidden items stay in old orders but can't be bought. */
+  active: boolean("active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: createdAt(),
+}, (t) => [check("shop_items_price_chk", sql`${t.priceCents} between 0 and 100000000`), check("shop_items_max_chk", sql`${t.personalizeMax} between 1 and 100`)]);
+
+export const shopItemSizes = pgTable(
+  "shop_item_sizes",
+  {
+    id: id(),
+    itemId: uuid("item_id").notNull().references(() => shopItems.id, { onDelete: "cascade" }),
+    label: text("label").notNull(),
+    stock: integer("stock").notNull().default(0),
+    sortOrder: integer("sort_order").notNull().default(0),
+  },
+  (t) => [uniqueIndex("shop_item_sizes_label_idx").on(t.itemId, t.label), check("shop_item_sizes_stock_chk", sql`${t.stock} >= 0`)],
+);
+
+export const shopOrderStatuses = ["pending", "paid", "delivered", "cancelled"] as const;
+export type ShopOrderStatus = (typeof shopOrderStatuses)[number];
+
+export const shopOrders = pgTable(
+  "shop_orders",
+  {
+    id: id(),
+    /** Kept null (with the name below) if the account is later erased. */
+    userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+    buyerName: text("buyer_name").notNull(),
+    buyerEmail: text("buyer_email").notNull(),
+    status: text("status").$type<ShopOrderStatus>().notNull().default("pending"),
+    totalCents: integer("total_cents").notNull(),
+    /** The date the buyer was told to pay by (the shop's end date when they ordered). */
+    payByAt: ts("pay_by_at"),
+    createdAt: createdAt(),
+    paidAt: ts("paid_at"),
+    deliveredAt: ts("delivered_at"),
+    cancelledAt: ts("cancelled_at"),
+  },
+  (t) => [index("shop_orders_user_idx").on(t.userId), index("shop_orders_status_idx").on(t.status, t.createdAt)],
+);
+
+export const shopOrderLines = pgTable(
+  "shop_order_lines",
+  {
+    id: id(),
+    orderId: uuid("order_id").notNull().references(() => shopOrders.id, { onDelete: "cascade" }),
+    /** Snapshots below keep the order readable after an item is edited or removed. */
+    itemId: uuid("item_id").references(() => shopItems.id, { onDelete: "set null" }),
+    sizeId: uuid("size_id").references(() => shopItemSizes.id, { onDelete: "set null" }),
+    itemName: text("item_name").notNull(),
+    sizeLabel: text("size_label").notNull(),
+    unitPriceCents: integer("unit_price_cents").notNull(),
+    qty: integer("qty").notNull(),
+    printText: text("print_text"),
+  },
+  (t) => [index("shop_order_lines_order_idx").on(t.orderId), check("shop_order_lines_qty_chk", sql`${t.qty} between 1 and 20`)],
 );

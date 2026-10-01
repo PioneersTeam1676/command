@@ -5,17 +5,20 @@ import { ClipboardList, Monitor, Pencil } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { EventDetails } from "@/components/calendar/event-details";
 import { SignupSection } from "@/components/signups/signup-section";
-import { RsvpForm } from "@/components/calendar/rsvp-form";
+import { AttendCard } from "@/components/calendar/attend-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireUser, roleAtLeast } from "@/lib/auth/current-user";
-import { getEvent, getRsvp, isOver, rsvpLists } from "@/lib/events";
+import { attendLists, attendingCounts, myAttendNote } from "@/lib/attend";
+import { getEvent, isOver } from "@/lib/events";
 import { listGroups } from "@/lib/groups";
+import { copySources } from "@/lib/signup-tools";
 import { getSignupView } from "@/lib/signups";
+import { formatInTz } from "@/lib/time";
 import { getSettings } from "@/lib/settings";
 import { uuidSchema } from "@/lib/validation";
-import { cancelEventAction, deleteEventAction, rsvpAction } from "../actions";
+import { attendAction, cancelEventAction, deleteEventAction } from "../actions";
 
 export const metadata: Metadata = { title: "Event" };
 export const dynamic = "force-dynamic";
@@ -30,11 +33,13 @@ export default async function EventPage({ params, searchParams }: { params: Prom
   const settings = await getSettings();
   const staff = roleAtLeast(user.role, "lead");
   const admin = roleAtLeast(user.role, "admin");
-  const [mine, lists, signups, groups] = await Promise.all([
-    getRsvp(user.id, event.id),
-    staff && event.rsvpEnabled ? rsvpLists(event.id) : null,
+  const [mine, lists, counts, signups, groups, sources] = await Promise.all([
+    myAttendNote(user.id, event.id),
+    staff && event.rsvpEnabled ? attendLists(event.id) : null,
+    attendingCounts([event.id]),
     getSignupView(event.id, { id: user.id, role: user.role }),
     staff ? listGroups() : [],
+    staff ? copySources(event.id) : [],
   ]);
   const over = isOver(event);
   const open = !event.cancelledAt && !over && event.rsvpEnabled;
@@ -71,7 +76,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
             size="md"
             danger
             title={`Delete “${event.title}”?`}
-            description="This removes the event and its RSVPs for good, with no notification. It can't be undone. Any check-ins recorded for it, and the hours they earned, are removed too. Cancel it instead if you want to keep them."
+            description="This removes the event and its sign-ups for good, with no notification. It can't be undone. Any check-ins recorded for it, and the hours they earned, are removed too. Cancel it instead if you want to keep them."
             confirmLabel="Delete event"
             action={deleteEventAction}
             fields={{ id: event.id }}
@@ -81,46 +86,39 @@ export default async function EventPage({ params, searchParams }: { params: Prom
       {admin && deleteError ? <p role="alert" className="rounded-[8px] bg-error-subtle p-3 text-sm text-error">{deleteError}</p> : null}
 
       {open ? (
-        <Card>
-          <CardHeader><CardTitle>Will you be there?</CardTitle></CardHeader>
-          <CardContent><RsvpForm eventId={event.id} current={mine?.response as never} reason={mine?.reason} action={rsvpAction} /></CardContent>
-        </Card>
-      ) : !event.rsvpEnabled ? null : mine ? (
-        <p className="text-sm text-muted">Your answer: <strong className="text-foreground capitalize">{mine.response === "cant" ? "Can't go" : mine.response}</strong></p>
+        <AttendCard eventId={event.id} going={mine.going} note={mine.note} count={counts.get(event.id) ?? 0} action={attendAction} />
+      ) : event.rsvpEnabled && mine.going ? (
+        <p className="text-sm text-muted">You were signed up for this one.</p>
       ) : null}
 
-      <SignupSection event={event} view={signups} tz={settings.timezone} staff={staff} groups={groups.map((g) => ({ id: g.id, name: g.name }))} />
+      <SignupSection event={event} view={signups} tz={settings.timezone} staff={staff} groups={groups.map((g) => ({ id: g.id, name: g.name }))} copySources={sources.map((e) => ({ value: e.id, label: `${e.title} · ${formatInTz(e.startsAt, settings.timezone, "MMM d")}` }))} />
 
       {lists ? (
         <Card>
           <CardHeader><CardTitle>Who&apos;s coming</CardTitle></CardHeader>
-          <CardContent className="grid gap-5 sm:grid-cols-2">
-            {(
-              [
-                ["Going", lists.going, "success"],
-                ["Maybe", lists.maybe, "warning"],
-                ["Can't go", lists.cant, "neutral"],
-                ["No response yet", lists.noResponse, "info"],
-              ] as const
-            ).map(([label, list, tone]) => (
-              <section key={label} aria-label={label}>
-                <h3 className="mb-2 flex items-center gap-2 text-sm font-medium">
-                  {label} <Badge tone={tone}>{list.length}</Badge>
-                </h3>
-                {list.length === 0 ? (
-                  <p className="text-sm md:text-[13px] text-muted">Nobody</p>
-                ) : (
-                  <ul className="space-y-1 text-sm md:text-[13px]">
-                    {list.map((p) => (
-                      <li key={"userId" in p ? p.userId : p.id}>
-                        {p.name}
-                        {"reason" in p && p.reason ? <span className="text-muted"> · {p.reason}</span> : null}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            ))}
+          <CardContent className="space-y-4">
+            {lists.going.length === 0 ? (
+              <p className="text-sm text-muted">Nobody has signed up yet.</p>
+            ) : (
+              <ul className="grid gap-x-6 gap-y-1 text-sm sm:grid-cols-2">
+                {lists.going.map((p) => (
+                  <li key={p.userId}>
+                    {p.name}
+                    {p.note ? <span className="text-muted"> · {p.note}</span> : null}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {lists.notYet.length > 0 ? (
+              <details>
+                <summary className="cursor-pointer text-sm text-muted hover:text-foreground">
+                  Haven&apos;t signed up <Badge tone="info">{lists.notYet.length}</Badge>
+                </summary>
+                <ul className="mt-2 grid gap-x-6 gap-y-1 text-sm text-muted sm:grid-cols-2">
+                  {lists.notYet.map((p) => <li key={p.id}>{p.name}</li>)}
+                </ul>
+              </details>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}

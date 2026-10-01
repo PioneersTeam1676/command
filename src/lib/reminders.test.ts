@@ -13,7 +13,7 @@ describe.skipIf(!hasTestDb)("scheduled reminders", () => {
     process.env.APP_URL = "http://localhost:3000";
     drop = (await createTestDb()).drop;
     const { db } = await import("@/db");
-    const { users, teamSettings, seasons, pushSubscriptions, memberDays, events, rsvps } = await import("@/db/schema");
+    const { users, teamSettings, seasons, pushSubscriptions, memberDays, events, signupEntries } = await import("@/db/schema");
     const { setPushSenderForTests } = await import("./push");
     setPushSenderForTests(async (t, body) => {
       sent.push({ endpoint: t.endpoint, title: JSON.parse(body).title });
@@ -39,12 +39,10 @@ describe.skipIf(!hasTestDb)("scheduled reminders", () => {
     // Event Tuesday Jan 13, 6-8 PM local (23:00Z-01:00Z)
     const [e] = await db.insert(events).values({ seasonId: s!.id, title: "Scrimmage", startsAt: T("2026-01-13T23:00:00Z"), endsAt: T("2026-01-14T01:00:00Z") }).returning();
     eventId = e!.id;
-    await db.insert(rsvps).values([
-      { eventId, userId: u.a!, response: "going" },
-      { eventId, userId: u.b!, response: "maybe" },
-      { eventId, userId: u.c!, response: "cant" },
-      { eventId, userId: u.lead!, response: "going" },
-    ]);
+    // a, b and lead signed up to attend; c didn't.
+    const { ensureAttendSlot } = await import("./attend");
+    const attendSlot = (await ensureAttendSlot(eventId))!;
+    await db.insert(signupEntries).values([u.a!, u.b!, u.lead!].map((userId) => ({ slotId: attendSlot, userId })));
   });
   afterAll(async () => {
     const { setPushSenderForTests } = await import("./push");
@@ -117,14 +115,17 @@ describe.skipIf(!hasTestDb)("scheduled reminders", () => {
   it("respects per-type opt-out and never notifies cancelled events", async () => {
     const { runReminders } = await import("./reminders");
     const { db } = await import("@/db");
-    const { notificationPrefs, events, rsvps, seasons } = await import("@/db/schema");
+    const { notificationPrefs, events, signupEntries, seasons } = await import("@/db/schema");
     const [s] = await db.select().from(seasons);
     const [e2] = await db.insert(events).values({ seasonId: s!.id, title: "Later", startsAt: T("2026-01-15T23:00:00Z"), endsAt: T("2026-01-16T01:00:00Z") }).returning();
     const [e3] = await db.insert(events).values({ seasonId: s!.id, title: "Nope", startsAt: T("2026-01-15T23:00:00Z"), endsAt: T("2026-01-16T01:00:00Z"), cancelledAt: T("2026-01-10T00:00:00Z") }).returning();
-    await db.insert(rsvps).values([
-      { eventId: e2!.id, userId: u.a!, response: "going" },
-      { eventId: e2!.id, userId: u.lead!, response: "going" },
-      { eventId: e3!.id, userId: u.a!, response: "going" },
+    const { ensureAttendSlot } = await import("./attend");
+    const s2 = (await ensureAttendSlot(e2!.id))!;
+    const s3 = (await ensureAttendSlot(e3!.id))!;
+    await db.insert(signupEntries).values([
+      { slotId: s2, userId: u.a! },
+      { slotId: s2, userId: u.lead! },
+      { slotId: s3, userId: u.a! },
     ]);
     await db.insert(notificationPrefs).values({ userId: u.a!, type: "event_reminder", enabled: false });
     const r = await runReminders(T("2026-01-15T22:10:00Z"));

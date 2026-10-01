@@ -65,3 +65,14 @@ describe("claimGate", () => {
     expect(claimGate({ ...base, opensToAllAt: at(12), now: at(13) })).toEqual({ state: "open" });
   });
 });
+
+describe("slot form schema", () => {
+  it("lets an item leave out its times, but still gives shifts a clear message", async () => {
+    const { slotFormSchema } = await import("./signups");
+    const item = slotFormSchema.safeParse({ kind: "item", title: "Drinks", capacity: "2" });
+    expect(item.success).toBe(true);
+    expect(item.success && item.data.startsAt).toBe("");
+    const bad = slotFormSchema.safeParse({ kind: "shift", title: "Cashier", startsAt: "tomorrow", endsAt: "", capacity: "2" });
+    expect(bad.success).toBe(false);
+  });
+});

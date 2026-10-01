@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm";
 import { db } from "@/db";
-import { attendanceSessions, auditLog, events, rsvps, users } from "@/db/schema";
+import { attendanceSessions, auditLog, events, signupEntries, signupSheets, signupSlots, users } from "@/db/schema";
 import { csvResponse, toCsv } from "@/lib/csv";
 import { countsTowardHours } from "@/lib/hours";
 import { rosterForSeason } from "@/lib/roster";
@@ -50,19 +50,21 @@ export async function exportAttendance(seasonId: string, tz: string) {
   return csvResponse(`attendance-${slug(season.name)}.csv`, toCsv(["Event", "Date", "Member", "In", "Out", "Hours", "Counts toward hours", "Kind", "Status", "Review", "Origin", "Self-reported", "Note"], body));
 }
 
-/** RSVPs for every event in a season. Admin only. */
+/** Who signed up to attend each event in a season, with the note they left. Admin only. */
 export async function exportRsvps(seasonId: string, tz: string) {
   const season = await getSeason(seasonId);
   if (!season) return null;
   const rows = await db
-    .select({ e: events, r: rsvps, name: users.name })
-    .from(rsvps)
-    .innerJoin(events, eq(events.id, rsvps.eventId))
-    .innerJoin(users, eq(users.id, rsvps.userId))
-    .where(eq(events.seasonId, seasonId))
+    .select({ e: events, entry: signupEntries, name: users.name })
+    .from(signupEntries)
+    .innerJoin(signupSlots, eq(signupSlots.id, signupEntries.slotId))
+    .innerJoin(signupSheets, eq(signupSheets.id, signupSlots.sheetId))
+    .innerJoin(events, eq(events.id, signupSheets.eventId))
+    .innerJoin(users, eq(users.id, signupEntries.userId))
+    .where(and(eq(events.seasonId, seasonId), eq(signupSlots.kind, "attend")))
     .orderBy(asc(events.startsAt), asc(users.name));
-  const body = rows.map(({ e, r, name }) => [e.title, formatInTz(e.startsAt, tz, "yyyy-MM-dd HH:mm"), e.cancelledAt ? "cancelled" : "", name, r.response, r.reason ?? "", r.updatedAt]);
-  return csvResponse(`rsvps-${slug(season.name)}.csv`, toCsv(["Event", "Starts", "Status", "Member", "Response", "Reason", "Answered at"], body));
+  const body = rows.map(({ e, entry, name }) => [e.title, formatInTz(e.startsAt, tz, "yyyy-MM-dd HH:mm"), e.cancelledAt ? "cancelled" : "", name, entry.note ?? "", entry.createdAt]);
+  return csvResponse(`attending-${slug(season.name)}.csv`, toCsv(["Event", "Starts", "Status", "Member", "Note", "Signed up at"], body));
 }
 
 /** The audit log, optionally between two dates (UTC day boundaries). Admin only. */
@@ -101,4 +103,25 @@ export async function exportMyHours(userId: string, seasonId: string, tz: string
     s.reviewState,
   ]);
   return csvResponse(`my-hours-${slug(season.name)}.csv`, toCsv(["What", "In", "Out", "Hours", "Counts toward hours", "Review"], body));
+}
+
+/** Every merch order line, one row each, with the text to print. Admin only. */
+export async function exportShopOrders(tz: string) {
+  const { shopOrderLines, shopOrders } = await import("@/db/schema");
+  const rows = await db.select({ o: shopOrders, l: shopOrderLines }).from(shopOrderLines).innerJoin(shopOrders, eq(shopOrders.id, shopOrderLines.orderId)).orderBy(asc(shopOrders.createdAt), asc(shopOrderLines.itemName));
+  const body = rows.map(({ o, l }) => [
+    formatInTz(o.createdAt, tz, "yyyy-MM-dd HH:mm"),
+    o.buyerName,
+    o.buyerEmail,
+    o.status,
+    l.itemName,
+    l.sizeLabel,
+    l.qty,
+    (l.unitPriceCents * l.qty) / 100,
+    l.printText ?? "",
+    o.payByAt ? formatInTz(o.payByAt, tz, "yyyy-MM-dd") : "",
+    o.paidAt ? formatInTz(o.paidAt, tz, "yyyy-MM-dd") : "",
+    o.deliveredAt ? formatInTz(o.deliveredAt, tz, "yyyy-MM-dd") : "",
+  ]);
+  return csvResponse("shop-orders.csv", toCsv(["Ordered", "Buyer", "Email", "Status", "Item", "Size", "Qty", "Line total ($)", "Print text", "Pay by", "Paid on", "Delivered on"], body));
 }

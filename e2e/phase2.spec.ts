@@ -4,7 +4,7 @@ import { signIn } from "./helpers";
 /** Runs after phase1.spec.ts (same database): relies on admin@school.edu and olly@gmail.com existing. */
 test.describe.configure({ mode: "serial" });
 
-test("set build season, create an event, RSVP, edit, cancel", async ({ page, browser }) => {
+test("set build season, create an event, sign up to attend, edit, cancel", async ({ page, browser }) => {
   await signIn(page, "admin@school.edu");
 
   await page.goto("/admin/season");
@@ -30,17 +30,17 @@ test("set build season, create an event, RSVP, edit, cancel", async ({ page, bro
   const member = await mCtx.newPage();
   await signIn(member, "olly@gmail.com");
   await member.goto(eventUrl);
-  await member.getByRole("button", { name: "Going" }).click();
-  await expect(member.getByText("Saved.")).toBeVisible();
-  await member.getByLabel("Reason (optional)").fill("Car trouble");
-  await member.getByRole("button", { name: "Can't go" }).click();
-  await expect(member.getByText("Saved.")).toBeVisible();
+  await member.getByLabel("Add a note (optional)").fill("Car trouble");
+  await member.getByRole("button", { name: "I'm going" }).click();
+  await expect(member.getByText("You're signed up.")).toBeVisible();
+  await expect(member.getByRole("heading", { name: "You're going" })).toBeVisible();
   const editRes = await member.request.get(`${eventUrl}/edit`, { maxRedirects: 0 });
   expect([302, 307]).toContain(editRes.status());
 
   await page.goto(eventUrl);
   await expect(page.getByText("Car trouble")).toBeVisible();
-  await expect(page.getByRole("region", { name: "No response yet" })).toContainText("Ada Admin");
+  await page.getByText("Haven't signed up").click();
+  await expect(page.locator("details").filter({ hasText: "Haven't signed up" })).toContainText("Ada Admin");
 
   await page.getByRole("link", { name: "Edit" }).click();
   await page.getByLabel("Title").fill("Build Day (moved)");

@@ -1,8 +1,9 @@
 import { and, asc, eq, gt, gte, inArray, isNull, lt, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { attendanceSessions, events, parentLinks, rsvps, users } from "@/db/schema";
+import { attendanceSessions, events, parentLinks, users } from "@/db/schema";
 import { audit } from "@/lib/audit";
+import { ensureAttendSlot } from "@/lib/attend";
 import { queueGcalPush, type EventChangeKind } from "@/lib/gcal-sync";
 import { notify } from "@/lib/notify";
 import { getCurrentSeason, seasonForDate } from "@/lib/seasons";
@@ -10,9 +11,6 @@ import { getSettings } from "@/lib/settings";
 import { fromDatetimeLocal, localDateOf, formatInTz } from "@/lib/time";
 
 export type EventRow = typeof events.$inferSelect;
-export const RSVP_RESPONSES = ["going", "maybe", "cant"] as const;
-export type RsvpResponse = (typeof RSVP_RESPONSES)[number];
-export const RSVP_LABEL: Record<RsvpResponse, string> = { going: "Going", maybe: "Maybe", cant: "Can't go" };
 
 const MAX_DURATION_MS = 72 * 3_600_000;
 
@@ -29,7 +27,7 @@ export const eventFormSchema = z.object({
 export type EventFormInput = Omit<z.infer<typeof eventFormSchema>, "description" | "locationText" | "rsvpEnabled"> & {
   description?: string;
   locationText?: string;
-  /** Defaults to true (RSVP on). */
+  /** Defaults to true (people can sign up to attend). */
   rsvpEnabled?: boolean;
 };
 
@@ -101,6 +99,7 @@ export async function createEvent(actorId: string, input: EventFormInput): Promi
       createdBy: actorId,
     })
     .returning();
+  if (row!.rsvpEnabled) await ensureAttendSlot(row!.id);
   await audit({ actorId, action: "event.create", targetType: "event", targetId: row!.id, after: { title: row!.title, startsAt: row!.startsAt, endsAt: row!.endsAt } });
   await queueGcalPush(row!.id, "created");
   await notifyEventChange(row!, "created", String(row!.createdAt.getTime())).catch(() => undefined);
@@ -121,6 +120,7 @@ export async function updateEvent(actorId: string, id: string, input: EventFormI
     // Imported events are read-only in Command except for the check-in verification method.
     const rsvpEnabled = input.rsvpEnabled ?? before.rsvpEnabled;
     await db.update(events).set({ verification: input.verification, rsvpEnabled }).where(eq(events.id, id));
+    if (rsvpEnabled) await ensureAttendSlot(id);
     await audit({ actorId, action: "event.update_verification", targetType: "event", targetId: id, before: { verification: before.verification, rsvpEnabled: before.rsvpEnabled }, after: { verification: input.verification, rsvpEnabled } });
     return { ok: true };
   }
@@ -140,6 +140,7 @@ export async function updateEvent(actorId: string, id: string, input: EventFormI
     })
     .where(eq(events.id, id))
     .returning();
+  if (after!.rsvpEnabled) await ensureAttendSlot(id);
   await audit({
     actorId,
     action: "event.update",
@@ -165,7 +166,7 @@ export async function cancelEvent(actorId: string, id: string): Promise<Result> 
 }
 
 /**
- * Permanently removes an event, its RSVPs and any attendance recorded against it (admin-only, enforced by
+ * Permanently removes an event, its sign-ups and any attendance recorded against it (admin-only, enforced by
  * the action). Refused only when the event is linked to Google Calendar, where a local delete would leave
  * the Google copy or re-import it.
  */
@@ -189,74 +190,6 @@ export async function listUpcomingEvents(now: Date, limit = 50): Promise<EventRo
 
 export async function eventsForSeason(seasonId: string): Promise<EventRow[]> {
   return db.select().from(events).where(eq(events.seasonId, seasonId)).orderBy(asc(events.startsAt));
-}
-
-// ---------- RSVPs ----------
-
-export async function setRsvp(userId: string, eventId: string, response: RsvpResponse, reason?: string): Promise<Result> {
-  const event = await getEvent(eventId);
-  if (!event) return { ok: false, error: "That event doesn't exist." };
-  if (event.cancelledAt) return { ok: false, error: "This event was cancelled." };
-  if (!event.rsvpEnabled) return { ok: false, error: "This event doesn't take RSVPs." };
-  if (event.endsAt <= new Date()) return { ok: false, error: "This event is over, so RSVPs are closed." };
-  const cleanReason = reason?.trim() ? reason.trim().slice(0, 300) : null;
-  await db
-    .insert(rsvps)
-    .values({ eventId, userId, response, reason: cleanReason })
-    .onConflictDoUpdate({ target: [rsvps.eventId, rsvps.userId], set: { response, reason: cleanReason, updatedAt: new Date() } });
-  return { ok: true };
-}
-
-export async function getRsvp(userId: string, eventId: string) {
-  const [r] = await db.select().from(rsvps).where(and(eq(rsvps.eventId, eventId), eq(rsvps.userId, userId)));
-  return r;
-}
-
-export async function rsvpCounts(eventIds: string[]): Promise<Map<string, Record<RsvpResponse, number>>> {
-  const out = new Map<string, Record<RsvpResponse, number>>();
-  if (eventIds.length === 0) return out;
-  const rows = await db
-    .select({ eventId: rsvps.eventId, response: rsvps.response, n: sql<number>`count(*)::int` })
-    .from(rsvps)
-    .innerJoin(users, eq(users.id, rsvps.userId))
-    .where(and(inArray(rsvps.eventId, eventIds), eq(users.status, "active")))
-    .groupBy(rsvps.eventId, rsvps.response);
-  for (const r of rows) {
-    const cur = out.get(r.eventId) ?? { going: 0, maybe: 0, cant: 0 };
-    cur[r.response as RsvpResponse] = r.n;
-    out.set(r.eventId, cur);
-  }
-  return out;
-}
-
-export async function myRsvps(userId: string, eventIds: string[]): Promise<Map<string, RsvpResponse>> {
-  const out = new Map<string, RsvpResponse>();
-  if (eventIds.length === 0) return out;
-  const rows = await db.select({ eventId: rsvps.eventId, response: rsvps.response }).from(rsvps).where(and(eq(rsvps.userId, userId), inArray(rsvps.eventId, eventIds)));
-  for (const r of rows) out.set(r.eventId, r.response as RsvpResponse);
-  return out;
-}
-
-/** Lead/admin view: who answered what, and active members who haven't answered. Never exposes email. */
-export async function rsvpLists(eventId: string) {
-  const answered = await db
-    .select({ userId: users.id, name: users.name, response: rsvps.response, reason: rsvps.reason })
-    .from(rsvps)
-    .innerJoin(users, eq(users.id, rsvps.userId))
-    .where(and(eq(rsvps.eventId, eventId), eq(users.status, "active")))
-    .orderBy(asc(users.name));
-  const answeredIds = new Set(answered.map((a) => a.userId));
-  const everyone = await db
-    .select({ id: users.id, name: users.name })
-    .from(users)
-    .where(and(eq(users.status, "active"), inArray(users.role, ["member", "lead", "admin"]), ne(users.role, "parent")))
-    .orderBy(asc(users.name));
-  return {
-    going: answered.filter((a) => a.response === "going"),
-    maybe: answered.filter((a) => a.response === "maybe"),
-    cant: answered.filter((a) => a.response === "cant"),
-    noResponse: everyone.filter((u) => !answeredIds.has(u.id)),
-  };
 }
 
 export { getCurrentSeason };

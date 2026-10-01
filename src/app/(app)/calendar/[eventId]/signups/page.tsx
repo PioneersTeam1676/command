@@ -28,6 +28,7 @@ function Row({ who, slotTitle, eventId, label }: { who: RosterEntry; slotTitle: 
       <span className="min-w-0 truncate">
         {label} {who.name}
         {who.source === "admin" ? <span className="text-muted"> · placed by a lead</span> : null}
+        {who.note ? <span className="text-muted"> · “{who.note}”</span> : null}
       </span>
       {who.entryId ? (
         <ConfirmAction
@@ -53,7 +54,7 @@ export default async function ManageSignupsPage({ params }: { params: Promise<{ 
   const [settings, view, groups] = await Promise.all([getSettings(), getSignupView(eventId, { id: user.id, role: user.role }), listGroups()]);
   if (!view) notFound();
   const tz = settings.timezone;
-  const live = view.slots.filter((s) => !s.slot.cancelledAt);
+  const live = view.slots.filter((s) => !s.slot.cancelledAt && s.slot.kind !== "attend");
   const [unsigned, pools] = await Promise.all([unsignedPeople(view.sheet.id), Promise.all(live.map(async (v) => [v.slot.id, await eligiblePeople(v.slot.id)] as const))]);
   const pool = new Map(pools);
   const places = live.reduce((n, v) => n + v.slot.capacity, 0);
