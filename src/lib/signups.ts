@@ -320,7 +320,7 @@ export async function leaveSlot(viewer: Viewer, slotId: string, now: Date = new 
     const span = spanOf(slot, event!);
     if (sheet!.closedAt) return { ok: false, error: "Sign-ups are closed. Ask a lead to take you off." };
     // A shift can be given back until it starts; being at an event or bringing something, until the event is over.
-    if (slot.kind === "shift" ? span.startsAt <= now : span.endsAt <= now) return { ok: false, error: slot.kind === "shift" ? "This shift has already started. Ask a lead to take you off." : "This event is over, so it can't be changed." };
+    if (slot.kind === "shift" ? span.startsAt <= now : span.endsAt <= now) return { ok: false, error: slot.kind === "shift" ? "This shift has already started. Ask a lead to take you off." : "This event is over." };
     await tx.delete(signupEntries).where(eq(signupEntries.id, mine.id));
     const promoted = mine.status === "confirmed" ? await promoteWaitlist(tx, slot) : [];
     return { ok: true, promoted, slot };

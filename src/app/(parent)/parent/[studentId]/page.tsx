@@ -34,7 +34,7 @@ export default async function ParentStudentPage({ params, searchParams }: { para
   return (
     <div className="space-y-6">
       <Link href="/parent" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← All students</Link>
-      <h1 className="text-[28px] font-semibold">{student.name}</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">{student.name}</h1>
       <SeasonPicker seasons={allSeasons} selectedId={season.id} />
       <HoursSummary sessions={sessions} tz={settings.timezone} seasonLabel={season.name} />
       {sessions.length === 0 ? (

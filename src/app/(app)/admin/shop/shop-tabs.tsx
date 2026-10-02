@@ -7,10 +7,10 @@ export function ShopTabs({ active, pending }: { active: "items" | "orders"; pend
     <Link
       href={href}
       aria-current={on ? "page" : undefined}
-      className={cn("inline-flex min-h-10 items-center gap-2 rounded-[8px] px-4 text-sm", on ? "bg-accent-subtle font-medium" : "text-muted hover:bg-surface hover:text-foreground")}
+      className={cn("inline-flex min-h-9 items-center gap-2 rounded-md px-3 text-[13px]", on ? "bg-hover font-medium" : "text-muted hover:bg-hover hover:text-foreground")}
     >
       {label}
-      {count ? <span className="rounded-full bg-accent px-1.5 font-mono text-xs text-accent-fg">{count}</span> : null}
+      {count ? <span className="rounded-full bg-foreground px-1.5 font-mono text-[11px] text-background">{count}</span> : null}
     </Link>
   );
   return (

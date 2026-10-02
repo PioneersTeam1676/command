@@ -29,7 +29,7 @@ export default async function ParentCalendar({ searchParams }: { searchParams: P
   const shifts = await calendarShiftInfo({ id: parent.id, role: parent.role });
   return (
     <div>
-      <h1 className="mb-6 text-[28px] font-semibold">Calendar</h1>
+      <h1 className="mb-6 text-2xl font-semibold tracking-tight">Calendar</h1>
       <CalendarView events={events} range={range} tz={settings.timezone} season={season} basePath="/parent/calendar" shifts={shifts} />
     </div>
   );

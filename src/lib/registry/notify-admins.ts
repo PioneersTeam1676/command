@@ -41,13 +41,13 @@ export async function announce(e: Effective, now: Date, ref: { lastSuccessAt: Da
   const day = now.toISOString().slice(0, 10);
   if (e.state === "warning") {
     const left = e.msUntilStop ?? 0;
-    await tellAdmins(`reg-warn-start:${anchor}`, "Command can't reach the license registry", `Command hasn't been able to check in with the license registry for over a day. Please make sure this server can reach the internet. If this continues, Command becomes read-only in ${days(left)} days (nobody could clock in or out). Data export keeps working.`);
+    await tellAdmins(`reg-warn-start:${anchor}`, "Command can't reach the license registry", `Command hasn't reached the license registry in over a day. Make sure this server has internet access. If it stays down, Command goes read-only in ${days(left)} days: nobody can clock in or out, but exports keep working.`);
     await tellAdmins(`reg-warn-day:${day}`, "Reminder: license check still failing", `Command still can't reach the license registry. ${days(left)} day${days(left) === 1 ? "" : "s"} left before it becomes read-only.`);
     if (left <= TIMING.urgentLeftMs) await tellAdmins(`reg-urgent:${anchor}`, "Urgent: Command will become read-only soon", `Command will become read-only in less than 2 days unless it can reach the license registry. Restore this server's internet access, or contact ${OWNER_CONTACT}.`);
   } else if (e.state === "stopped_unreachable") {
-    await tellAdmins(`reg-stopped-unreachable:${anchor}`, "Command is now read-only", `Command couldn't reach the license registry for 7 days, so it is read-only: everyone can still see their data and download exports, but nobody can clock in or out or change anything. Restore internet access to the registry (it recovers automatically), or contact ${OWNER_CONTACT}.`);
+    await tellAdmins(`reg-stopped-unreachable:${anchor}`, "Command is now read-only", `Command couldn't reach the license registry for 7 days. It's read-only: data and exports still work, but nobody can clock in or out or change anything. It recovers on its own once the registry is reachable again, or contact ${OWNER_CONTACT}.`);
   } else if (e.state === "stopped_integrity") {
-    await tellAdmins(`reg-stopped-integrity:${e.reason}:${anchor}`, "Command is read-only: license check problem", `Command detected that the license-check code was changed or its responses couldn't be trusted. It is read-only until this is resolved: data can still be viewed and exported. Please contact ${OWNER_CONTACT}.`);
+    await tellAdmins(`reg-stopped-integrity:${e.reason}:${anchor}`, "Command is read-only: license check problem", `The license-check code was changed or its responses can't be trusted. Command is read-only until this is resolved. Data can still be viewed and exported. Contact ${OWNER_CONTACT}.`);
   } else if (e.state === "revoked") {
     const deadline = e.revokeDeadline ? e.revokeDeadline.toISOString().slice(0, 10) : "";
     const msg = e.message ? ` Message from the owner: “${e.message}”` : "";

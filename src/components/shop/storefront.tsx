@@ -43,26 +43,26 @@ function ItemCard({ item, onAdd, leftInCart }: { item: StoreItem; onAdd: (l: Omi
   };
 
   return (
-    <Card role="group" aria-label={item.name} className="flex flex-col overflow-hidden">
+    <Card role="group" aria-label={item.name} className="flex min-w-0 flex-col overflow-hidden">
       {item.photoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.photoUrl} alt={item.name} className="aspect-[4/3] w-full object-cover" />
+        <img src={item.photoUrl} alt={item.name} className="aspect-[4/3] w-full border-b object-cover" />
       ) : (
-        <div aria-hidden className="grid aspect-[4/3] w-full place-items-center bg-surface text-muted"><Shirt className="size-10" /></div>
+        <div aria-hidden className="grid aspect-[4/3] w-full place-items-center border-b bg-surface text-muted"><Shirt className="size-8" strokeWidth={1.5} /></div>
       )}
-      <div className="flex flex-1 flex-col gap-3 p-4">
+      <div className="flex min-w-0 flex-1 flex-col gap-4 p-4">
         <div>
           <div className="flex items-baseline justify-between gap-3">
-            <h3 className="font-semibold">{item.name}</h3>
-            <span className="font-mono text-sm">{formatMoney(item.priceCents)}</span>
+            <h3 className="min-w-0 truncate text-[15px] font-semibold tracking-tight">{item.name}</h3>
+            <span className="shrink-0 font-mono text-sm">{formatMoney(item.priceCents)}</span>
           </div>
-          {item.description ? <p className="mt-1 text-sm md:text-[13px] text-muted">{item.description}</p> : null}
+          {item.description ? <p className="mt-1 text-[13px] text-muted">{item.description}</p> : null}
         </div>
         {soldOut ? (
           <p className="text-sm font-medium text-muted">Sold out</p>
         ) : (
           <>
-            <label className="block space-y-1 text-sm">
+            <label className="block space-y-1.5 text-[13px]">
               <span className="font-medium">Size</span>
               <Select value={sizeId} onChange={(e) => { setSizeId(e.target.value); setError(""); }}>
                 {item.sizes.map((s) => (
@@ -73,19 +73,19 @@ function ItemCard({ item, onAdd, leftInCart }: { item: StoreItem; onAdd: (l: Omi
               </Select>
             </label>
             {item.personalize !== "none" ? (
-              <label className="block space-y-1 text-sm">
+              <label className="block space-y-1.5 text-[13px]">
                 <span className="font-medium">{item.personalizeLabel}{item.personalize === "optional" ? " (optional)" : ""}</span>
-                <Input value={text} onChange={(e) => setText(e.target.value)} maxLength={item.personalizeMax} placeholder="Exactly as you want it printed" />
+                <Input value={text} onChange={(e) => setText(e.target.value)} maxLength={item.personalizeMax} placeholder="Exactly as you want it" />
                 {text ? <span className="block text-xs text-muted">It will say: <span className="font-mono text-foreground">{text.trim().replace(/\s+/g, " ")}</span></span> : null}
               </label>
             ) : null}
-            <div className="mt-auto flex items-center gap-3 pt-1">
-              <div className="flex items-center rounded-[8px] border">
+            <div className="mt-auto flex items-center gap-2 pt-1">
+              <div className="flex shrink-0 items-center rounded-md border">
                 <Button type="button" variant="ghost" size="icon" aria-label="One fewer" onClick={() => setQty((q) => Math.max(1, q - 1))}><Minus /></Button>
-                <span className="w-8 text-center font-mono text-sm" aria-live="polite">{qty}</span>
+                <span className="w-7 text-center font-mono text-sm" aria-live="polite">{qty}</span>
                 <Button type="button" variant="ghost" size="icon" aria-label="One more" onClick={() => setQty((q) => Math.min(20, q + 1))}><Plus /></Button>
               </div>
-              <Button type="button" onClick={add} className="flex-1">Add to order</Button>
+              <Button type="button" onClick={add} className="min-w-0 flex-1">Add to order</Button>
             </div>
             {error ? <p role="alert" className="text-sm text-error">{error}</p> : null}
           </>
@@ -117,15 +117,15 @@ export function Storefront({ items, payBy }: { items: StoreItem[]; payBy: string
     });
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-      <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+      <div className="grid min-w-0 gap-4 sm:grid-cols-2">
         {items.map((item) => (
           <ItemCard key={item.id} item={item} leftInCart={inCart} onAdd={(l) => { setCart((c) => [...c, { ...l, key: next }]); setNext((n) => n + 1); }} />
         ))}
       </div>
       <aside aria-label="Your order" className="lg:sticky lg:top-6">
         <Card className="space-y-4 p-4">
-          <h2 className="flex items-center gap-2 font-semibold"><ShoppingBag className="size-4" aria-hidden /> Your order</h2>
+          <h2 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight"><ShoppingBag className="size-4" aria-hidden /> Your order</h2>
           {cart.length === 0 ? (
             <p className="text-sm text-muted">Nothing yet. Pick a size and tap “Add to order”.</p>
           ) : (

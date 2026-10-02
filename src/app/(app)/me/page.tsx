@@ -28,7 +28,7 @@ export default async function MePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[28px] font-semibold">{user.name}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{user.name}</h1>
         <p className="mt-1 font-mono text-sm md:text-[13px] text-muted"><EmailText email={user.email} /></p>
         <p className="mt-2"><Badge tone="accent" className="capitalize">{user.role}</Badge></p>
       </div>
@@ -82,13 +82,13 @@ export default async function MePage() {
         <CardHeader>
           <CardTitle>Let a parent follow along</CardTitle>
           <CardDescription>
-            Create a link and send it to your parent or guardian. After they sign up, a team admin approves them. They can only see your calendar, hours and attendance.
+            Send this link to your parent or guardian. Once they sign up, a team admin approves them. They only see your calendar, hours and attendance.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <InviteCreator action={createInviteAction} />
           {activeInvites.length > 0 ? (
-            <ul className="divide-y rounded-[8px] border text-sm md:text-[13px]">
+            <ul className="divide-y rounded-lg border text-sm md:text-[13px]">
               {activeInvites.map((i) => (
                 <li key={i.id} className="flex items-center justify-between gap-3 p-3">
                   <span className="text-muted">Link expires {format(i.expiresAt, "MMM d")} · used {i.usedCount}×</span>
@@ -103,7 +103,7 @@ export default async function MePage() {
           {links.length > 0 ? (
             <div>
               <h3 className="mb-2 text-sm font-medium">Parents</h3>
-              <ul className="divide-y rounded-[8px] border text-sm md:text-[13px]">
+              <ul className="divide-y rounded-lg border text-sm md:text-[13px]">
                 {links.map((l) => (
                   <li key={l.id} className="flex items-center justify-between gap-3 p-3">
                     <span>

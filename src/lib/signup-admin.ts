@@ -202,7 +202,7 @@ export async function unsignedPeople(sheetId: string, now: Date = new Date()): P
 export async function nudgeSheet(actorId: string, sheetId: string, now: Date = new Date()): Promise<Result<{ reminded: number; alreadyToday: boolean }>> {
   const [sheet] = await db.select().from(signupSheets).where(eq(signupSheets.id, sheetId));
   if (!sheet) return { ok: false, error: "That sign-up sheet doesn't exist." };
-  if (sheet.closedAt) return { ok: false, error: "Sign-ups are closed, so there's nothing to remind people about." };
+  if (sheet.closedAt) return { ok: false, error: "Sign-ups are closed." };
   const [event] = await db.select().from(events).where(eq(events.id, sheet.eventId));
   const targets = await unsignedPeople(sheetId, now);
   if (targets.length === 0) return { ok: true, reminded: 0, alreadyToday: false };

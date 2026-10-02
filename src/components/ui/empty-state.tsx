@@ -16,7 +16,7 @@ export function EmptyState({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-col items-center gap-2 rounded-[8px] border border-dashed px-6 py-10 text-center", className)}>
+    <div className={cn("flex flex-col items-center gap-2 rounded-lg border border-dashed px-6 py-10 text-center", className)}>
       {icon ? <div className="text-muted [&_svg]:size-6">{icon}</div> : null}
       <p className="text-[15px] font-medium">{title}</p>
       {children ? <p className="max-w-sm text-sm md:text-[13px] text-muted">{children}</p> : null}

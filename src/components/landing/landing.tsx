@@ -14,8 +14,8 @@ export function Landing() {
         <div className="space-y-4">
           <h1 className="text-5xl font-semibold tracking-tight">Command</h1>
           <p className="text-lg">
-            Command is team management software for FIRST Robotics teams. Teams use it to run their calendar, track attendance and
-            build-season hours, and keep members and parents informed.
+            Team management for FIRST Robotics teams. Run the calendar, track attendance and build-season hours, and keep
+            members and parents in the loop.
           </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Button asChild size="lg"><Link href="/login">Sign in</Link></Button>
@@ -29,7 +29,7 @@ export function Landing() {
             { Icon: CalendarDays, title: "Events & sign-ups", body: "A shared calendar with reminders and check-in." },
             { Icon: Users, title: "Members & parents", body: "Rosters, approvals and updates for families." },
           ].map(({ Icon, title, body }) => (
-            <li key={title} className="rounded-[10px] border bg-background p-4">
+            <li key={title} className="rounded-lg border bg-background p-4">
               <Icon className="mb-2 size-5 text-muted" aria-hidden />
               <p className="font-medium">{title}</p>
               <p className="mt-1 text-sm text-muted">{body}</p>

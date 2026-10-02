@@ -54,7 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ];
   return (
     <div>
-      <h1 className="mb-4 text-[28px] font-semibold">Admin</h1>
+      <h1 className="mb-4 text-2xl font-semibold tracking-tight">Admin</h1>
       <AdminTabs groups={groups} />
       {children}
     </div>

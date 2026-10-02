@@ -65,7 +65,7 @@ export default async function EventPage({ params, searchParams }: { params: Prom
               size="md"
               danger
               title={`Cancel “${event.title}”?`}
-              description="It stays on the calendar marked as cancelled, and everyone gets a notification. This can't be undone."
+              description="It stays on the calendar marked as cancelled, and everyone is notified. Can't be undone."
               confirmLabel="Cancel event"
               action={cancelEventAction}
               fields={{ id: event.id }}
@@ -76,14 +76,14 @@ export default async function EventPage({ params, searchParams }: { params: Prom
             size="md"
             danger
             title={`Delete “${event.title}”?`}
-            description="This removes the event and its sign-ups for good, with no notification. It can't be undone. Any check-ins recorded for it, and the hours they earned, are removed too. Cancel it instead if you want to keep them."
+            description="Removes the event, its sign-ups, and any check-ins and hours earned from it. Nobody is notified. Can't be undone. Cancel it instead to keep the records."
             confirmLabel="Delete event"
             action={deleteEventAction}
             fields={{ id: event.id }}
           /> : null}
         </div>
       ) : null}
-      {admin && deleteError ? <p role="alert" className="rounded-[8px] bg-error-subtle p-3 text-sm text-error">{deleteError}</p> : null}
+      {admin && deleteError ? <p role="alert" className="rounded-lg bg-error-subtle p-3 text-sm text-error">{deleteError}</p> : null}
 
       {open ? (
         <AttendCard eventId={event.id} going={mine.going} note={mine.note} count={counts.get(event.id) ?? 0} action={attendAction} />

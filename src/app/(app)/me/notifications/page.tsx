@@ -30,7 +30,7 @@ export default async function NotificationsPage() {
     <div className="space-y-6">
       <div>
         <Link href="/me" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Me</Link>
-        <h1 className="mt-2 text-[28px] font-semibold">Notifications</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Notifications</h1>
       </div>
 
       <Card>
@@ -65,8 +65,8 @@ export default async function NotificationsPage() {
             <ActionForm action={saveDaysAction} className="space-y-4">
               <div className="flex flex-wrap gap-2">
                 {season.workdays.map((d) => (
-                  <label key={d} className="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-[8px] border px-3 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent-subtle">
-                    <input type="checkbox" name="days" value={d} defaultChecked={attending.has(d)} className="size-4 accent-[var(--accent)]" />
+                  <label key={d} className="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent-subtle">
+                    <input type="checkbox" name="days" value={d} defaultChecked={attending.has(d)} className="size-4 accent-foreground" />
                     {DAYS[d]}
                   </label>
                 ))}

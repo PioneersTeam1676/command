@@ -10,9 +10,9 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
         <div className="mb-8 flex items-center justify-center gap-2.5 text-[15px] font-semibold tracking-tight">
           {logoPath ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src="/api/logo" alt="" className="size-8 rounded-[6px] object-cover" />
+            <img src="/api/logo" alt="" className="size-8 rounded-md object-cover" />
           ) : (
-            <span aria-hidden className="grid size-8 place-items-center rounded-[6px] bg-accent text-sm text-accent-fg">
+            <span aria-hidden className="grid size-8 place-items-center rounded-md bg-accent text-sm text-accent-fg">
               {name.slice(0, 1).toUpperCase()}
             </span>
           )}

@@ -41,7 +41,7 @@ export default async function HerePage() {
                 <ConfirmAction
                   label="Clock out"
                   title={`Clock ${h.name} out now?`}
-                  description="This ends their open session at this moment. It will be marked as edited by you in the audit log."
+                  description="Ends their open session now. It's marked as edited and logged under your name."
                   confirmLabel="Clock out"
                   action={forceClockOutAction}
                   fields={{ id: h.sessionId, userId: h.userId }}

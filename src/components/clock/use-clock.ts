@@ -84,7 +84,7 @@ export function useClock() {
 
   async function queueTap(input: TapInput, actionId: string, clientTime: string): Promise<TapResult> {
     if (input.kind === "event" && input.code) {
-      return { ok: false, error: "This event needs a check-in code, so you have to be online to check in." };
+      return { ok: false, error: "This event needs a check-in code. Go online to enter it." };
     }
     try {
       await enqueueTap({ actionId, action: input.action, kind: input.kind, eventId: input.eventId, clientTime, label: input.label, note: input.note });

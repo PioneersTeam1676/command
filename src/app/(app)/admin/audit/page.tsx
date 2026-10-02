@@ -55,8 +55,8 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
             {actors.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
           </Select>
         </div>
-        <div className="space-y-1.5"><Label htmlFor="from">From</Label><input id="from" name="from" type="date" defaultValue={sp.from} className="h-10 min-h-[44px] rounded-[8px] border bg-background px-3 text-sm md:min-h-10" /></div>
-        <div className="space-y-1.5"><Label htmlFor="to">To</Label><input id="to" name="to" type="date" defaultValue={sp.to} className="h-10 min-h-[44px] rounded-[8px] border bg-background px-3 text-sm md:min-h-10" /></div>
+        <div className="space-y-1.5"><Label htmlFor="from">From</Label><input id="from" name="from" type="date" defaultValue={sp.from} className="h-10 min-h-[44px] rounded-lg border bg-background px-3 text-sm md:min-h-10" /></div>
+        <div className="space-y-1.5"><Label htmlFor="to">To</Label><input id="to" name="to" type="date" defaultValue={sp.to} className="h-10 min-h-[44px] rounded-lg border bg-background px-3 text-sm md:min-h-10" /></div>
         <Button type="submit" variant="secondary">Filter</Button>
         <Button asChild variant="ghost"><Link href="/api/export/audit">Download CSV</Link></Button>
       </form>
@@ -76,7 +76,7 @@ export default async function AuditPage({ searchParams }: { searchParams: Promis
                 {a.before || a.after ? (
                   <details className="mt-1.5">
                     <summary className="cursor-pointer text-[13px] md:text-[12px] text-muted">Details</summary>
-                    <pre className="mt-1 overflow-x-auto rounded-[6px] bg-surface p-2 font-mono text-xs md:text-[11px]">{JSON.stringify({ before: a.before, after: a.after }, null, 2)}</pre>
+                    <pre className="mt-1 overflow-x-auto rounded-md bg-surface p-2 font-mono text-xs md:text-[11px]">{JSON.stringify({ before: a.before, after: a.after }, null, 2)}</pre>
                   </details>
                 ) : null}
               </li>

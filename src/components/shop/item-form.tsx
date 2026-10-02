@@ -22,12 +22,12 @@ export function ItemForm({ item }: { item?: ShopItemWithSizes }) {
           <TextField name="photo" label="Photo" type="file" accept="image/png,image/jpeg,image/webp" help="PNG, JPEG or WebP, up to 3 MB." />
           {item?.photoPath ? (
             <label className="flex min-h-[44px] items-center gap-3 text-sm">
-              <input type="checkbox" name="removePhoto" className="size-4 accent-[var(--accent)]" /> Remove the current photo
+              <input type="checkbox" name="removePhoto" className="size-4 accent-foreground" /> Remove the current photo
             </label>
           ) : null}
         </div>
         <SizeEditor initial={item?.sizes.map((s) => ({ id: s.id, label: s.label, stock: s.stock })) ?? [{ id: "", label: "One size", stock: 0 }]} />
-        <div className="space-y-3 rounded-[8px] border p-4">
+        <div className="space-y-3 rounded-lg border p-4">
           <SelectField
             name="personalize"
             label="Print something on it?"
@@ -45,7 +45,7 @@ export function ItemForm({ item }: { item?: ShopItemWithSizes }) {
           </div>
         </div>
         <label className="flex items-start gap-3 text-sm">
-          <input type="checkbox" name="active" defaultChecked={item?.active ?? true} className="mt-1 size-4 accent-[var(--accent)]" />
+          <input type="checkbox" name="active" defaultChecked={item?.active ?? true} className="mt-1 size-4 accent-foreground" />
           <span>
             <span className="font-medium">Show in the shop</span>
             <span className="block text-sm md:text-[13px] text-muted">Untick to hide it without deleting it. Old orders keep working.</span>

@@ -67,7 +67,7 @@ export default async function SettingsPage() {
             <TextField name="logo" label="Logo" type="file" accept="image/png,image/jpeg,image/webp" help={s.logoPath ? "Choose a file to replace the current logo (PNG, JPEG or WebP, up to 512 KB)." : "PNG, JPEG or WebP, up to 512 KB. Also becomes your app icon."} />
             {s.logoPath ? (
               <label className="flex min-h-[44px] items-center gap-3 text-sm">
-                <input type="checkbox" name="removeLogo" className="size-4 accent-[var(--accent)]" /> Remove the current logo
+                <input type="checkbox" name="removeLogo" className="size-4 accent-foreground" /> Remove the current logo
               </label>
             ) : null}
             <TextField name="domains" label="Auto-approved email domains" defaultValue={s.allowedDomains.join(", ")} placeholder="school.edu, team.org" help="People who sign in with Google using a verified email on one of these domains skip approval. Email must match exactly (no subdomains). Separate with commas." />
@@ -98,28 +98,28 @@ export default async function SettingsPage() {
               <TextField name="eventAutocloseGraceMinutes" label="Event grace period (minutes)" type="number" min={0} max={240} defaultValue={s.eventAutocloseGraceMinutes} help="How long after an event ends before people still checked in are clocked out." />
             </div>
             <label className="flex items-start gap-3 text-sm">
-              <input type="checkbox" name="backfillRequiresApproval" defaultChecked={s.backfillRequiresApproval} className="mt-1 size-4 accent-[var(--accent)]" />
+              <input type="checkbox" name="backfillRequiresApproval" defaultChecked={s.backfillRequiresApproval} className="mt-1 size-4 accent-foreground" />
               <span>
                 <span className="font-medium">Require approval for added time</span>
                 <span className="block text-sm md:text-[13px] text-muted">When someone adds time they forgot to clock, a lead or admin must approve it before it counts. If you turn this off, it counts right away and is marked “self-reported”.</span>
               </span>
             </label>
             <label className="flex items-start gap-3 text-sm">
-              <input type="checkbox" name="showOffHoursNotice" defaultChecked={s.showOffHoursNotice} className="mt-1 size-4 accent-[var(--accent)]" />
+              <input type="checkbox" name="showOffHoursNotice" defaultChecked={s.showOffHoursNotice} className="mt-1 size-4 accent-foreground" />
               <span>
                 <span className="font-medium">Show an “outside build hours” notice</span>
                 <span className="block text-sm md:text-[13px] text-muted">On the Home screen, warn people when they clock in outside build season or after the automatic clock-out time that a lead will have to approve the time. The time is held for approval either way.</span>
               </span>
             </label>
             <label className="flex items-start gap-3 text-sm">
-              <input type="checkbox" name="clockoutNoteEnabled" defaultChecked={s.clockoutNoteEnabled} className="mt-1 size-4 accent-[var(--accent)]" />
+              <input type="checkbox" name="clockoutNoteEnabled" defaultChecked={s.clockoutNoteEnabled} className="mt-1 size-4 accent-foreground" />
               <span>
                 <span className="font-medium">Ask what people did when they clock out</span>
                 <span className="block text-sm md:text-[13px] text-muted">Shows a short note box before clocking out. The note is saved with the session and leads can see it.</span>
               </span>
             </label>
             <label className="ml-7 flex items-start gap-3 text-sm">
-              <input type="checkbox" name="clockoutNoteRequired" defaultChecked={s.clockoutNoteRequired} className="mt-1 size-4 accent-[var(--accent)]" />
+              <input type="checkbox" name="clockoutNoteRequired" defaultChecked={s.clockoutNoteRequired} className="mt-1 size-4 accent-foreground" />
               <span>
                 <span className="font-medium">Make the note required</span>
                 <span className="block text-sm md:text-[13px] text-muted">People can&apos;t clock out until they write something. Only applies when the note is turned on.</span>
@@ -165,7 +165,7 @@ export default async function SettingsPage() {
               ] as const
             ).map(([name, on, label, help]) => (
               <label key={name} className="flex items-start gap-3 text-sm">
-                <input type="checkbox" name={name} defaultChecked={on} className="mt-1 size-4 accent-[var(--accent)]" />
+                <input type="checkbox" name={name} defaultChecked={on} className="mt-1 size-4 accent-foreground" />
                 <span>
                   <span className="font-medium">{label}</span>
                   <span className="block text-sm md:text-[13px] text-muted">{help}</span>

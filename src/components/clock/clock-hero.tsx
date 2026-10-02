@@ -76,7 +76,7 @@ export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, 
           </span>
           {running ? "Clocked in" : canClockIn ? "Clocked out" : idleMessage}
         </p>
-        <p className={cn("font-mono text-6xl font-light tabular-nums tracking-tight transition-colors duration-300", running ? "text-foreground" : "text-muted/40")}>
+        <p className={cn("font-mono text-6xl font-light tabular-nums tracking-tight transition-colors duration-300", running ? "text-foreground" : "text-muted")}>
           {fmt(elapsed)}
         </p>
       </div>
@@ -87,10 +87,10 @@ export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, 
         disabled={disabled}
         aria-label={running ? "Clock out" : "Clock in"}
         className={cn(
-          "group flex h-14 w-full items-center justify-center gap-2.5 rounded-full text-base font-medium transition-[background-color,transform,box-shadow,color] duration-200 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
+          "group flex h-12 w-full items-center justify-center gap-2.5 rounded-lg text-[15px] font-medium transition-[background-color,transform,box-shadow,color] duration-200 ease-out active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40",
           running
             ? "border border-error/40 bg-error-subtle text-error hover:bg-error hover:text-white"
-            : "bg-foreground text-background shadow-sm hover:shadow-md",
+            : "bg-foreground text-background hover:bg-foreground/85",
         )}
       >
         {busy ? (

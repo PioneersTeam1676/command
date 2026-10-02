@@ -34,7 +34,7 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
     <div className="space-y-6">
       <div>
         <Link href="/me" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Me</Link>
-        <h1 className="mt-2 text-[28px] font-semibold">My hours</h1>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">My hours</h1>
       </div>
       <SeasonPicker seasons={allSeasons} selectedId={season.id} />
       <HoursSummary sessions={list} tz={tz} seasonLabel={season.name} />

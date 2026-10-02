@@ -15,7 +15,7 @@ export async function resetFeedAction(): Promise<FormState> {
   const user = await requireActionUser("member", { allowParent: true });
   const token = await resetFeed(user.id);
   refresh();
-  return { success: "Your calendar link is ready. Copy it now: for your safety it isn't shown again.", data: { url: feedUrl(token) } };
+  return { success: "Your calendar link is ready. Copy it now, it won't be shown again.", data: { url: feedUrl(token) } };
 }
 
 /** Turning a link off is a safety action, so it still works when the instance is read-only. */

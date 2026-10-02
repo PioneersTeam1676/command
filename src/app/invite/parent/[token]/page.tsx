@@ -85,7 +85,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
           <TextField name="password" label="Password" type="password" autoComplete="new-password" required minLength={10} help="At least 10 characters." />
           <SubmitButton size="lg" className="w-full" pendingText="Creating…">Create account</SubmitButton>
         </ActionForm>
-        <details className="mt-6 rounded-[8px] border p-4">
+        <details className="mt-6 rounded-lg border p-4">
           <summary className="cursor-pointer text-sm font-medium">Already have a parent account? Sign in</summary>
           <ActionForm action={loginAction} className="mt-4 space-y-4">
             <input type="hidden" name="next" value={path} />

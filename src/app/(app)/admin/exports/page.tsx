@@ -54,8 +54,8 @@ export default async function ExportsPage() {
         </CardHeader>
         <CardContent>
           <form method="get" action="/api/export/audit" className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1.5"><Label htmlFor="from">From</Label><input id="from" name="from" type="date" className="h-10 min-h-[44px] rounded-[8px] border bg-background px-3 text-sm md:min-h-10" /></div>
-            <div className="space-y-1.5"><Label htmlFor="to">To</Label><input id="to" name="to" type="date" className="h-10 min-h-[44px] rounded-[8px] border bg-background px-3 text-sm md:min-h-10" /></div>
+            <div className="space-y-1.5"><Label htmlFor="from">From</Label><input id="from" name="from" type="date" className="h-10 min-h-[44px] rounded-lg border bg-background px-3 text-sm md:min-h-10" /></div>
+            <div className="space-y-1.5"><Label htmlFor="to">To</Label><input id="to" name="to" type="date" className="h-10 min-h-[44px] rounded-lg border bg-background px-3 text-sm md:min-h-10" /></div>
             <Button type="submit" variant="secondary"><Download aria-hidden />Download CSV</Button>
           </form>
         </CardContent>

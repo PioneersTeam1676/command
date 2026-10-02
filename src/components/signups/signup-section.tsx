@@ -26,7 +26,7 @@ function Slot({ v, event, tz, staff, groups }: { v: SlotView; event: EventRow; t
   const cancelled = Boolean(slot.cancelledAt);
   const groupNames = v.groups.map((g) => g.name).join(", ");
   return (
-    <li className="space-y-3 rounded-[8px] border p-4">
+    <li className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
           <p className={`text-[15px] font-medium ${cancelled ? "text-muted line-through" : ""}`}>{slot.title}</p>

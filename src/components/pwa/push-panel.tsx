@@ -37,7 +37,7 @@ async function readEnv(): Promise<Env> {
 
 export function IosInstallGuide() {
   return (
-    <div className="space-y-3 rounded-[8px] border bg-surface p-4 text-sm">
+    <div className="space-y-3 rounded-lg border bg-surface p-4 text-sm">
       <p className="font-medium">On iPhone, notifications work once Command is on your Home Screen</p>
       <ol className="space-y-3">
         <li className="flex items-start gap-3">

@@ -28,7 +28,7 @@ export default async function AdminNotificationsPage({ searchParams }: { searchP
       <p className="text-sm text-muted">Who can actually receive reminders on their phone. Ask people who show as not enabled to open Me → Notifications.</p>
       <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {(Object.keys(counts) as PushStatus[]).map((k) => (
-          <div key={k} className="rounded-[8px] border p-4">
+          <div key={k} className="rounded-lg border p-4">
             <dt className="text-sm md:text-[13px] text-muted">{PUSH_STATUS_LABEL[k]}</dt>
             <dd className="mt-1 font-mono text-[28px] font-medium">{counts[k]}</dd>
           </div>

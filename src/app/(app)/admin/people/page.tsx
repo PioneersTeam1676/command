@@ -22,7 +22,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
   const all = await listUsers();
   return (
     <div className="space-y-3">
-      {error ? <p role="alert" className="rounded-[8px] bg-error-subtle p-3 text-sm text-error">{error.slice(0, 200)}</p> : null}
+      {error ? <p role="alert" className="rounded-lg bg-error-subtle p-3 text-sm text-error">{error.slice(0, 200)}</p> : null}
       <p className="text-sm text-muted">Everyone with an account. Members never see each other&apos;s email addresses; only admins see them here.</p>
       {all.map((u) => (
         <Card key={u.id} className="p-5">
@@ -56,7 +56,7 @@ export default async function PeoplePage({ searchParams }: { searchParams: Promi
                   <form action={reactivateAction}><input type="hidden" name="id" value={u.id} /><Button type="submit" size="sm" variant="secondary">Reactivate</Button></form>
                 ) : null}
                 {u.id !== me.id ? (
-                  <ConfirmAction label="Erase data" title={`Permanently erase ${u.name}'s personal data?`} description="This removes their name, email, login and devices for good and can't be undone. Their attendance hours stay in season totals, but no longer show who they belong to. Use this when someone asks to be forgotten." confirmLabel="Erase permanently" action={eraseAction} fields={{ id: u.id }} danger />
+                  <ConfirmAction label="Erase data" title={`Permanently erase ${u.name}'s personal data?`} description="Removes their name, email, login and devices. Can't be undone. Their hours stay in season totals but are no longer tied to them. Use this when someone asks to be forgotten." confirmLabel="Erase permanently" action={eraseAction} fields={{ id: u.id }} danger />
                 ) : null}
                 {u.id !== me.id ? (
                   <ConfirmAction label="Delete" title={`Delete ${u.name}?`} description={u.role === "parent" ? "This deletes the parent account and their links to students. The students' own accounts are not affected. It can't be undone." : "This deletes the account and everything tied to it, including their attendance hours and sign-ups, for good. It can't be undone. To keep their hours, deactivate them instead."} confirmLabel="Delete permanently" action={deleteUserAction} fields={{ id: u.id }} danger />

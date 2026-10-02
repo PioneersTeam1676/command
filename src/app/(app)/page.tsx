@@ -5,7 +5,6 @@ import { EventClockCard } from "@/components/clock/event-clock-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { GridBackground } from "@/components/ui/grid-background";
 import { Landing } from "@/components/landing/landing";
 import { getCurrentUser, requireUser } from "@/lib/auth/current-user";
 import { isReadOnly } from "@/lib/registry";
@@ -48,8 +47,8 @@ export default async function HomePage() {
 
   return (
     <div className="space-y-10">
-      <GridBackground className="-mx-5 -mt-6 px-5 pb-6 pt-6 md:-mx-8 md:-mt-8 md:px-8 md:pt-8">
-        <h1 className="text-3xl font-semibold">{greeting}, {first}!</h1>
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">{greeting}, {first}!</h1>
         <p className="mt-0.5 text-sm text-muted">{formatInTz(new Date(), tz, "EEEE, MMMM d")}{home.buildDay ? (home.workday ? " · Build season workday" : " · Build season") : ""}</p>
         <div className="mt-6">
           <ClockHero
@@ -62,10 +61,10 @@ export default async function HomePage() {
             cutoffLabel={cutoffLabel}
           />
         </div>
-      </GridBackground>
+      </div>
 
       <section aria-labelledby="today-h">
-        <h2 id="today-h" className="mb-3 text-lg font-semibold">Today</h2>
+        <h2 id="today-h" className="mb-3 text-base font-semibold tracking-tight">Today</h2>
         {home.todayEvents.length === 0 ? (
           <p className="text-sm text-muted">No events today.</p>
         ) : (
@@ -80,14 +79,14 @@ export default async function HomePage() {
       {shifts.upcoming.length > 0 || openShifts.length > 0 ? (
         <section aria-labelledby="shifts-h">
           <div className="mb-3 flex items-center justify-between">
-            <h2 id="shifts-h" className="text-lg font-semibold">Your shifts</h2>
+            <h2 id="shifts-h" className="text-base font-semibold tracking-tight">Your shifts</h2>
             <Button asChild variant="ghost" size="sm"><Link href="/me/shifts">All my shifts</Link></Button>
           </div>
           {shifts.upcoming.length > 0 ? (
             <ul className="space-y-2">
               {shifts.upcoming.slice(0, 3).map((m) => (
                 <li key={m.entryId}>
-                  <Link href={`/calendar/${m.eventId}`} className="flex items-start justify-between gap-3 rounded-[10px] border p-4 transition-colors duration-150 hover:bg-surface md:rounded-[8px] md:p-3">
+                  <Link href={`/calendar/${m.eventId}`} className="flex items-start justify-between gap-3 rounded-lg border p-4 transition-colors duration-150 hover:bg-surface md:rounded-lg md:p-3">
                     <span className="min-w-0">
                       <span className="block truncate font-medium">{m.slot.title} <span className="font-normal text-muted">· {m.eventTitle}</span></span>
                       <span className="block font-mono text-[13px] md:text-[12px] text-muted">{formatInTz(m.slot.startsAt, tz, "EEE MMM d, h:mm a")}</span>
@@ -108,7 +107,7 @@ export default async function HomePage() {
 
       <section aria-labelledby="up-h">
         <div className="mb-3 flex items-center justify-between">
-          <h2 id="up-h" className="text-lg font-semibold">Coming up</h2>
+          <h2 id="up-h" className="text-base font-semibold tracking-tight">Coming up</h2>
           <Button asChild variant="ghost" size="sm"><Link href="/calendar?view=agenda">See all</Link></Button>
         </div>
         {home.upcoming.length === 0 ? (
@@ -116,7 +115,7 @@ export default async function HomePage() {
         ) : (
           <ul className="space-y-3">
             {home.upcoming.map((c) => (
-              <li key={c.event.id} className="rounded-[10px] border p-5 md:rounded-[8px] md:p-4">
+              <li key={c.event.id} className="rounded-lg border p-5 md:rounded-lg md:p-4">
                 <div className="flex items-start justify-between gap-3">
                   <Link href={`/calendar/${c.event.id}`} className="min-w-0">
                     <p className={`truncate font-medium ${c.event.cancelledAt ? "text-muted line-through" : ""}`}>{c.event.title}</p>

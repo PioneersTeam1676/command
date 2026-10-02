@@ -11,10 +11,10 @@ export function validateClientTime(raw: string | number | Date | null | undefine
   const time = raw instanceof Date ? raw : new Date(raw ?? NaN);
   if (Number.isNaN(time.getTime())) return { ok: false, reason: "invalid", message: "That time isn't valid." };
   if (time.getTime() > now.getTime() + FUTURE_TOLERANCE_MS) {
-    return { ok: false, reason: "future", message: "That tap has a time in the future, so it couldn't be saved. Check your phone's clock." };
+    return { ok: false, reason: "future", message: "That tap is dated in the future. Check your phone's clock." };
   }
   if (now.getTime() - time.getTime() > MAX_AGE_MS) {
-    return { ok: false, reason: "too_old", message: "That tap is more than 24 hours old, so it couldn't be saved. Ask a lead to add your time." };
+    return { ok: false, reason: "too_old", message: "That tap is over 24 hours old. Ask a lead to add your time." };
   }
   return { ok: true, time };
 }

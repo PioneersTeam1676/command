@@ -69,9 +69,9 @@ test("outsider signs up, waits, admin approves, outsider gets in", async ({ page
 
 test("wrong password gives a generic error", async ({ page }) => {
   await attemptSignIn(page, "admin@school.edu", "totally wrong password");
-  await expect(page.getByText("That email and password don't match")).toBeVisible();
+  await expect(page.getByText("Wrong email or password")).toBeVisible();
   await attemptSignIn(page, "nobody@nowhere.com", "totally wrong password");
-  await expect(page.getByText("That email and password don't match")).toBeVisible();
+  await expect(page.getByText("Wrong email or password")).toBeVisible();
 });
 
 test("parent link: invite, sign-up, approval, scoped access", async ({ page, browser }) => {

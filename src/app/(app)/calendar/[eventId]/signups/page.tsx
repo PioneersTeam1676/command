@@ -63,7 +63,7 @@ export default async function ManageSignupsPage({ params }: { params: Promise<{ 
   return (
     <div className="space-y-6">
       <Link href={`/calendar/${event.id}`} className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← {event.title}</Link>
-      <h1 className="text-[28px] font-semibold">Manage sign-ups</h1>
+      <h1 className="text-2xl font-semibold tracking-tight">Manage sign-ups</h1>
 
       <Card>
         <CardHeader>
@@ -111,7 +111,7 @@ export default async function ManageSignupsPage({ params }: { params: Promise<{ 
               </CardHeader>
               <CardContent className="space-y-4">
                 {v.roster && v.roster.length > 0 ? (
-                  <ul className="divide-y rounded-[8px] border" aria-label={`On ${slot.title}`}>
+                  <ul className="divide-y rounded-lg border" aria-label={`On ${slot.title}`}>
                     {v.roster.map((r) => <Row key={r.userId} who={r} slotTitle={slot.title} eventId={event.id} label="" />)}
                   </ul>
                 ) : (
@@ -120,7 +120,7 @@ export default async function ManageSignupsPage({ params }: { params: Promise<{ 
                 {v.queue && v.queue.length > 0 ? (
                   <div className="space-y-1.5">
                     <h3 className="text-sm font-medium">Waitlist</h3>
-                    <ul className="divide-y rounded-[8px] border" aria-label={`Waitlist for ${slot.title}`}>
+                    <ul className="divide-y rounded-lg border" aria-label={`Waitlist for ${slot.title}`}>
                       {v.queue.map((r, i) => <Row key={r.userId} who={r} slotTitle={slot.title} eventId={event.id} label={`${i + 1}.`} />)}
                     </ul>
                   </div>
@@ -132,17 +132,17 @@ export default async function ManageSignupsPage({ params }: { params: Promise<{ 
                     <ActionForm action={assignPeopleAction} className="mt-3 space-y-3">
                       <input type="hidden" name="slotId" value={slot.id} />
                       <input type="hidden" name="eventId" value={event.id} />
-                      <fieldset className="max-h-56 space-y-1 overflow-y-auto rounded-[8px] border p-3">
+                      <fieldset className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-3">
                         <legend className="sr-only">People to add to {slot.title}</legend>
                         {people.map((p) => (
                           <label key={p.id} className="flex items-center gap-2 py-1 text-sm">
-                            <input type="checkbox" name="userIds" value={p.id} className="size-4 accent-[var(--accent)]" />
+                            <input type="checkbox" name="userIds" value={p.id} className="size-4 accent-foreground" />
                             {p.name} <span className="text-muted capitalize">· {p.role}</span>
                           </label>
                         ))}
                       </fieldset>
                       <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="overbook" className="size-4 accent-[var(--accent)]" />
+                        <input type="checkbox" name="overbook" className="size-4 accent-foreground" />
                         Place them even if it&apos;s over the number needed
                       </label>
                       <SubmitButton variant="secondary" pendingText="Adding…">Add selected</SubmitButton>
@@ -158,7 +158,7 @@ export default async function ManageSignupsPage({ params }: { params: Promise<{ 
                       <input type="hidden" name="eventId" value={event.id} />
                       <SelectField name="groupId" label="Group" options={groups.map((g) => ({ value: g.id, label: `${g.name} (${g.memberCount})` }))} />
                       <label className="flex items-center gap-2 text-sm">
-                        <input type="checkbox" name="overbook" className="size-4 accent-[var(--accent)]" />
+                        <input type="checkbox" name="overbook" className="size-4 accent-foreground" />
                         Place them even if it&apos;s over the number needed
                       </label>
                       <SubmitButton variant="secondary" pendingText="Adding…">Add the group</SubmitButton>

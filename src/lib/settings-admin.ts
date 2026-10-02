@@ -24,7 +24,7 @@ export function parseDomains(input: string): { ok: true; domains: string[] } | {
 export function validateSchedule(s: { dailyReminderTime: string; clockoutReminderTime: string; autoClockoutTime: string }): string | null {
   if (![s.dailyReminderTime, s.clockoutReminderTime, s.autoClockoutTime].every(isHHMM)) return "Enter times like 15:30.";
   if (minutes(s.dailyReminderTime) >= minutes(s.clockoutReminderTime)) return "The clock-in reminder has to come before the clock-out reminder.";
-  if (minutes(s.clockoutReminderTime) >= minutes(s.autoClockoutTime)) return "The clock-out reminder has to come before the automatic clock-out, so people get a chance to do it themselves.";
+  if (minutes(s.clockoutReminderTime) >= minutes(s.autoClockoutTime)) return "The clock-out reminder has to come before the automatic clock-out.";
   return null;
 }
 

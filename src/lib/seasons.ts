@@ -89,7 +89,7 @@ export async function startNewSeason(actorId: string, input: NewSeasonInput): Pr
   const err = validateSeasonInput({ name: input.name, buildStart: input.buildStart, buildEnd: input.buildEnd, workdays: input.workdays });
   if (err) return { ok: false, error: err };
   if (!isLocalDate(input.startDate)) return { ok: false, error: "Choose a start date." };
-  if (input.startDate > today) return { ok: false, error: "A new season starts today or earlier. You can't start one in the future." };
+  if (input.startDate > today) return { ok: false, error: "A new season can't start in the future." };
   if (input.startDate < current.startDate) return { ok: false, error: `The new season can't start before the current one began (${current.startDate}).` };
   // Day before the new season, but never before the old season's own first day (same-day starts end it that day).
   const dayBefore = addDaysLocal(input.startDate, -1);

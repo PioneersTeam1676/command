@@ -24,7 +24,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
       <p className="max-w-2xl text-sm text-muted">
         Groups are sets of people you name, like &ldquo;Super scouts&rdquo; or &ldquo;Drivers&rdquo;. On a sign-up sheet you can reserve a shift for a group, or give a group first pick before it opens to everyone.
       </p>
-      {error ? <p role="alert" className="rounded-[8px] bg-error-subtle p-3 text-sm text-error">{error.slice(0, 300)}</p> : null}
+      {error ? <p role="alert" className="rounded-lg bg-error-subtle p-3 text-sm text-error">{error.slice(0, 300)}</p> : null}
 
       <Card className="p-5">
         <h2 className="mb-3 text-base font-semibold">New group</h2>
@@ -53,7 +53,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
                 label="Delete group"
                 danger
                 title={`Delete “${g.name}”?`}
-                description="Everyone is taken out of the group. It can't be deleted while a shift is still reserved for it."
+                description="Removes everyone from the group. Can't be deleted while a shift is still reserved for it."
                 confirmLabel="Delete group"
                 action={deleteGroupAction}
                 fields={{ id: g.id }}
@@ -63,7 +63,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
             {members.length === 0 ? (
               <p className="text-sm md:text-[13px] text-muted">Nobody in this group yet.</p>
             ) : (
-              <ul className="divide-y rounded-[8px] border">
+              <ul className="divide-y rounded-lg border">
                 {members.map((m) => (
                   <li key={m.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                     <span className="min-w-0 truncate">{m.name} <span className="text-muted capitalize">· {m.role}</span></span>
@@ -82,11 +82,11 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
                 <summary className="cursor-pointer text-sm font-medium">Add people</summary>
                 <form action={addMembersAction} className="mt-3 space-y-3">
                   <input type="hidden" name="id" value={g.id} />
-                  <fieldset className="max-h-56 space-y-1 overflow-y-auto rounded-[8px] border p-3">
+                  <fieldset className="max-h-56 space-y-1 overflow-y-auto rounded-lg border p-3">
                     <legend className="sr-only">People to add to {g.name}</legend>
                     {others.map((o) => (
                       <label key={o.id} className="flex items-center gap-2 py-1 text-sm">
-                        <input type="checkbox" name="userIds" value={o.id} className="size-4 accent-[var(--accent)]" />
+                        <input type="checkbox" name="userIds" value={o.id} className="size-4 accent-foreground" />
                         {o.name} <span className="text-muted capitalize">· {o.role}</span>
                       </label>
                     ))}

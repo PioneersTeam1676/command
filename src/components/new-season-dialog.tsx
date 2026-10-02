@@ -12,7 +12,7 @@ export function NewSeasonDialog({ action, currentName, today, splitDate, upcomin
         <Button variant="secondary">Start a new season…</Button>
       </DialogTrigger>
       <DialogContent title="Start a new season" description={`This closes “${currentName}” and starts fresh.`} className="max-h-[90dvh] max-w-lg overflow-y-auto">
-        <div className="mb-4 space-y-2 rounded-[8px] border bg-surface p-3 text-sm md:text-[13px]">
+        <div className="mb-4 space-y-2 rounded-lg border bg-surface p-3 text-sm md:text-[13px]">
           <p className="font-medium">Here&apos;s what happens</p>
           <ul className="list-disc space-y-1 pl-5 text-muted">
             <li><strong className="text-foreground">{currentName}</strong> is archived. Its hours, attendance and leaderboard stay viewable and downloadable. Nothing is deleted.</li>
@@ -30,7 +30,7 @@ export function NewSeasonDialog({ action, currentName, today, splitDate, upcomin
             <TextField name="buildEnd" label="Build season ends (optional)" type="date" />
           </div>
           <label className="flex min-h-[44px] items-start gap-3 text-sm">
-            <input type="checkbox" name="confirm" className="mt-1 size-4 accent-[var(--accent)]" required />
+            <input type="checkbox" name="confirm" className="mt-1 size-4 accent-foreground" required />
             <span>I understand the current season will be archived.</span>
           </label>
           <div className="flex justify-end gap-2">

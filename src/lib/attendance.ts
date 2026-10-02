@@ -121,7 +121,7 @@ export async function clockOutOpen(userId: string, t: Timing, origin: Origin = "
     .where(and(eq(attendanceSessions.userId, userId), eq(attendanceSessions.kind, "open"), eq(attendanceSessions.status, "open")))
     .orderBy(desc(attendanceSessions.clockInAt))
     .limit(1);
-  if (!open) return fail("You're not clocked in, so there's nothing to clock out of.", true);
+  if (!open) return fail("You're not clocked in.", true);
   if (time.at <= open.clockInAt) return fail("That clock-out is before your clock-in. Ask a lead to fix your time.", true);
 
   const cutoff = openSessionCloseAt(open, settings);
@@ -146,15 +146,15 @@ export async function clockInEvent(userId: string, eventId: string, t: Timing & 
   const settings = await getSettings();
   const opensAt = new Date(event.startsAt.getTime() - EVENT_CLOCKIN_LEAD_MS);
   if (time.at < opensAt) return fail(`Check-in opens 30 minutes before the event, at ${formatInTz(opensAt, settings.timezone, "h:mm a")}.`);
-  if (time.at >= event.endsAt) return fail("This event is over, so check-in has closed. You can add your time afterwards from your hours page.");
+  if (time.at >= event.endsAt) return fail("Check-in is closed. Add your time from your hours page.");
 
   if (effectiveVerification(event, settings) === "code") {
-    if (origin === "offline_synced") return fail("This event needs a check-in code, so you have to be online to check in.");
+    if (origin === "offline_synced") return fail("This event needs a check-in code. Go online to enter it.");
     const attempts = await hit(`checkin:${userId}:${eventId}`, 10, 300);
     if (!attempts.allowed) return fail(`Too many wrong codes. Try again in ${Math.ceil(attempts.retryAfterSeconds / 60)} minute(s), or ask a lead to add you.`);
     const secret = await getCheckinSecret(eventId, false);
     if (!t.code || !secret || !verifyCode(secret, t.code, t.now)) {
-      return fail("That code isn't right, or it has expired. Codes change every minute. Check the screen and try again.");
+      return fail("Wrong or expired code. Codes change every minute, so check the screen.");
     }
   }
 
@@ -297,7 +297,7 @@ export async function addBackfill(userId: string, input: BackfillInput, now: Dat
     return fail("Enter valid in and out times.");
   }
   if (outAt <= inAt) return fail("Your out time has to be after your in time.");
-  if (outAt.getTime() - inAt.getTime() > MAX_SESSION_MS) return fail("That's longer than 16 hours. Split it into separate days or ask a lead.");
+  if (outAt.getTime() - inAt.getTime() > MAX_SESSION_MS) return fail("That's over 16 hours. Split it across days or ask a lead.");
   if (outAt > now) return fail("You can only add time that has already happened.");
 
   let season: Season;

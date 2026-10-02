@@ -21,7 +21,7 @@ export function SubmitButton({ children, pendingText, ...props }: ButtonProps & 
 export function FormMessage({ state }: { state: FormState }) {
   if (state.error && !state.fieldErrors) {
     return (
-      <p role="alert" className="flex items-start gap-2 rounded-[8px] border border-error/30 bg-error-subtle p-3 text-sm md:text-[13px] text-error">
+      <p role="alert" className="flex items-start gap-2 rounded-lg border border-error/30 bg-error-subtle p-3 text-sm md:text-[13px] text-error">
         <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden />
         {state.error}
       </p>
@@ -36,7 +36,7 @@ export function FormMessage({ state }: { state: FormState }) {
   }
   if (state.success) {
     return (
-      <p role="status" className="flex items-start gap-2 rounded-[8px] border border-success/30 bg-success-subtle p-3 text-sm md:text-[13px] text-success">
+      <p role="status" className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-subtle p-3 text-sm md:text-[13px] text-success">
         <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
         {state.success}
       </p>

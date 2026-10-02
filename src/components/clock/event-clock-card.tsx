@@ -38,7 +38,7 @@ export function EventClockCard(p: EventClockProps) {
   }
 
   return (
-    <div className={cn("rounded-[10px] border p-5 md:rounded-[8px] md:p-4", checkedIn && "border-accent bg-accent-subtle/50")}>
+    <div className={cn("rounded-lg border p-5 md:rounded-lg md:p-4", checkedIn && "border-accent bg-accent-subtle/50")}>
       <div className="flex items-start justify-between gap-3">
         <Link href={`/calendar/${p.eventId}`} className="min-w-0">
           <p className={cn("truncate font-medium", p.cancelled && "text-muted line-through")}>{p.title}</p>

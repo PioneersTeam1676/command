@@ -33,7 +33,7 @@ export function SessionBadges({ s }: { s: SessionRowData }) {
 
 export function SessionList({ sessions, tz }: { sessions: SessionRowData[]; tz: string }) {
   return (
-    <ul className="divide-y rounded-[8px] border">
+    <ul className="divide-y rounded-lg border">
       {sessions.map((s) => {
         const ms = s.clockOutAt ? s.clockOutAt.getTime() - s.clockInAt.getTime() : 0;
         const counts = countsTowardHours({ clockInAt: s.clockInAt, clockOutAt: s.clockOutAt, status: s.status, reviewState: s.reviewState });
@@ -64,11 +64,11 @@ export function HoursSummary({ sessions, tz, seasonLabel }: { sessions: SessionR
   const days = msByLocalDate(hs, tz).size;
   return (
     <dl className="grid grid-cols-2 gap-3">
-      <div className="rounded-[8px] border p-4">
+      <div className="rounded-lg border p-4">
         <dt className="text-sm md:text-[13px] text-muted">Hours in {seasonLabel}</dt>
         <dd className="mt-1 font-mono text-[28px] font-medium">{(total / 3_600_000).toFixed(1)}</dd>
       </div>
-      <div className="rounded-[8px] border p-4">
+      <div className="rounded-lg border p-4">
         <dt className="text-sm md:text-[13px] text-muted">Days with time</dt>
         <dd className="mt-1 font-mono text-[28px] font-medium">{days}</dd>
       </div>

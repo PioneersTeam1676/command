@@ -32,7 +32,7 @@ export default async function SeasonPage({ searchParams }: { searchParams: Promi
   const archived = seasons.filter((s) => !s.isCurrent);
   return (
     <div className="max-w-xl space-y-6">
-    {started ? <p role="status" className="rounded-[8px] border bg-success-subtle p-3 text-sm text-success">New season started. The old one is archived and still viewable.</p> : null}
+    {started ? <p role="status" className="rounded-lg border bg-success-subtle p-3 text-sm text-success">New season started. The old one is archived and still viewable.</p> : null}
     <Card>
       <CardHeader>
         <CardTitle>Current season</CardTitle>
@@ -51,8 +51,8 @@ export default async function SeasonPage({ searchParams }: { searchParams: Promi
             <legend className="mb-2 text-sm font-medium">Workdays</legend>
             <div className="flex flex-wrap gap-2">
               {DAYS.map((d, i) => (
-                <label key={d} className="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-[8px] border px-3 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent-subtle">
-                  <input type="checkbox" name="workdays" value={i} defaultChecked={season.workdays.includes(i)} className="size-4 accent-[var(--accent)]" />
+                <label key={d} className="flex min-h-[44px] cursor-pointer items-center gap-2 rounded-lg border px-3 text-sm has-[:checked]:border-accent has-[:checked]:bg-accent-subtle">
+                  <input type="checkbox" name="workdays" value={i} defaultChecked={season.workdays.includes(i)} className="size-4 accent-foreground" />
                   {d}
                 </label>
               ))}

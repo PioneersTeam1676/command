@@ -26,7 +26,7 @@ export default async function EditItemPage({ params }: { params: Promise<{ id: s
         label="Delete item"
         danger
         title={`Delete “${item.name}”?`}
-        description="It disappears from the shop. Orders that already include it keep their details. To just stop selling it, untick “Show in the shop” instead."
+        description="Removes it from the shop. Existing orders keep their details. To stop selling it without deleting, untick “Show in the shop”."
         confirmLabel="Delete item"
         action={deleteItemAction}
         fields={{ id: item.id }}

@@ -100,4 +100,24 @@ describe.skipIf(!hasTestDb)("shop orders and stock", () => {
     expect(after.find((s) => s.label === "XL")!.id).toBe(m.id);
     expect((await saveItem(u.admin!, itemId, { ...item, sizes: [{ label: "A", stock: 1 }, { label: "a", stock: 1 }] })).ok).toBe(false);
   });
+
+  it("deleting an item removes its sizes but preserves orders and allows cancellation", async () => {
+    const { allOrders, cancelOrder, deleteItem, getItem, listAllItems, listStoreItems, placeOrder } = await import("./shop");
+    const { db } = await import("@/db");
+    const { shopItemSizes } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const before = await allOrders();
+    const sizeId = (await getItem(itemId))!.sizes[0]!.id;
+
+    expect((await deleteItem(u.admin!, itemId)).ok).toBe(true);
+    expect(await getItem(itemId)).toBeUndefined();
+    expect(await listAllItems()).toEqual([]);
+    expect(await listStoreItems()).toEqual([]);
+    expect(await db.select().from(shopItemSizes).where(eq(shopItemSizes.itemId, itemId))).toEqual([]);
+    expect(await allOrders()).toEqual(before.map((o) => ({ ...o, lines: o.lines.map((l) => ({ ...l, itemId: null, sizeId: null })) })));
+    expect((await placeOrder(buyer("ann"), [{ sizeId, qty: 1, printText: "Ann" }])).ok).toBe(false);
+    const pending = before.find((o) => o.status === "pending")!;
+    expect((await cancelOrder({ id: u.admin!, isAdmin: true }, pending.id)).ok).toBe(true);
+    expect((await deleteItem(u.admin!, itemId)).ok).toBe(false);
+  });
 });

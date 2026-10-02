@@ -9,7 +9,7 @@ export function EventDetails({ event, tz, showVerification = false }: { event: E
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h1 className={`text-[28px] font-semibold ${cancelled ? "text-muted line-through" : ""}`}>{event.title}</h1>
+        <h1 className={`text-2xl font-semibold tracking-tight ${cancelled ? "text-muted line-through" : ""}`}>{event.title}</h1>
         {cancelled ? <Badge tone="error">Cancelled</Badge> : null}
         {event.source === "imported" ? <Badge>From Google Calendar</Badge> : null}
       </div>

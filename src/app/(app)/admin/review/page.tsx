@@ -64,7 +64,7 @@ export default async function ReviewPage() {
     <div className="space-y-8">
       {attendance.length > 0 ? (
         <section aria-labelledby="att-h">
-          <h2 id="att-h" className="mb-3 text-lg font-semibold">Attendance</h2>
+          <h2 id="att-h" className="mb-3 text-base font-semibold tracking-tight">Attendance</h2>
           <div className="space-y-3">
             {attendance.map(({ session: a, userName, eventTitle }) => {
               const pendingBackfill = a.reviewState === "pending_approval";
@@ -94,7 +94,7 @@ export default async function ReviewPage() {
                         fields={{ id: a.id }}
                       />
                       {a.clockOutAt ? (
-                        <ConfirmAction label="Edit end time" title="Set the real end time" description="Use this when they actually left earlier. It will be marked as edited." confirmLabel="Save" action={editSessionEndAction} fields={{ id: a.id }}>
+                        <ConfirmAction label="Edit end time" title="Set the real end time" description="Use this if they left earlier. It's marked as edited." confirmLabel="Save" action={editSessionEndAction} fields={{ id: a.id }}>
                           <Input type="datetime-local" name="outAt" aria-label="End time" required defaultValue={toDatetimeLocal(a.clockOutAt, tz)} />
                           <p className="text-[13px] md:text-[12px] text-muted">Times are in {tz}.</p>
                         </ConfirmAction>
@@ -113,7 +113,7 @@ export default async function ReviewPage() {
 
       {access.length > 0 ? (
         <section aria-labelledby="access-h">
-          <h2 id="access-h" className="mb-3 text-lg font-semibold">Join requests</h2>
+          <h2 id="access-h" className="mb-3 text-base font-semibold tracking-tight">Join requests</h2>
           <div className="space-y-3">
             {access.map((r) => (
               <Card key={r.id}>
@@ -159,7 +159,7 @@ export default async function ReviewPage() {
 
       {parents.length > 0 ? (
         <section aria-labelledby="parent-h">
-          <h2 id="parent-h" className="mb-3 text-lg font-semibold">Parent link requests</h2>
+          <h2 id="parent-h" className="mb-3 text-base font-semibold tracking-tight">Parent link requests</h2>
           <div className="space-y-3">
             {parents.map((r) => (
               <Card key={r.id}>

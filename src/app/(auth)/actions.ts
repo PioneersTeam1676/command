@@ -35,8 +35,8 @@ async function readOnlyMessage(): Promise<string | null> {
   }
 }
 
-const GENERIC_LOGIN_ERROR = "That email and password don't match. Check them and try again.";
-const TOO_MANY = "Too many attempts. Please wait a few minutes and try again.";
+const GENERIC_LOGIN_ERROR = "Wrong email or password.";
+const TOO_MANY = "Too many attempts. Try again in a few minutes.";
 
 const loginSchema = z.object({ email: emailSchema, password: z.string().min(1, "Enter your password.").max(200), next: z.string().optional() });
 

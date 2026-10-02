@@ -164,7 +164,7 @@ test("manage page: a lead places and removes people; members can't open it", asy
   await expect(page.getByRole("heading", { name: "Manage sign-ups" })).toBeVisible();
   await expect(page.getByText(/places filled across/)).toBeVisible();
 
-  const card = page.locator("div.rounded-\\[8px\\].border").filter({ has: page.getByRole("heading", { name: "Pit crew" }) }).first();
+  const card = page.locator("div.rounded-lg.border").filter({ has: page.getByRole("heading", { name: "Pit crew" }) }).first();
   await card.getByText("Add people", { exact: true }).click();
   await card.getByLabel(/Olly Outsider/).check();
   await card.getByRole("button", { name: "Add selected" }).click();

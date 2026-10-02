@@ -45,8 +45,8 @@ export default async function WaitingPage() {
             <h1 className="text-2xl font-semibold">Waiting for approval</h1>
             <p className="text-sm text-muted">
               {request
-                ? "A team admin needs to approve your account. You don't have to keep this page open. Come back any time and sign in to check."
-                : "Your account is set up. A team admin will let you in soon."}
+                ? "A team admin needs to approve your account. You can close this page and sign in later to check."
+                : "Your account is set up. An admin will let you in soon."}
             </p>
             <Button asChild variant="secondary">
               <a href="/waiting">Check status</a>

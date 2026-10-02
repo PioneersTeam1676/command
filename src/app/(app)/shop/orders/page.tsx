@@ -26,11 +26,11 @@ export default async function MyOrdersPage({ searchParams }: { searchParams: Pro
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-[28px] font-semibold">My orders</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">My orders</h1>
         <Button asChild variant="secondary" size="sm"><Link href="/shop">Back to shop</Link></Button>
       </div>
       {placed ? (
-        <p role="status" className="flex items-start gap-2 rounded-[8px] border border-success/30 bg-success-subtle p-3 text-sm text-success">
+        <p role="status" className="flex items-start gap-2 rounded-lg border border-success/30 bg-success-subtle p-3 text-sm text-success">
           <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden /> Order placed. We emailed you. Hand a mentor the money to finish.
         </p>
       ) : null}

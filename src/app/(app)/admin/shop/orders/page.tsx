@@ -87,7 +87,7 @@ export default async function ShopOrdersPage({ searchParams }: { searchParams: P
   const totals = new Map<string, number>();
   for (const o of everything) if (o.status !== "cancelled") for (const l of o.lines) totals.set(`${l.itemName} · ${l.sizeLabel}`, (totals.get(`${l.itemName} · ${l.sizeLabel}`) ?? 0) + l.qty);
   const chip = (href: string, label: string, on: boolean, n?: number) => (
-    <Link href={href} aria-current={on ? "page" : undefined} className={cn("inline-flex min-h-9 items-center gap-2 rounded-full px-3.5 text-sm", on ? "bg-accent-subtle font-medium" : "bg-surface text-muted hover:text-foreground")}>
+    <Link href={href} aria-current={on ? "page" : undefined} className={cn("inline-flex min-h-8 items-center gap-2 rounded-md px-3 text-[13px]", on ? "bg-hover font-medium" : "text-muted hover:bg-hover hover:text-foreground")}>
       {label}
       {n !== undefined ? <span className="font-mono text-xs text-muted">{n}</span> : null}
     </Link>

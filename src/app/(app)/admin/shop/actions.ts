@@ -102,7 +102,7 @@ export async function deleteItemAction(fd: FormData) {
   const r = await deleteItem(admin.id, id.data);
   if (r.ok && r.photoPath) await deleteShopPhoto(r.photoPath);
   refresh();
-  redirect("/admin/shop");
+  redirect(r.ok ? "/admin/shop?deleted=1" : "/admin/shop");
 }
 
 export async function setOrderStatusAction(fd: FormData) {

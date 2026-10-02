@@ -59,7 +59,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
   return (
     <GridBackground className="min-h-dvh px-4 py-10 md:py-16">
       <div className="mx-auto w-full max-w-md">
-        <h1 className="text-center text-[28px] font-semibold">Set up Command</h1>
+        <h1 className="text-center text-2xl font-semibold tracking-tight">Set up Command</h1>
         <ol className="mt-6 flex items-center justify-center gap-2 text-xs" aria-label="Setup progress">
           {visible.map((s, i) => (
             <li key={s.key} className="flex items-center gap-2" aria-current={i === idx ? "step" : undefined}>
@@ -74,7 +74,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
           <CardContent className="p-6">
             {step === "token" && (
               <>
-                <h2 className="text-lg font-semibold">Enter your setup token</h2>
+                <h2 className="text-base font-semibold tracking-tight">Enter your setup token</h2>
                 <p className="mt-1 text-sm text-muted">
                   When Command started, it printed a one-time token in its logs. Run <code className="font-mono text-sm md:text-[13px]">docker compose logs app</code> and copy the token. This stops anyone else from claiming a new install.
                 </p>
@@ -87,7 +87,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
             {step === "account" && (
               <>
-                <h2 className="text-lg font-semibold">{hasAdmin ? "Sign back in as admin" : "Create the first admin"}</h2>
+                <h2 className="text-base font-semibold tracking-tight">{hasAdmin ? "Sign back in as admin" : "Create the first admin"}</h2>
                 {hasAdmin ? (
                   <>
                     <p className="mt-1 text-sm text-muted">You already created an admin account in this setup. Sign in to keep going.</p>
@@ -127,7 +127,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
             {step === "team" && (
               <>
-                <h2 className="text-lg font-semibold">About your team</h2>
+                <h2 className="text-base font-semibold tracking-tight">About your team</h2>
                 <p className="mt-1 text-sm text-muted">You can change all of this later in Settings.</p>
                 <ActionForm action={saveTeamAction} className="mt-5 space-y-4">
                   <TextField name="name" label="Team name" defaultValue={settings.name === "My Team" ? "" : settings.name} required maxLength={80} />
@@ -158,7 +158,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
             {step === "email" && (
               <>
-                <h2 className="text-lg font-semibold">Test your email</h2>
+                <h2 className="text-base font-semibold tracking-tight">Test your email</h2>
                 <p className="mt-1 text-sm text-muted">Email is set up on this server. Send yourself a test so you know sign-up confirmations and reset links will arrive. You can skip this.</p>
                 <ActionForm action={testEmailAction} className="mt-5 space-y-4">
                   <TextField name="to" label="Send a test to" type="email" defaultValue={user?.email} required />
@@ -170,13 +170,13 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
 
             {step === "finish" && (
               <>
-                <h2 className="text-lg font-semibold">Before you finish</h2>
+                <h2 className="text-base font-semibold tracking-tight">Before you finish</h2>
                 <div className="mt-3 space-y-3 text-sm text-muted">
                   <p>
                     Command is <strong className="text-foreground">source-available, not open source</strong>. You may run it for your own team. See the{" "}
                     <Link href="/license" className="underline underline-offset-4">license</Link> for what is and isn&apos;t allowed.
                   </p>
-                  <div className="rounded-[8px] border bg-surface p-3">
+                  <div className="rounded-lg border bg-surface p-3">
                     <p className="font-medium text-foreground">The registry check (required)</p>
                     <p className="mt-1">
                       As a condition of the license, Command registers with the owner&apos;s registry now and about once a day afterwards. It sends <em>only</em>: a random install ID, the Command version, your team name, team number and region, how many active members you have, and a build integrity value. It never sends names, emails, attendance or member lists. The registry keeps a one-way hash of your server&apos;s IP address for up to 30 days to detect misuse.
@@ -186,7 +186,7 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
                 </div>
                 <ActionForm action={finishSetupAction} className="mt-5 space-y-4">
                   <label className="flex min-h-[44px] items-start gap-3 text-sm">
-                    <input type="checkbox" name="agree" className="mt-1 size-4 accent-[var(--accent)]" required />
+                    <input type="checkbox" name="agree" className="mt-1 size-4 accent-foreground" required />
                     <span>I&apos;ve read the license and the registry notice, and I agree to them.</span>
                   </label>
                   <SubmitButton size="lg" className="w-full" pendingText="Finishing…">Finish setup</SubmitButton>

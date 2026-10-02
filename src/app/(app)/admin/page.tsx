@@ -17,7 +17,7 @@ export const dynamic = "force-dynamic";
 
 function Tile({ href, label, value, note }: { href: string; label: string; value: string | number; note?: string }) {
   return (
-    <Link href={href} className="group rounded-[8px] border p-4 transition-colors duration-150 hover:bg-surface">
+    <Link href={href} className="group rounded-lg border p-4 transition-colors duration-150 hover:bg-surface">
       <p className="flex items-center justify-between text-sm md:text-[13px] text-muted">{label}<ArrowRight className="size-4 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden /></p>
       <p className="mt-1 font-mono text-[28px] font-medium">{value}</p>
       {note ? <p className="text-[13px] md:text-[12px] text-muted">{note}</p> : null}

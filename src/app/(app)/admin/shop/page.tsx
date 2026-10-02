@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Plus, Shirt } from "lucide-react";
+import { ConfirmAction } from "@/components/confirm-action";
 import { ActionForm, SubmitButton } from "@/components/form";
 import { TextAreaField, TextField } from "@/components/form-fields";
 import { Badge } from "@/components/ui/badge";
@@ -12,15 +13,15 @@ import { readSettings } from "@/lib/settings";
 import { listAllItems, orderCounts } from "@/lib/shop";
 import { formatMoney, isShopOpen } from "@/lib/shop-rules";
 import { toDatetimeLocal } from "@/lib/time";
-import { saveShopSettingsAction } from "./actions";
+import { deleteItemAction, saveShopSettingsAction } from "./actions";
 import { ShopTabs } from "./shop-tabs";
 
 export const metadata: Metadata = { title: "Shop" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminShopPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
+export default async function AdminShopPage({ searchParams }: { searchParams: Promise<{ saved?: string; deleted?: string }> }) {
   await requireUser({ min: "admin" });
-  const { saved } = await searchParams;
+  const { saved, deleted } = await searchParams;
   const [s, items, counts] = await Promise.all([readSettings(), listAllItems(), orderCounts()]);
   const open = isShopOpen(s);
   // The stored end is the very end of the last day; show the day itself.
@@ -28,7 +29,8 @@ export default async function AdminShopPage({ searchParams }: { searchParams: Pr
   return (
     <div className="space-y-6">
       <ShopTabs active="items" pending={counts.pending} />
-      {saved ? <p role="status" className="rounded-[8px] bg-success-subtle p-3 text-sm text-success">Item saved.</p> : null}
+      {saved ? <p role="status" className="rounded-lg bg-success-subtle p-3 text-sm text-success">Item saved.</p> : null}
+      {deleted === "1" ? <p role="status" className="rounded-lg bg-success-subtle p-3 text-sm text-success">Item deleted. Existing orders have been kept.</p> : null}
 
       <Card className="max-w-2xl p-5">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -37,7 +39,7 @@ export default async function AdminShopPage({ searchParams }: { searchParams: Pr
         </div>
         <ActionForm action={saveShopSettingsAction} className="space-y-4">
           <label className="flex items-start gap-3 text-sm">
-            <input type="checkbox" name="enabled" defaultChecked={s.shopEnabled} className="mt-1 size-4 accent-[var(--accent)]" />
+            <input type="checkbox" name="enabled" defaultChecked={s.shopEnabled} className="mt-1 size-4 accent-foreground" />
             <span>
               <span className="font-medium">Open the shop</span>
               <span className="block text-sm md:text-[13px] text-muted">A “Shop” link appears in everyone&apos;s menu. Untick to hide it again.</span>
@@ -63,13 +65,13 @@ export default async function AdminShopPage({ searchParams }: { searchParams: Pr
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2">
             {items.map((i) => (
-              <li key={i.id}>
-                <Link href={`/admin/shop/items/${i.id}`} className="flex gap-3 rounded-[8px] border p-3 transition-colors hover:bg-surface">
+              <li key={i.id} className="rounded-lg border">
+                <Link href={`/admin/shop/items/${i.id}`} className="flex gap-3 rounded-lg p-3 transition-colors hover:bg-surface">
                   {i.photoPath ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={`/api/shop/photo/${i.photoPath}`} alt="" className="size-16 shrink-0 rounded-[6px] object-cover" />
+                    <img src={`/api/shop/photo/${i.photoPath}`} alt="" className="size-16 shrink-0 rounded-md object-cover" />
                   ) : (
-                    <span aria-hidden className="grid size-16 shrink-0 place-items-center rounded-[6px] bg-surface text-muted"><Shirt className="size-6" /></span>
+                    <span aria-hidden className="grid size-16 shrink-0 place-items-center rounded-md bg-surface text-muted"><Shirt className="size-6" /></span>
                   )}
                   <span className="min-w-0">
                     <span className="flex flex-wrap items-center gap-2"><span className="font-medium">{i.name}</span>{i.active ? null : <Badge>Hidden</Badge>}</span>
@@ -77,6 +79,17 @@ export default async function AdminShopPage({ searchParams }: { searchParams: Pr
                     <span className="block text-sm md:text-[13px] text-muted">{i.sizes.map((z) => `${z.label}: ${z.stock}`).join(" · ")}</span>
                   </span>
                 </Link>
+                <div className="flex justify-end px-3 pb-3">
+                  <ConfirmAction
+                    label="Delete item"
+                    danger
+                    title={`Delete “${i.name}”?`}
+                    description="Permanently removes this item and its sizes from the shop. Existing orders keep their details. This cannot be undone."
+                    confirmLabel="Delete item"
+                    action={deleteItemAction}
+                    fields={{ id: i.id }}
+                  />
+                </div>
               </li>
             ))}
           </ul>

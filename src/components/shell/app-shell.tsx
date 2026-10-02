@@ -43,9 +43,9 @@ function Brand({ teamName, logoUrl, href = "/" }: { teamName: string; logoUrl?: 
     <Link href={href} aria-label={teamName} className="flex min-w-0 items-center gap-2.5 whitespace-nowrap font-semibold tracking-tight">
       {logoUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={logoUrl} alt="" className="size-7 shrink-0 rounded-[6px] object-cover" />
+        <img src={logoUrl} alt="" className="size-7 shrink-0 rounded-md object-cover" />
       ) : (
-        <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-[6px] bg-accent text-[13px] text-accent-fg">
+        <span aria-hidden className="grid size-7 shrink-0 place-items-center rounded-md bg-accent text-[13px] text-accent-fg">
           {teamName.slice(0, 1).toUpperCase()}
         </span>
       )}
@@ -61,9 +61,9 @@ function SidebarLink({ item, active, rail }: { item: NavItem; active: boolean; r
       aria-current={active ? "page" : undefined}
       title={item.label}
       className={cn(
-        "flex min-h-10 items-center gap-3 whitespace-nowrap rounded-[6px] text-sm transition-colors duration-150",
-        rail ? "justify-center px-0" : "px-4",
-        active ? "bg-accent-subtle font-medium text-foreground" : "text-muted hover:bg-surface hover:text-foreground",
+        "flex min-h-9 items-center gap-2.5 whitespace-nowrap rounded-md text-[13px] transition-colors duration-150",
+        rail ? "justify-center px-0" : "px-2.5",
+        active ? "bg-hover font-medium text-foreground" : "text-muted hover:bg-hover hover:text-foreground",
       )}
     >
       <item.Icon className="size-4 shrink-0" aria-hidden />
@@ -131,10 +131,10 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
       className="min-h-dvh md:grid md:transition-[grid-template-columns] md:duration-200 md:ease-[cubic-bezier(0.32,0.72,0,1)] md:data-[dragging]:transition-none"
       style={{ gridTemplateColumns: `${stored ? RAIL : FULL}px 1fr` }}
     >
-      <a href="#main" className="sr-only z-50 rounded-[6px] bg-background px-3 py-2 text-sm focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:border">
+      <a href="#main" className="sr-only z-50 rounded-md bg-background px-3 py-2 text-sm focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:border">
         Skip to content
       </a>
-      <aside className="sticky top-0 hidden h-dvh min-w-0 flex-col gap-6 overflow-hidden border-r bg-surface/50 px-2 py-4 md:flex">
+      <aside className="sticky top-0 hidden h-dvh min-w-0 flex-col gap-5 overflow-hidden border-r bg-surface px-2 py-3 md:flex">
         <div className={cn("flex items-center gap-2", stored ? "justify-center" : "justify-between pl-2.5")}>
           {stored ? null : <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />}
           <button
@@ -142,7 +142,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
             onClick={toggle}
             aria-label={stored ? "Expand sidebar" : "Collapse sidebar"}
             title={stored ? "Expand sidebar" : "Collapse sidebar"}
-            className="grid size-7 shrink-0 place-items-center rounded-[6px] text-muted transition-colors duration-150 hover:bg-surface hover:text-foreground"
+            className="grid size-7 shrink-0 place-items-center rounded-md text-muted transition-colors duration-150 hover:bg-hover hover:text-foreground"
           >
             {stored ? <PanelLeftOpen className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
           </button>
@@ -154,7 +154,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
         </nav>
         {isParent ? (
           <form action={logoutAction} className="mt-auto">
-            <button type="submit" title="Sign out" className={cn("flex min-h-10 w-full items-center gap-3 whitespace-nowrap rounded-[6px] text-sm text-muted transition-colors duration-150 hover:bg-surface hover:text-foreground", stored ? "justify-center px-0" : "px-4")}>
+            <button type="submit" title="Sign out" className={cn("flex min-h-9 w-full items-center gap-2.5 whitespace-nowrap rounded-md text-[13px] text-muted transition-colors duration-150 hover:bg-hover hover:text-foreground", stored ? "justify-center px-0" : "px-2.5")}>
               <LogOut className="size-4 shrink-0" aria-hidden />
               <span className={stored ? "sr-only" : undefined}>Sign out</span>
             </button>
@@ -182,26 +182,23 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
 
 
       <div className="flex min-w-0 flex-col">
-        <header className="pt-safe sticky top-0 z-30 flex h-[calc(3.5rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-5 md:hidden">
+        <header className="pt-safe sticky top-0 z-30 flex h-[calc(3rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background/90 px-4 backdrop-blur md:hidden">
           <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />
           {isStaff ? (
-            <Link href="/admin" className="inline-flex min-h-[44px] items-center px-2 text-sm font-medium text-accent">
+            <Link href="/admin" className="inline-flex min-h-[44px] items-center px-2 text-[13px] font-medium text-muted hover:text-foreground">
               Admin
             </Link>
           ) : null}
           {isParent ? (
             <form action={logoutAction}>
-              <button type="submit" className="inline-flex min-h-[44px] items-center px-2 text-sm font-medium text-accent">
+              <button type="submit" className="inline-flex min-h-[44px] items-center px-2 text-[13px] font-medium text-muted hover:text-foreground">
                 Sign out
               </button>
             </form>
           ) : null}
         </header>
-        <div className="hidden h-12 items-center justify-end border-b px-6 md:flex">
-          <span className="text-[13px] text-muted">{teamName}</span>
-        </div>
         {banner}
-        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-5 pb-32 pt-6 md:px-8 md:pb-12 md:pt-8">{children}</main>
+        <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-16 md:pt-10">{children}</main>
       </div>
 
       <nav
@@ -217,11 +214,11 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "flex min-h-[64px] flex-col items-center justify-center gap-1 text-xs transition-colors duration-150",
-                active ? "font-medium text-accent" : "text-muted",
+                "flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] transition-colors duration-150",
+                active ? "font-medium text-foreground" : "text-muted",
               )}
             >
-              <item.Icon className="size-6" aria-hidden />
+              <item.Icon className="size-5" aria-hidden />
               {item.label}
             </Link>
           );
@@ -231,9 +228,9 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
             <DialogTrigger asChild>
               <button
                 type="button"
-                className={cn("flex min-h-[64px] flex-col items-center justify-center gap-1 text-xs transition-colors duration-150", more.some((m) => isActive(pathname, m.href)) ? "font-medium text-accent" : "text-muted")}
+                className={cn("flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] transition-colors duration-150", more.some((m) => isActive(pathname, m.href)) ? "font-medium text-foreground" : "text-muted")}
               >
-                <Ellipsis className="size-6" aria-hidden />
+                <Ellipsis className="size-5" aria-hidden />
                 More
               </button>
             </DialogTrigger>
@@ -242,7 +239,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
                 {more.map((item) => (
                   <li key={item.href}>
                     <DialogClose asChild>
-                      <Link href={item.href} className="flex min-h-12 items-center gap-3 rounded-[8px] px-3 text-[15px] hover:bg-surface">
+                      <Link href={item.href} className="flex min-h-11 items-center gap-3 rounded-md px-3 text-sm hover:bg-hover">
                         <item.Icon className="size-5 text-muted" aria-hidden />
                         {item.label}
                       </Link>

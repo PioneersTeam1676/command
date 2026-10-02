@@ -51,7 +51,7 @@ export function SlotForm({
       {lockKind ? null : (
         <fieldset className="flex flex-wrap gap-2" aria-label="What kind of spot is this?">
           {([["shift", "A shift (a time to be there)"], ["item", "Something to bring"]] as const).map(([v, l]) => (
-            <label key={v} className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-full border px-4 text-sm ${kind === v ? "border-accent bg-accent-subtle font-medium" : "text-muted"}`}>
+            <label key={v} className={`flex min-h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-[13px] ${kind === v ? "border-foreground font-medium" : "text-muted hover:bg-hover"}`}>
               <input type="radio" name="kindChoice" value={v} checked={kind === v} onChange={() => setKind(v)} className="sr-only" />
               {l}
             </label>
@@ -75,12 +75,12 @@ export function SlotForm({
         />
       </div>
       {groups.length > 0 ? (
-        <fieldset className="space-y-3 rounded-[8px] border p-3">
+        <fieldset className="space-y-3 rounded-lg border p-3">
           <legend className="px-1 text-sm font-medium">Reserve for a group (optional)</legend>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             {groups.map((g) => (
               <label key={g.id} className="flex items-center gap-2 text-sm">
-                <input type="checkbox" name="groupIds" value={g.id} defaultChecked={defaults.groupIds?.includes(g.id)} className="size-4 accent-[var(--accent)]" />
+                <input type="checkbox" name="groupIds" value={g.id} defaultChecked={defaults.groupIds?.includes(g.id)} className="size-4 accent-foreground" />
                 {g.name}
               </label>
             ))}
@@ -95,7 +95,7 @@ export function SlotForm({
         </fieldset>
       ) : null}
       <label className="flex items-start gap-3 text-sm">
-        <input type="checkbox" name="waitlistEnabled" defaultChecked={defaults.waitlistEnabled ?? true} className="mt-1 size-4 accent-[var(--accent)]" />
+        <input type="checkbox" name="waitlistEnabled" defaultChecked={defaults.waitlistEnabled ?? true} className="mt-1 size-4 accent-foreground" />
         <span>
           <span className="font-medium">Keep a waitlist</span>
           <span className="block text-sm md:text-[13px] text-muted">When the shift is full, people can queue. If someone drops out, the next person in line gets the place and a notification.</span>

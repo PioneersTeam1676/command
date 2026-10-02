@@ -70,7 +70,7 @@ export async function shiftsIcs(user: { id: string; role: Role }, now: Date = ne
       start: r.slot.startsAt,
       end: r.slot.endsAt,
       summary: `${cancelled ? "Cancelled: " : waiting ? "Waitlist: " : ""}${r.slot.title} (${r.eventTitle})`,
-      description: [r.slot.description, waiting ? "You're on the waitlist. You'll be notified if a place opens." : null, link].filter(Boolean).join("\n"),
+      description: [r.slot.description, waiting ? "You're on the waitlist." : null, link].filter(Boolean).join("\n"),
       location: r.locationText ?? undefined,
       url: link,
       status: cancelled ? "CANCELLED" : waiting ? "TENTATIVE" : "CONFIRMED",

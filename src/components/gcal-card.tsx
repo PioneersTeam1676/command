@@ -96,7 +96,7 @@ export function GcalCard({
 
         {mode === "api" ? (
           <>
-            {failingPushes > 0 ? <p role="alert" className="rounded-[8px] border bg-warning-subtle p-3 text-sm md:text-[13px] text-warning">{failingPushes} change{failingPushes === 1 ? "" : "s"} couldn&apos;t be sent to Google yet. Command keeps retrying. Use “Test connection” to see why.</p> : null}
+            {failingPushes > 0 ? <p role="alert" className="rounded-lg border bg-warning-subtle p-3 text-sm md:text-[13px] text-warning">{failingPushes} change{failingPushes === 1 ? "" : "s"} couldn&apos;t be sent to Google yet. Command keeps retrying. Use “Test connection” to see why.</p> : null}
             <div className="border-t pt-5">
               <h3 className="text-sm font-medium">Import past events</h3>
               <p className="mb-3 mt-1 text-sm md:text-[13px] text-muted">Brings events already on your Google Calendar into Command so members can add their attendance. Safe to run again: events already imported are skipped, and nothing is sent back to Google.</p>

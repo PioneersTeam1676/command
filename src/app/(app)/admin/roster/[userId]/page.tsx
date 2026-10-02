@@ -82,7 +82,7 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
                     {s.status === "open" ? (
                       <ConfirmAction label="Clock out now" title={`Clock ${member.name} out now?`} description="This ends their open session at this moment." confirmLabel="Clock out" action={forceClockOutAction} fields={{ id: s.id, userId }} danger />
                     ) : (
-                      <ConfirmAction label="Edit times" title="Edit this entry" description="Change when they were in. It will be marked as edited and recorded in the audit log." confirmLabel="Save" action={editTimesAction} fields={{ id: s.id, userId }}>
+                      <ConfirmAction label="Edit times" title="Edit this entry" description="It's marked as edited and logged." confirmLabel="Save" action={editTimesAction} fields={{ id: s.id, userId }}>
                         <div className="grid gap-3 sm:grid-cols-2">
                           <label className="space-y-1.5 text-sm font-medium">In<Input type="datetime-local" name="inAt" required defaultValue={toDatetimeLocal(s.clockInAt, tz)} /></label>
                           <label className="space-y-1.5 text-sm font-medium">Out<Input type="datetime-local" name="outAt" required defaultValue={s.clockOutAt ? toDatetimeLocal(s.clockOutAt, tz) : ""} /></label>

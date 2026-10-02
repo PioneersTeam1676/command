@@ -61,19 +61,19 @@ export function CheckInDisplay({ eventId, title, whenLabel, mode }: { eventId: s
       </div>
 
       {mode === "none" ? (
-        <div className="max-w-md rounded-[8px] border bg-background p-6">
+        <div className="max-w-md rounded-lg border bg-background p-6">
           <p className="text-lg font-medium">This event uses one-tap check-in</p>
           <p className="mt-2 text-sm text-muted">Members just tap Check in on their Home screen. To require a code, edit the event and choose “Rotating code shown on a screen”, then start this display again.</p>
         </div>
       ) : error ? (
-        <p role="alert" className="rounded-[8px] border bg-error-subtle p-4 text-error">{error}</p>
+        <p role="alert" className="rounded-lg border bg-error-subtle p-4 text-error">{error}</p>
       ) : !data ? (
         <p className="text-muted">Loading…</p>
       ) : (
         <>
           <div className="grid gap-8 md:grid-cols-2 md:items-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img alt="QR code for checking in" src={`data:image/svg+xml;utf8,${encodeURIComponent(data.qr)}`} className="mx-auto aspect-square w-[min(70vw,46vh)] rounded-[8px] border bg-white p-2" />
+            <img alt="QR code for checking in" src={`data:image/svg+xml;utf8,${encodeURIComponent(data.qr)}`} className="mx-auto aspect-square w-[min(70vw,46vh)] rounded-lg border bg-white p-2" />
             <div>
               <p className="text-sm text-muted">Or type this code</p>
               <p data-testid="checkin-code" aria-live="off" className="font-mono text-[15vw] font-semibold leading-none tracking-[0.08em] md:text-[9vw]">

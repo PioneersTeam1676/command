@@ -75,3 +75,26 @@ test("admin sees the order, marks it paid and delivered, and the shop page passe
     expect(r.violations.filter((v) => v.impact === "serious" || v.impact === "critical")).toEqual([]);
   }
 });
+
+test("admin can cancel or confirm deletion from the item list without losing order history", async ({ page }) => {
+  await signIn(page, "admin@school.edu");
+  await page.goto("/admin/shop");
+  const item = page.getByRole("listitem").filter({ has: page.getByRole("link", { name: /Team hoodie/ }) });
+  await item.getByRole("button", { name: "Delete item" }).click();
+  const dialog = page.getByRole("dialog", { name: "Delete “Team hoodie”?" });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(item).toBeVisible();
+
+  await item.getByRole("button", { name: "Delete item" }).click();
+  await dialog.getByRole("button", { name: "Delete item", exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/shop\?deleted=1$/);
+  await expect(page.getByRole("status")).toHaveText("Item deleted. Existing orders have been kept.");
+  await expect(item).toHaveCount(0);
+  await page.goto("/shop");
+  await expect(page.getByRole("group", { name: "Team hoodie" })).toHaveCount(0);
+  await page.goto("/admin/shop/orders");
+  await expect(page.getByText("1 × Team hoodie", { exact: true })).toBeVisible();
+  await expect(page.getByText("Print: Alex R.")).toBeVisible();
+});

@@ -38,7 +38,7 @@ export function EventForm({
           <input type="hidden" name="title" value={defaults.title ?? ""} />
           <input type="hidden" name="startsAt" value={defaults.startsAt} />
           <input type="hidden" name="endsAt" value={defaults.endsAt} />
-          <p className="rounded-[8px] border bg-surface p-3 text-sm md:text-[13px] text-muted">
+          <p className="rounded-lg border bg-surface p-3 text-sm md:text-[13px] text-muted">
             This event was imported from Google Calendar, so its title and times are edited there. You can still choose how members check in.
           </p>
         </>
@@ -65,7 +65,7 @@ export function EventForm({
         help="A rotating code proves someone is physically at the event."
       />
       <label className="flex items-start gap-3 text-sm">
-        <input type="checkbox" name="rsvpEnabled" defaultChecked={defaults.rsvpEnabled ?? true} className="mt-1 size-4 accent-[var(--accent)]" />
+        <input type="checkbox" name="rsvpEnabled" defaultChecked={defaults.rsvpEnabled ?? true} className="mt-1 size-4 accent-foreground" />
         <span>
           <span className="font-medium">Let people sign up to come</span>
           <span className="block text-sm md:text-[13px] text-muted">Adds an “I&apos;m going” button so you can see who&apos;s coming, and only they get reminders. Turn off for mandatory events: everyone is then reminded.</span>

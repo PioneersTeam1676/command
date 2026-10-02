@@ -22,7 +22,7 @@ export default async function ShopPage() {
   if (!isShopOpen(s)) {
     return (
       <div className="space-y-4">
-        <h1 className="text-[28px] font-semibold">Shop</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Shop</h1>
         <EmptyState icon={<Shirt aria-hidden />} title="The shop is closed right now" action={admin ? <Button asChild><Link href="/admin/shop">Open it in Admin</Link></Button> : undefined}>
           Check back when the team opens it again.
         </EmptyState>
@@ -45,12 +45,12 @@ export default async function ShopPage() {
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-semibold">Shop</h1>
-          <p className="text-sm text-muted">{payBy ? `Order by ${payBy}. ` : ""}Pay a mentor in cash. No card needed.</p>
+          <h1 className="text-2xl font-semibold tracking-tight">Shop</h1>
+          <p className="text-sm text-muted">{payBy ? `Order by ${payBy}. ` : ""}Pay a mentor in cash.</p>
         </div>
         <Button asChild variant="secondary" size="sm"><Link href="/shop/orders">My orders</Link></Button>
       </div>
-      {s.shopNote ? <p className="whitespace-pre-line rounded-[8px] border bg-surface p-3 text-sm">{s.shopNote}</p> : null}
+      {s.shopNote ? <p className="whitespace-pre-line rounded-lg border bg-surface p-3 text-sm">{s.shopNote}</p> : null}
       {items.length === 0 ? <EmptyState icon={<Shirt aria-hidden />} title="Nothing for sale yet">Items will show up here.</EmptyState> : <Storefront items={items} payBy={payBy} />}
     </div>
   );

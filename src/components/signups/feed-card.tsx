@@ -35,7 +35,7 @@ export function FeedCard({ exists, lastUsedLabel, reset, revoke }: { exists: boo
             </ol>
           </div>
         ) : null}
-        <p className="rounded-[8px] border bg-surface p-3 text-sm md:text-[13px] text-muted">
+        <p className="rounded-lg border bg-surface p-3 text-sm md:text-[13px] text-muted">
           Anyone with this link can see your shift times and where they are, so don&apos;t share it. If it gets out, make a new one and the old one stops working.
         </p>
         {on && !url ? <p className="text-sm md:text-[13px] text-muted">Your link is on{lastUsedLabel ? `. Last used ${lastUsedLabel}` : ", and hasn't been used yet"}. We can&apos;t show it again, but you can make a new one.</p> : null}

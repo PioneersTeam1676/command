@@ -24,7 +24,7 @@ export default async function ParentHome() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-[28px] font-semibold">Hi, {user.name.split(" ")[0]}</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Hi, {user.name.split(" ")[0]}</h1>
         <p className="mt-1 text-muted">You have read-only access to the students below once the team approves you.</p>
       </div>
       {links.length === 0 ? (
@@ -40,7 +40,7 @@ export default async function ParentHome() {
               {l.status === "approved" ? (
                 <Button asChild variant="secondary"><Link href={`/parent/${l.studentId}`}>View {l.studentName.split(" ")[0]}</Link></Button>
               ) : null}
-              {l.adminMessage ? <p className="rounded-[8px] border bg-surface p-3 text-sm md:text-[13px]"><strong>Message from the team:</strong> {l.adminMessage}</p> : null}
+              {l.adminMessage ? <p className="rounded-lg border bg-surface p-3 text-sm md:text-[13px]"><strong>Message from the team:</strong> {l.adminMessage}</p> : null}
               {l.status === "needs_info" ? (
                 <ActionForm action={resubmitParentLinkAction} className="space-y-4 border-t pt-4">
                   <input type="hidden" name="linkId" value={l.id} />

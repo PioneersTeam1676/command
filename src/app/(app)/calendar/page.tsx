@@ -27,7 +27,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <div className="mb-6 flex items-center justify-between gap-3">
-        <h1 className="text-[28px] font-semibold">Calendar</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
         {roleAtLeast(user.role, "lead") ? (
           <Button asChild><Link href="/calendar/new"><Plus aria-hidden />New event</Link></Button>
         ) : null}

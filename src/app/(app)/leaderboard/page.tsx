@@ -31,15 +31,15 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-[28px] font-semibold">Leaderboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Leaderboard</h1>
           <p className="mt-1 text-sm text-muted">{season.name}{season.isCurrent ? "" : " · archived"}</p>
         </div>
         <SeasonPicker seasons={seasons} selectedId={season.id} keep={{ tab }} />
       </div>
 
-      <div role="tablist" aria-label="Ranking" className="inline-flex rounded-[8px] border p-0.5">
+      <div role="tablist" aria-label="Ranking" className="inline-flex rounded-lg border p-0.5">
         {([["hours", "Total hours"], ["attendance", "Attendance rate"]] as const).map(([t, label]) => (
-          <Link key={t} role="tab" aria-selected={tab === t} href={href(t)} className={cn("inline-flex min-h-[36px] items-center rounded-[6px] px-4 text-sm md:text-[13px] transition-colors duration-150", tab === t ? "bg-surface font-medium" : "text-muted hover:text-foreground")}>
+          <Link key={t} role="tab" aria-selected={tab === t} href={href(t)} className={cn("inline-flex min-h-[36px] items-center rounded-md px-4 text-sm md:text-[13px] transition-colors duration-150", tab === t ? "bg-surface font-medium" : "text-muted hover:text-foreground")}>
             {label}
           </Link>
         ))}
@@ -49,7 +49,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
       ) : null}
 
       {hidden && me ? (
-        <div className="flex items-start gap-3 rounded-[8px] border bg-surface p-4 text-sm">
+        <div className="flex items-start gap-3 rounded-lg border bg-surface p-4 text-sm">
           <EyeOff className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />
           <div>
             <p className="font-medium">You&apos;re hidden from this board</p>

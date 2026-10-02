@@ -17,7 +17,7 @@ export function MyShiftsView({ upcoming, past, open, tz, eventHref }: { upcoming
   return (
     <div className="space-y-8">
       <section aria-labelledby="mine-h">
-        <h2 id="mine-h" className="mb-3 text-lg font-semibold">Coming up</h2>
+        <h2 id="mine-h" className="mb-3 text-base font-semibold tracking-tight">Coming up</h2>
         {upcoming.length === 0 ? (
           <EmptyState icon={<ClipboardList aria-hidden />} title="No shifts yet">
             {open.length > 0 ? "Pick one from “Shifts you can take” below." : "When your team opens sign-ups, the shifts you sign up for will show here."}
@@ -25,7 +25,7 @@ export function MyShiftsView({ upcoming, past, open, tz, eventHref }: { upcoming
         ) : (
           <ul className="space-y-3">
             {upcoming.map((m) => (
-              <li key={m.entryId} className="space-y-3 rounded-[8px] border p-4">
+              <li key={m.entryId} className="space-y-3 rounded-lg border p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 space-y-1">
                     <p className="text-[15px] font-medium">{m.slot.title}</p>
@@ -48,11 +48,11 @@ export function MyShiftsView({ upcoming, past, open, tz, eventHref }: { upcoming
 
       {open.length > 0 ? (
         <section aria-labelledby="open-h">
-          <h2 id="open-h" className="mb-3 text-lg font-semibold">Shifts you can take</h2>
+          <h2 id="open-h" className="mb-3 text-base font-semibold tracking-tight">Shifts you can take</h2>
           <ul className="space-y-2">
             {open.slice(0, 25).map((o) => (
               <li key={o.slot.id}>
-                <Link href={eventHref(o.eventId)} className="flex flex-col gap-1 rounded-[8px] border p-3 transition-colors duration-150 hover:bg-surface md:flex-row md:items-center md:justify-between">
+                <Link href={eventHref(o.eventId)} className="flex flex-col gap-1 rounded-lg border p-3 transition-colors duration-150 hover:bg-surface md:flex-row md:items-center md:justify-between">
                   <span className="min-w-0">
                     <span className="block font-medium">{o.slot.title} <span className="font-normal text-muted">· {o.eventTitle}</span></span>
                     <span className="block font-mono text-[13px] md:text-xs text-muted">{shiftWhen(o.slot, tz)}</span>
@@ -69,8 +69,8 @@ export function MyShiftsView({ upcoming, past, open, tz, eventHref }: { upcoming
       {past.length > 0 ? (
         <section aria-labelledby="past-h">
           <details>
-            <summary id="past-h" className="cursor-pointer text-lg font-semibold">Past shifts ({past.length})</summary>
-            <ul className="mt-3 divide-y rounded-[8px] border">
+            <summary id="past-h" className="cursor-pointer text-base font-semibold tracking-tight">Past shifts ({past.length})</summary>
+            <ul className="mt-3 divide-y rounded-lg border">
               {past.map((m) => (
                 <li key={m.entryId} className="flex flex-wrap items-baseline justify-between gap-2 px-3 py-2 text-sm">
                   <span className="min-w-0">{m.slot.title} <span className="text-muted">· {m.eventTitle}</span></span>

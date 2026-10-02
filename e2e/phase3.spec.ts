@@ -67,7 +67,7 @@ test("rotating-code event check-in with a wrong code, the right code, then clock
     .locator("div.border", { has: member.getByRole("link", { name: /^Code Night/ }) });
   await card.getByLabel("Check-in code").fill(codeText === "000000" ? "111111" : "000000");
   await card.getByRole("button", { name: "Check in" }).click();
-  await expect(member.getByText(/That code isn't right/)).toBeVisible();
+  await expect(member.getByText(/Wrong or expired code/)).toBeVisible();
   await card.getByLabel("Check-in code").fill(codeText);
   await card.getByRole("button", { name: "Check in" }).click();
   await expect(card.getByText("Checked in")).toBeVisible();
