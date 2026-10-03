@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://command:${POSTGRES_PASSWORD}@db:5432/command
+      APP_URL: ${APP_URL}
+      TZ: ${TZ:-UTC}
+      LEADERBOARD_ENABLED: ${LEADERBOARD_ENABLED:-true}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-}
+      GOOGLE_CALENDAR_MODE: ${GOOGLE_CALENDAR_MODE:-off}
+      GOOGLE_CALENDAR_ICS_URL: ${GOOGLE_CALENDAR_ICS_URL:-}
+      GOOGLE_CALENDAR_ID: ${GOOGLE_CALENDAR_ID:-}
+      GOOGLE_SERVICE_ACCOUNT_JSON: ${GOOGLE_SERVICE_ACCOUNT_JSON:-}
+      SETUP_TOKEN: ${SETUP_TOKEN:-}
+    # No published ports: Dokploy's Traefik routes to this service via the Domains tab (port 3000).
+    expose:
+      - "3000"
+    volumes:
+      - command_data:/app/data
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: command
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: command
+    volumes:
+      - command_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U command -d command"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  command_pgdata:
+  command_data:
