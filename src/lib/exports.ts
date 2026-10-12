@@ -12,13 +12,14 @@ const hoursCell = (h: number) => Math.round(h * 100) / 100;
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 /** Hours per member for a season. Admin only. */
-export async function exportHours(seasonId: string, tz: string) {
+export async function exportHours(seasonId: string, tz: string, withOutreach = false) {
   const season = await getSeason(seasonId);
   if (!season) return null;
   const roster = await rosterForSeason(seasonId, tz);
   const emails = new Map((await db.select({ id: users.id, email: users.email }).from(users)).map((u) => [u.id, u.email]));
-  const rows = roster.map((r) => [r.name, emails.get(r.userId) ?? "", r.role, season.name, hoursCell(r.hours), r.days, r.eventsAttended, r.needsReview, r.pendingApproval]);
-  return csvResponse(`hours-${slug(season.name)}.csv`, toCsv(["Name", "Email", "Role", "Season", "Hours", "Days with time", "Events attended", "Auto-closed awaiting review", "Backfill awaiting approval"], rows));
+  const rows = roster.map((r) => [r.name, emails.get(r.userId) ?? "", r.role, season.name, hoursCell(r.hours), r.days, r.eventsAttended, ...(withOutreach ? [r.outreachAttended] : []), r.needsReview, r.pendingApproval]);
+  const header = ["Name", "Email", "Role", "Season", "Hours", "Days with time", "Events attended", ...(withOutreach ? ["Outreach events attended"] : []), "Auto-closed awaiting review", "Time awaiting approval"];
+  return csvResponse(`hours-${slug(season.name)}.csv`, toCsv(header, rows));
 }
 
 /** Every attendance entry in a season, one row per session. Admin only. */

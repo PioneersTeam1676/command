@@ -12,6 +12,7 @@ export function EventDetails({ event, tz, showVerification = false }: { event: E
         <h1 className={`text-2xl font-semibold tracking-tight ${cancelled ? "text-muted line-through" : ""}`}>{event.title}</h1>
         {cancelled ? <Badge tone="error">Cancelled</Badge> : null}
         {event.source === "imported" ? <Badge>From Google Calendar</Badge> : null}
+        {event.isOutreach ? <Badge tone="info">Outreach</Badge> : null}
       </div>
       <p className="flex items-start gap-2 text-[15px]">
         <CalendarClock className="mt-0.5 size-4 shrink-0 text-muted" aria-hidden />

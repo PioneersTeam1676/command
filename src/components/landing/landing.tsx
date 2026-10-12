@@ -4,8 +4,8 @@ import { Button } from "@/components/ui/button";
 import { GridBackground } from "@/components/ui/grid-background";
 
 /**
- * Public home page for signed-out visitors (no sign-in needed to read it). It states what Command is for,
- * how it uses Google, and links to the Privacy Policy and Terms, as the Google OAuth consent screen requires.
+ * Public /about page (no sign-in needed). It states what Command is for, how it uses Google, and links to
+ * the Privacy Policy and Terms, as the Google OAuth consent screen's "home page" requires.
  */
 export function Landing() {
   return (

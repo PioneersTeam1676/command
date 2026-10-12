@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import type { Role } from "@/db/schema";
 import { isSetupComplete } from "@/lib/settings";
 import { safeNext } from "@/lib/form";
-import { assertWritable, ReadOnlyError } from "@/lib/registry";
 import { readSession, type SessionUser } from "./session";
 
 export const getCurrentUser = cache(readSession);
@@ -59,15 +58,7 @@ export async function requireParent(): Promise<SessionUser> {
 }
 
 /** Guard for server actions and route handlers: throws instead of redirecting. */
-export async function requireActionUser(min: "member" | "lead" | "admin" = "member", opts: { allowReadOnly?: boolean; allowParent?: boolean } = {}): Promise<SessionUser> {
-  if (!opts.allowReadOnly) {
-    try {
-      await assertWritable();
-    } catch (e) {
-      if (e instanceof ReadOnlyError) throw new AuthError(e.message);
-      throw e;
-    }
-  }
+export async function requireActionUser(min: "member" | "lead" | "admin" = "member", opts: { allowParent?: boolean } = {}): Promise<SessionUser> {
   const user = await getCurrentUser();
   if (!user || user.status !== "active") throw new AuthError("Please sign in again.", "unauthenticated");
   if (user.mustChangePassword) throw new AuthError("Change your temporary password first.");

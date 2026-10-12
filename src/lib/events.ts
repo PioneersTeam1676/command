@@ -23,12 +23,15 @@ export const eventFormSchema = z.object({
   verification: z.enum(["inherit", "none", "code"]).default("inherit"),
   // A checkbox: absent from the form data when unticked.
   rsvpEnabled: z.string().optional().transform((v) => v === "on"),
+  isOutreach: z.string().optional().transform((v) => v === "on"),
 });
-export type EventFormInput = Omit<z.infer<typeof eventFormSchema>, "description" | "locationText" | "rsvpEnabled"> & {
+export type EventFormInput = Omit<z.infer<typeof eventFormSchema>, "description" | "locationText" | "rsvpEnabled" | "isOutreach"> & {
   description?: string;
   locationText?: string;
   /** Defaults to true (people can sign up to attend). */
   rsvpEnabled?: boolean;
+  /** Undefined leaves it as it is (the form only shows the box while outreach tracking is on). */
+  isOutreach?: boolean;
 };
 
 type Result<T = object> = ({ ok: true } & T) | { ok: false; error: string; field?: string };
@@ -95,6 +98,7 @@ export async function createEvent(actorId: string, input: EventFormInput): Promi
       endsAt: times.endsAt,
       verification: input.verification,
       rsvpEnabled: input.rsvpEnabled ?? true,
+      isOutreach: input.isOutreach ?? false,
       source: "app",
       createdBy: actorId,
     })
@@ -119,9 +123,10 @@ export async function updateEvent(actorId: string, id: string, input: EventFormI
   if (before.source === "imported") {
     // Imported events are read-only in Command except for the check-in verification method.
     const rsvpEnabled = input.rsvpEnabled ?? before.rsvpEnabled;
-    await db.update(events).set({ verification: input.verification, rsvpEnabled }).where(eq(events.id, id));
+    const isOutreach = input.isOutreach ?? before.isOutreach;
+    await db.update(events).set({ verification: input.verification, rsvpEnabled, isOutreach }).where(eq(events.id, id));
     if (rsvpEnabled) await ensureAttendSlot(id);
-    await audit({ actorId, action: "event.update_verification", targetType: "event", targetId: id, before: { verification: before.verification, rsvpEnabled: before.rsvpEnabled }, after: { verification: input.verification, rsvpEnabled } });
+    await audit({ actorId, action: "event.update_verification", targetType: "event", targetId: id, before: { verification: before.verification, rsvpEnabled: before.rsvpEnabled, isOutreach: before.isOutreach }, after: { verification: input.verification, rsvpEnabled, isOutreach } });
     return { ok: true };
   }
   if (before.cancelledAt) return { ok: false, error: "Cancelled events can't be edited." };
@@ -137,6 +142,7 @@ export async function updateEvent(actorId: string, id: string, input: EventFormI
       endsAt: times.endsAt,
       verification: input.verification,
       rsvpEnabled: input.rsvpEnabled ?? before.rsvpEnabled,
+      isOutreach: input.isOutreach ?? before.isOutreach,
     })
     .where(eq(events.id, id))
     .returning();
@@ -146,8 +152,8 @@ export async function updateEvent(actorId: string, id: string, input: EventFormI
     action: "event.update",
     targetType: "event",
     targetId: id,
-    before: { title: before.title, description: before.description, locationText: before.locationText, startsAt: before.startsAt, endsAt: before.endsAt, verification: before.verification, rsvpEnabled: before.rsvpEnabled },
-    after: { title: after!.title, description: after!.description, locationText: after!.locationText, startsAt: after!.startsAt, endsAt: after!.endsAt, verification: after!.verification, rsvpEnabled: after!.rsvpEnabled },
+    before: { title: before.title, description: before.description, locationText: before.locationText, startsAt: before.startsAt, endsAt: before.endsAt, verification: before.verification, rsvpEnabled: before.rsvpEnabled, isOutreach: before.isOutreach },
+    after: { title: after!.title, description: after!.description, locationText: after!.locationText, startsAt: after!.startsAt, endsAt: after!.endsAt, verification: after!.verification, rsvpEnabled: after!.rsvpEnabled, isOutreach: after!.isOutreach },
   });
   await queueGcalPush(id, "updated");
   await notifyEventChange(after!, "updated", String(Date.now())).catch(() => undefined);

@@ -11,11 +11,14 @@ import { uuidSchema } from "@/lib/validation";
 
 const KEEP = ["title", "description", "locationText", "startsAt", "endsAt", "verification"];
 
+/** The outreach box is only on the form while outreach tracking is on; otherwise leave the flag untouched. */
+const withOutreach = <T extends { isOutreach: boolean }>(data: T, formData: FormData) => ({ ...data, isOutreach: formData.has("outreachShown") ? data.isOutreach : undefined });
+
 export async function createEventAction(_: FormState, formData: FormData): Promise<FormState> {
   const user = await requireActionUser("lead");
   const parsed = parseForm(eventFormSchema, formData, { keepValues: KEEP });
   if (!parsed.ok) return parsed.state;
-  const r = await createEvent(user.id, parsed.data);
+  const r = await createEvent(user.id, withOutreach(parsed.data, formData));
   if (!r.ok) return { error: r.error, fieldErrors: r.field ? { [r.field]: r.error } : undefined, values: Object.fromEntries(KEEP.map((k) => [k, String(formData.get(k) ?? "")])) };
   revalidatePath("/calendar");
   redirect(`/calendar/${r.id}`);
@@ -27,7 +30,7 @@ export async function updateEventAction(_: FormState, formData: FormData): Promi
   if (!id.success) return { error: "Unknown event." };
   const parsed = parseForm(eventFormSchema, formData, { keepValues: KEEP });
   if (!parsed.ok) return parsed.state;
-  const r = await updateEvent(user.id, id.data, parsed.data);
+  const r = await updateEvent(user.id, id.data, withOutreach(parsed.data, formData));
   if (!r.ok) return { error: r.error, fieldErrors: r.field ? { [r.field]: r.error } : undefined, values: Object.fromEntries(KEEP.map((k) => [k, String(formData.get(k) ?? "")])) };
   revalidatePath("/calendar");
   redirect(`/calendar/${id.data}`);

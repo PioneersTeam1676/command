@@ -9,7 +9,7 @@ export async function register() {
   const { startScheduler } = await import("./lib/jobs/scheduler");
   registerAllJobs();
   await startScheduler();
-  // LICENSE mechanism (section 3): do not remove or modify. Any change is detected and puts the install into read-only mode.
+  // LICENSE mechanism (section 3): do not remove or modify. Any change is detected and reported to the registry.
   const { startRegistry } = await import("./lib/registry");
   await startRegistry();
 }

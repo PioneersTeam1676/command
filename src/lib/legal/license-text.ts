@@ -31,9 +31,10 @@ expressly stated in this license.
    d. Copying, reproducing, or reimplementing the design or functionality of
       the Software in another product or service.
    e. Using the Software's name, branding, or identity in any other project.
-   f. Removing, disabling, bypassing, or interfering with the registration
-      and heartbeat mechanism described in section 3, or removing or altering
-      any license notice.
+   f. Removing, bypassing, or interfering with the code of the registration
+      and heartbeat mechanism described in section 3 (turning it off with the
+      Software's own setting is allowed), or removing or altering any license
+      notice.
 
 3. REGISTRATION AND HEARTBEAT
    The Software contacts a registry operated by the Owner when it is set up
@@ -43,11 +44,10 @@ expressly stated in this license.
    attendance records, or other personal information about individuals is
    sent. The registry also keeps a one-way hash of the connecting IP address
    for up to 30 days, used only to detect misuse of this license (such as
-   one installation being copied or hosted for other teams). This license is
-   granted on the condition that this mechanism remains enabled and functional. If the Software cannot complete a heartbeat for
-   7 consecutive days, or has been modified in a way that removes or alters
-   the mechanism, it will enter a read-only state until the condition is
-   resolved. Data export remains available at all times.
+   one installation being copied or hosted for other teams). An
+   administrator can turn the mechanism off in the Software's settings; while
+   it is off, nothing is sent. The mechanism never restricts what the
+   Software can do.
 
 4. CONTRIBUTIONS
    By submitting a pull request or other contribution, you agree that your

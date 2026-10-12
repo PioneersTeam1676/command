@@ -99,7 +99,7 @@ describe.skipIf(!hasTestDb)("registry client against a fake registry", () => {
     tick(D);
     const r = await run();
     expect(r.outcome).toBe("success");
-    expect(r.effective).toMatchObject({ state: "ok", readOnly: false });
+    expect(r.effective).toMatchObject({ state: "ok" });
     const hb = seen.filter((s) => s.path === "/v1/heartbeat").at(-1)!;
     expect(hb.auth).toBe("Bearer tok_" + "x".repeat(40));
   });
@@ -111,14 +111,14 @@ describe.skipIf(!hasTestDb)("registry client against a fake registry", () => {
       tick(H);
       const r = await run();
       expect(r.outcome).toBe("network_failure");
-      expect(r.effective.state).not.toBe("stopped_integrity");
+      expect(r.effective.state).not.toBe("integrity");
     }
     const row = await readRegistryRow();
     expect(row.signatureFailures).toBe(0);
     expect(row.consecutiveFailures).toBe(3);
   });
 
-  it("warns admins after a day of failures, once, then a daily reminder; then 7 days of failure makes it read-only with a clear notice", async () => {
+  it("warns admins once after a day of failures, and never goes read-only however long it lasts", async () => {
     const { db } = await import("@/db");
     const { inAppNotifications } = await import("@/db/schema");
     const { eq } = await import("drizzle-orm");
@@ -129,23 +129,14 @@ describe.skipIf(!hasTestDb)("registry client against a fake registry", () => {
     let r = await run();
     expect(r.effective.state).toBe("warning");
     const first = (await notes()).length;
-    expect(first).toBeGreaterThanOrEqual(2); // the warning and the same-day reminder
-    r = await run(); // same day, same state: nothing new
-    expect((await notes()).length).toBe(first);
-
-    tick(D); // next day: a new daily reminder
-    await run();
-    expect((await notes()).length).toBeGreaterThan(first);
-
-    // Hourly retries for the rest of the week.
-    for (let i = 0; i < 24 * 5; i++) {
+    expect(first).toBe(1);
+    for (let i = 0; i < 24 * 10; i++) {
       tick(H);
       r = await run();
     }
-    expect(r.effective).toMatchObject({ state: "stopped_unreachable", readOnly: true });
-    const titles = (await notes()).map((n) => n.title);
-    expect(titles.some((t) => /urgent/i.test(t))).toBe(true);
-    expect(titles.some((t) => /read-only/i.test(t))).toBe(true);
+    expect(r.effective.state).toBe("warning");
+    expect(r.effective).not.toHaveProperty("readOnly");
+    expect((await notes()).length).toBe(first); // no daily nagging
   });
 
   it("a successful heartbeat restores normal operation automatically", async () => {
@@ -153,7 +144,7 @@ describe.skipIf(!hasTestDb)("registry client against a fake registry", () => {
     tick(H);
     const r = await run();
     expect(r.outcome).toBe("success");
-    expect(r.effective).toMatchObject({ state: "ok", readOnly: false });
+    expect(r.effective).toMatchObject({ state: "ok" });
   });
 
   it("forged responses and replayed responses are rejected and counted as signature failures", async () => {
@@ -169,58 +160,55 @@ describe.skipIf(!hasTestDb)("registry client against a fake registry", () => {
     const row = await readRegistryRow();
     expect(row.signatureFailures).toBe(2);
     expect(row.status).toBe("ok"); // nothing from the forged/replayed answers was believed
-    expect(r.effective.state).not.toBe("stopped_integrity"); // needs 3+ over 24h
+    expect(r.effective.state).not.toBe("integrity"); // needs 3+ over 24h
   });
 
-  it("3+ signature failures spanning 24h stop the instance (integrity); a verified ok clears it", async () => {
+  it("3+ signature failures spanning 24h are reported as an integrity problem; a verified ok clears it", async () => {
     mode = "forged";
     for (let i = 0; i < 26; i++) {
       tick(H);
       await run();
     }
     let r = await run();
-    expect(r.effective).toMatchObject({ state: "stopped_integrity", readOnly: true, reason: "signature_failures" });
+    expect(r.effective).toMatchObject({ state: "integrity", reason: "signature_failures" });
     mode = "ok";
     tick(H);
     r = await run();
-    expect(r.effective).toMatchObject({ state: "ok", readOnly: false });
+    expect(r.effective).toMatchObject({ state: "ok" });
   });
 
-  it("a verified integrity_failed response stops the instance and a later verified ok restores it", async () => {
+  it("a verified integrity_failed response is reported and a later verified ok clears it", async () => {
     mode = "integrity_failed";
     tick(H);
     let r = await run();
-    expect(r.effective).toMatchObject({ state: "stopped_integrity", readOnly: true, reason: "verified_integrity_failed" });
+    expect(r.effective).toMatchObject({ state: "integrity", reason: "verified_integrity_failed" });
     mode = "ok";
     tick(H);
     r = await run();
     expect(r.effective.state).toBe("ok");
   });
 
-  it("revoke: message and countdown first, read-only only after the deadline; restore round-trips", async () => {
+  it("revoke: shows the owner's message, never limits the app; restore round-trips", async () => {
     revokeDeadline = new Date(clock + 7 * D).toISOString();
     mode = "revoked";
     tick(H);
     let r = await run();
-    expect(r.effective).toMatchObject({ state: "revoked", readOnly: false, message: "Please contact the owner" });
-    expect(r.effective.msUntilStop).toBeGreaterThan(6 * D);
-    tick(3 * D);
+    expect(r.effective).toMatchObject({ state: "revoked", message: "Please contact the owner" });
+    tick(8 * D);
     r = await run();
-    expect(r.effective).toMatchObject({ state: "revoked", readOnly: false });
-    tick(5 * D);
-    r = await run();
-    expect(r.effective).toMatchObject({ state: "revoked", readOnly: true });
+    expect(r.effective).toMatchObject({ state: "revoked" });
+    expect(r.effective).not.toHaveProperty("readOnly");
     mode = "ok"; // the owner restores it; takes effect at the next heartbeat
     tick(H);
     r = await run();
-    expect(r.effective).toMatchObject({ state: "ok", readOnly: false, message: null });
+    expect(r.effective).toMatchObject({ state: "ok", message: null });
   });
 
   it("a warn response shows the owner's message to admins without changing behaviour", async () => {
     mode = "warn";
     tick(H);
     const r = await run();
-    expect(r.effective).toMatchObject({ state: "ok", readOnly: false, message: "Please update soon" });
+    expect(r.effective).toMatchObject({ state: "ok", message: "Please update soon" });
     mode = "ok";
     tick(H);
     await run();
@@ -258,22 +246,25 @@ describe.skipIf(!hasTestDb)("registry client against a fake registry", () => {
     tick(H);
     await startupIntegrityCheck(bad); // an hour after the first sighting
     row = await readRegistryRow();
-    expect(evaluate(await snapshot(), new Date(clock))).toMatchObject({ state: "stopped_integrity", reason: "local_mismatch", readOnly: true });
+    expect(evaluate(await snapshot(), new Date(clock))).toMatchObject({ state: "integrity", reason: "local_mismatch" });
     // Files restored: back to normal.
     await startupIntegrityCheck({ ...d, integrity: () => ({ status: "ok", actualHash: "a".repeat(64) }) });
     expect(evaluate(await snapshot(), new Date(clock)).state).toBe("ok");
   });
 
-  it("does nothing before setup completes, and read-only mode blocks writes but not reads", async () => {
-    const { assertWritable, ReadOnlyError, invalidateStateCache } = await import("./index");
-    const { patchRegistry } = await import("./store");
+  it("turned off in Settings: no check-ins are sent and the state is 'disabled'", async () => {
+    const { db } = await import("@/db");
+    const { teamSettings } = await import("@/db/schema");
+    const { runHeartbeatIfDue } = await import("./client");
+    const { getEffectiveState, invalidateStateCache } = await import("./index");
+    await db.update(teamSettings).set({ registryEnabled: false });
+    const sent = seen.length;
+    expect(await runHeartbeatIfDue(deps(), true)).toBe(false);
+    expect(seen.length).toBe(sent);
     invalidateStateCache();
-    await expect(assertWritable()).resolves.toBeUndefined();
-    await patchRegistry({ status: "integrity_failed" });
+    expect((await getEffectiveState()).state).toBe("disabled");
+    await db.update(teamSettings).set({ registryEnabled: true });
     invalidateStateCache();
-    await expect(assertWritable()).rejects.toBeInstanceOf(ReadOnlyError);
-    await patchRegistry({ status: "ok" });
-    invalidateStateCache();
-    await expect(assertWritable()).resolves.toBeUndefined();
+    expect((await getEffectiveState()).state).not.toBe("disabled");
   });
 });

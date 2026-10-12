@@ -86,3 +86,26 @@ test("settings changes are saved, validated and audited", async ({ page }) => {
   await page.getByText("Details").first().click();
   await expect(page.getByText("Northeast").first()).toBeVisible();
 });
+
+test("outreach tracking and the registry check-in are toggles in Settings", async ({ page }) => {
+  await signIn(page, "admin@school.edu");
+  await page.goto("/admin/settings");
+  await page.getByLabel(/Track outreach events/).check();
+  await page.getByLabel(/Track outreach events/).locator("xpath=ancestor::form").getByRole("button", { name: "Save" }).click();
+  await expect(page.getByText("Saved.").first()).toBeVisible();
+
+  await page.goto("/admin/roster");
+  await expect(page.getByText("Outreach", { exact: true }).first()).toBeVisible();
+  await page.goto("/calendar/new");
+  await expect(page.getByLabel(/Outreach event/)).toBeVisible();
+
+  await page.goto("/admin/settings");
+  const license = page.locator("#license-check");
+  await license.getByLabel(/Check in with the registry/).uncheck();
+  await license.getByRole("button", { name: "Save" }).click();
+  await expect(license.getByText("Off", { exact: true })).toBeVisible();
+  await expect(license.getByRole("button", { name: "Check now" })).toHaveCount(0);
+  await license.getByLabel(/Check in with the registry/).check();
+  await license.getByRole("button", { name: "Save" }).click();
+  await expect(license.getByRole("button", { name: "Check now" })).toBeVisible();
+});

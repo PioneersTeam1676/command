@@ -13,7 +13,7 @@ import { and, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { parseServiceAccount } from "@/lib/gcal/api";
 import { LicenseCard } from "@/components/registry/license-card";
 import { registryOverview } from "@/lib/registry";
-import { checkRegistryNowAction, saveAttendanceAction, saveEmailsAction, saveRemindersAction, sendEmailPreviewAction, saveTeamAction } from "./actions";
+import { checkRegistryNowAction, saveAttendanceAction, saveRegistryAction, saveEmailsAction, saveRemindersAction, sendEmailPreviewAction, saveTeamAction } from "./actions";
 import { importPastAction, saveIcsUrlAction, syncNowAction, testConnectionAction } from "./gcal-actions";
 
 export const metadata: Metadata = { title: "Settings" };
@@ -105,10 +105,24 @@ export default async function SettingsPage() {
               </span>
             </label>
             <label className="flex items-start gap-3 text-sm">
+              <input type="checkbox" name="offHoursRequiresApproval" defaultChecked={s.offHoursRequiresApproval} className="mt-1 size-4 accent-foreground" />
+              <span>
+                <span className="font-medium">Require approval for time outside build hours</span>
+                <span className="block text-sm md:text-[13px] text-muted">Clocking in outside build season or after the automatic clock-out time is held until a lead or admin approves it. If you turn this off, that time counts right away.</span>
+              </span>
+            </label>
+            <label className="ml-7 flex items-start gap-3 text-sm">
               <input type="checkbox" name="showOffHoursNotice" defaultChecked={s.showOffHoursNotice} className="mt-1 size-4 accent-foreground" />
               <span>
                 <span className="font-medium">Show an “outside build hours” notice</span>
-                <span className="block text-sm md:text-[13px] text-muted">On the Home screen, warn people when they clock in outside build season or after the automatic clock-out time that a lead will have to approve the time. The time is held for approval either way.</span>
+                <span className="block text-sm md:text-[13px] text-muted">On the Home screen, warn people that a lead will have to approve the time. Only applies when approval above is turned on; the time is held either way.</span>
+              </span>
+            </label>
+            <label className="flex items-start gap-3 text-sm">
+              <input type="checkbox" name="outreachTrackingEnabled" defaultChecked={s.outreachTrackingEnabled} className="mt-1 size-4 accent-foreground" />
+              <span>
+                <span className="font-medium">Track outreach events</span>
+                <span className="block text-sm md:text-[13px] text-muted">Lets leads mark events as outreach, and shows leads and admins how many outreach events each member attended (on the Roster). Members don&apos;t see the count.</span>
               </span>
             </label>
             <label className="flex items-start gap-3 text-sm">
@@ -194,7 +208,7 @@ export default async function SettingsPage() {
         actions={{ saveIcs: saveIcsUrlAction, test: testConnectionAction, sync: syncNowAction, importPast: importPastAction }}
       />
 
-      <LicenseCard o={license} action={checkRegistryNowAction} />
+      <LicenseCard o={license} action={checkRegistryNowAction} toggleAction={saveRegistryAction} />
 
       <Card>
         <CardHeader>

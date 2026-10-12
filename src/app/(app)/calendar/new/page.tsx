@@ -17,7 +17,7 @@ export default async function NewEventPage() {
     <div className="max-w-xl">
       <Link href="/calendar" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Calendar</Link>
       <h1 className="mb-6 mt-3 text-2xl font-semibold tracking-tight">New event</h1>
-      <EventForm action={createEventAction} defaults={{ startsAt, endsAt }} tz={settings.timezone} teamDefault={settings.defaultCheckinVerification === "code" ? "code" : "none"} />
+      <EventForm action={createEventAction} defaults={{ startsAt, endsAt }} tz={settings.timezone} teamDefault={settings.defaultCheckinVerification === "code" ? "code" : "none"} outreachEnabled={settings.outreachTrackingEnabled} />
     </div>
   );
 }

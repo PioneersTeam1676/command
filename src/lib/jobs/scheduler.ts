@@ -13,7 +13,7 @@ const SCHEDULER_LOCK = 727302;
 const STALE_LOCK_MINUTES = 5;
 const MAX_ATTEMPTS = 5;
 
-/** Throw from a handler to try again later without counting it as a failed attempt (e.g. while the instance is read-only). */
+/** Throw from a handler to try again later without counting it as a failed attempt. */
 export class RescheduleError extends Error {
   constructor(readonly delayMs: number, message = "rescheduled") {
     super(message);

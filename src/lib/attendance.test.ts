@@ -72,6 +72,21 @@ describe.skipIf(!hasTestDb)("attendance: clock in/out, sweeps, backfill, review"
       expect((await a.clockOutOpen(otherId, { now: MON_3PM })).ok).toBe(false); // not clocked in
     });
 
+    it("counts off-hours time right away when the team turns approval off", async () => {
+      const a = await import("./attendance");
+      const { db } = await import("@/db");
+      const { teamSettings } = await import("@/db/schema");
+      await db.update(teamSettings).set({ offHoursRequiresApproval: false });
+      try {
+        const late = await a.clockInOpen(leadId, { now: T("2026-03-03T20:00:00Z") }); // after build season
+        expect(late).toMatchObject({ ok: true, offHours: false });
+        if (late.ok) expect(late.session.reviewState).toBe("none");
+        await a.clockOutOpen(leadId, { now: T("2026-03-03T22:00:00Z") });
+      } finally {
+        await db.update(teamSettings).set({ offHoursRequiresApproval: true });
+      }
+    });
+
     it("allows open clock-in on a non-workday inside the build range (Saturday)", async () => {
       const a = await import("./attendance");
       const r = await a.clockInOpen(otherId, { now: T("2026-01-10T20:00:00Z") });

@@ -57,7 +57,7 @@ test("setup registers the team; the owner sees it", async ({ page, browser }) =>
   await owner.context().close();
 });
 
-test("revoke shows the owner's message and a countdown in Command; restore clears it at the next heartbeat", async ({ page, browser }) => {
+test("revoke shows the owner's message in Command; restore clears it at the next heartbeat", async ({ page, browser }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@loop.test");
   await page.getByLabel("Password").fill(PASSWORD);
@@ -73,10 +73,8 @@ test("revoke shows the owner's message and a countdown in Command; restore clear
   await expect(owner.getByRole("heading", { name: /Loop Robotics.*revoked/i })).toBeVisible(); // the status badge flips (the form itself disappears)
 
   await checkNow(page);
-  await expect(page.getByText("Action needed: this installation was revoked by the owner.")).toBeVisible();
+  await expect(page.getByText("This installation was revoked by the owner.")).toBeVisible();
   await expect(page.getByText(/Please contact alex@alexradu.co about your installation/).first()).toBeVisible();
-  await expect(page.getByText(/becomes read-only on/)).toBeVisible(); // a countdown, not yet read-only
-  await expect(page.getByText("Command is read-only.")).toHaveCount(0);
   // The private reason is never sent to the team.
   expect(await page.content()).not.toContain("duplicate of team 4242");
 
@@ -85,11 +83,11 @@ test("revoke shows the owner's message and a countdown in Command; restore clear
   await expect(owner.getByRole("button", { name: "Restore", exact: true })).toHaveCount(0);
 
   await checkNow(page);
-  await expect(page.getByText("Action needed: this installation was revoked by the owner.")).toHaveCount(0);
+  await expect(page.getByText("This installation was revoked by the owner.")).toHaveCount(0);
   await owner.context().close();
 });
 
-test("an owner-declared integrity failure makes Command read-only (export still works); clearing restores it", async ({ page, browser }) => {
+test("an owner-declared integrity failure shows admins a notice but never blocks anything; clearing removes it", async ({ page, browser }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("admin@loop.test");
   await page.getByLabel("Password").fill(PASSWORD);
@@ -104,19 +102,16 @@ test("an owner-declared integrity failure makes Command read-only (export still 
   await expect(owner.getByText("Integrity failed").first()).toBeVisible();
 
   await checkNow(page);
-  await expect(page.getByText("Command is read-only.")).toBeVisible();
+  await expect(page.getByText("License check problem.")).toBeVisible();
   await expect(page.getByText(/license-check code was changed/)).toBeVisible();
   const clock = await page.request.post("/api/clock", { data: { actionId: "abcdefgh1", action: "in", kind: "open" }, headers: { origin: "http://localhost:3400" } });
-  expect(clock.status()).toBe(423);
-  expect((await clock.json()).error).toMatch(/read-only/i);
-  expect((await page.request.get("/api/export/hours")).status()).toBe(200); // export always works
-  expect((await page.request.get("/api/export/my-hours")).status()).toBe(200);
+  expect(clock.status()).toBe(200); // clocking in still works
 
   await owner.getByRole("button", { name: "Clear integrity failure" }).click();
   await owner.getByRole("dialog").getByRole("button", { name: "Clear" }).click();
   await expect(owner.getByText("Integrity failed")).toHaveCount(0);
   await checkNow(page);
-  await expect(page.getByText("Command is read-only.")).toHaveCount(0);
+  await expect(page.getByText("License check problem.")).toHaveCount(0);
   await owner.context().close();
 });
 

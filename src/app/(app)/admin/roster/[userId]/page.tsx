@@ -52,7 +52,12 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
           {isAdmin ? <EmailText className="font-mono" email={member.email} /> : null}
         </p>
       </div>
-      <HoursSummary sessions={sessions} tz={tz} seasonLabel={season.name} />
+      <HoursSummary
+        sessions={sessions}
+        tz={tz}
+        seasonLabel={season.name}
+        outreach={settings.outreachTrackingEnabled ? sessions.filter((s) => s.kind === "event" && s.isOutreach && s.reviewState !== "rejected" && s.reviewState !== "pending_approval").length : undefined}
+      />
 
       {sessions.length === 0 ? (
         <EmptyState icon={<Clock />} title="No time recorded">Use “Add time” below if they were here but forgot to clock in.</EmptyState>
@@ -66,7 +71,7 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
                 <li key={s.id} className="flex flex-col gap-3 p-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium">{s.kind === "event" ? (s.eventTitle ?? "Event") : "Build season clock-in"}</p>
+                      <p className="text-sm font-medium">{s.kind === "event" ? (s.eventTitle ?? "Event") : "Build season clock-in"}{settings.outreachTrackingEnabled && s.isOutreach ? <Badge tone="info" className="ml-2 align-middle">Outreach</Badge> : null}</p>
                       <p className="font-mono text-[13px] md:text-[12px] text-muted">
                         {formatInTz(s.clockInAt, tz, "EEE MMM d, h:mm a")} – {s.clockOutAt ? formatInTz(s.clockOutAt, tz, "h:mm a") : "now"}
                         {s.clockOutAt ? ` · ${formatDuration(s.clockOutAt.getTime() - s.clockInAt.getTime())}` : ""}

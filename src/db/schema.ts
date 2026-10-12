@@ -39,6 +39,12 @@ export const teamSettings = pgTable("team_settings", {
   allowedDomains: text("allowed_domains").array().notNull().default(sql`'{}'::text[]`),
   defaultCheckinVerification: text("default_checkin_verification").notNull().default("none"),
   backfillRequiresApproval: boolean("backfill_requires_approval").notNull().default(true),
+  /** Hold clock-ins made outside build season or after the daily cutoff for a lead's approval. Off: they count right away. */
+  offHoursRequiresApproval: boolean("off_hours_requires_approval").notNull().default(true),
+  /** Lets leads tag events as outreach and shows staff how many outreach events each member attended. */
+  outreachTrackingEnabled: boolean("outreach_tracking_enabled").notNull().default(false),
+  /** Daily check-in with the owner's registry. Purely informational: it never limits what the app can do. */
+  registryEnabled: boolean("registry_enabled").notNull().default(true),
   /** Show members the "outside build hours" warning when they clock in off-season or after the cutoff. */
   showOffHoursNotice: boolean("show_off_hours_notice").notNull().default(false),
   /** Ask "what did you do?" when clocking out of an open session; the answer is saved as the session note. */
@@ -208,6 +214,8 @@ export const events = pgTable(
     verification: text("verification").notNull().default("inherit"), // inherit | none | code
     /** Off for mandatory events (or ones that just don't need a head count): hides RSVP everywhere. */
     rsvpEnabled: boolean("rsvp_enabled").notNull().default(true),
+    /** Counts toward each member's outreach total (when outreach tracking is on). */
+    isOutreach: boolean("is_outreach").notNull().default(false),
     source: text("source").notNull().default("app"), // app | imported
     gcalEventId: text("gcal_event_id"),
     icsUid: text("ics_uid"),

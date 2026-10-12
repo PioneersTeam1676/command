@@ -5,7 +5,7 @@ import { z } from "zod";
 import { requireActionUser } from "@/lib/auth/current-user";
 import { hit } from "@/lib/auth/rate-limit";
 import { audit } from "@/lib/audit";
-import { checkNow } from "@/lib/registry";
+import { checkNow, onRegistryToggled } from "@/lib/registry";
 import { isHexColor } from "@/lib/color";
 import { MAX_LOGO_BYTES, saveLogo, sniffImage } from "@/lib/files";
 import { parseForm, type FormState } from "@/lib/form";
@@ -82,6 +82,8 @@ export async function saveAttendanceAction(_: FormState, formData: FormData): Pr
     {
       defaultCheckinVerification: p.data.defaultCheckinVerification,
       backfillRequiresApproval: formData.get("backfillRequiresApproval") === "on",
+      offHoursRequiresApproval: formData.get("offHoursRequiresApproval") === "on",
+      outreachTrackingEnabled: formData.get("outreachTrackingEnabled") === "on",
       showOffHoursNotice: formData.get("showOffHoursNotice") === "on",
       clockoutNoteEnabled: formData.get("clockoutNoteEnabled") === "on",
       clockoutNoteRequired: formData.get("clockoutNoteRequired") === "on",
@@ -141,11 +143,23 @@ export async function sendEmailPreviewAction(_: FormState, __: FormData): Promis
 
 /** "Check now": send a license-check heartbeat immediately and report what came back. */
 export async function checkRegistryNowAction(_: FormState, __: FormData): Promise<FormState> {
-  const admin = await requireActionUser("admin", { allowReadOnly: true });
+  const admin = await requireActionUser("admin");
+  if (!(await readSettings()).registryEnabled) return { error: "The registry check-in is turned off." };
   if (!(await hit(`registry-check:${admin.id}`, 6, 600)).allowed) return { error: "Too many checks. Wait a few minutes." };
   const state = await checkNow();
   await audit({ actorId: admin.id, action: "registry.check_now", targetType: "registry", after: { state: state.state } });
   revalidatePath("/admin/settings");
   revalidatePath("/", "layout");
   return state.state === "ok" || state.state === "revoked" ? { success: state.state === "ok" ? "Checked in with the license registry. All good." : "Checked in. The owner has revoked this installation: see the notice at the top." } : { error: "Couldn't complete a check-in yet. The notice at the top explains what to do." };
+}
+
+/** Turn the daily registry check-in on or off. */
+export async function saveRegistryAction(_: FormState, formData: FormData): Promise<FormState> {
+  const admin = await requireActionUser("admin");
+  const enabled = formData.get("registryEnabled") === "on";
+  const r = await updateTeamSettings(admin.id, { registryEnabled: enabled }, "settings.registry");
+  await onRegistryToggled(enabled);
+  revalidatePath("/admin/settings");
+  revalidatePath("/", "layout");
+  return done(r.changed ? r.fields : undefined);
 }

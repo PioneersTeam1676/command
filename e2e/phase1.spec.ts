@@ -35,7 +35,7 @@ test("setup wizard creates the first admin, then /setup is gone", async ({ page 
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByRole("heading", { name: "Before you finish" })).toBeVisible();
-  await expect(page.getByText("The registry check (required)")).toBeVisible();
+  await expect(page.getByText("The registry check", { exact: true })).toBeVisible();
   await page.getByLabel(/I.ve read the license/).check();
   await page.getByRole("button", { name: "Finish setup" }).click();
   await expect(page.getByRole("heading", { name: /, Ada!$/ })).toBeVisible();
@@ -65,6 +65,15 @@ test("outsider signs up, waits, admin approves, outsider gets in", async ({ page
   await page.getByRole("link", { name: "Check status" }).click();
   await expect(page.getByRole("heading", { name: /, Olly!$/ })).toBeVisible();
   await adminCtx.close();
+});
+
+test("signed-out visitors land on /login; the public description lives at /about", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await page.getByRole("link", { name: "About" }).click();
+  await expect(page).toHaveURL(/\/about$/);
+  await expect(page.getByRole("heading", { name: "How Command uses Google" })).toBeVisible();
 });
 
 test("wrong password gives a generic error", async ({ page }) => {

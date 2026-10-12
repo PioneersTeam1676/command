@@ -21,19 +21,8 @@ import { clientIp } from "@/lib/auth/request";
 import { destroyAllSessions, destroyCurrentSession, createSession } from "@/lib/auth/session";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { smtpConfigured } from "@/lib/env";
-import { assertWritable, ReadOnlyError } from "@/lib/registry";
 import { parseForm, safeNext, type FormState } from "@/lib/form";
 import { emailSchema, nameSchema, optionalText, passwordSchema } from "@/lib/validation";
-
-async function readOnlyMessage(): Promise<string | null> {
-  try {
-    await assertWritable();
-    return null;
-  } catch (e) {
-    if (e instanceof ReadOnlyError) return e.message;
-    throw e;
-  }
-}
 
 const GENERIC_LOGIN_ERROR = "Wrong email or password.";
 const TOO_MANY = "Too many attempts. Try again in a few minutes.";
@@ -72,8 +61,6 @@ const signupSchema = z.object({
 });
 
 export async function signupAction(_: FormState, formData: FormData): Promise<FormState> {
-  const ro = await readOnlyMessage();
-  if (ro) return { error: ro };
   const parsed = parseForm(signupSchema, formData, { keepValues: ["name", "email", "note"] });
   if (!parsed.ok) return parsed.state;
   const ip = await clientIp();

@@ -8,8 +8,7 @@ export const dynamic = "force-dynamic";
 /**
  * A person's shifts as a calendar feed they can subscribe to from Google Calendar, Apple Calendar or
  * Outlook. The secret in the address is the only credential (calendar apps can't sign in), so it's
- * revocable, rate-limited, and never lists anything but that one person's own shifts. Read-only, so it
- * keeps working when the instance is read-only.
+ * revocable, rate-limited, and never lists anything but that one person's own shifts.
  */
 export async function GET(_req: Request, { params }: { params: Promise<{ token: string }> }) {
   if (!(await hit(`feed:ip:${await clientIp()}`, 120, 600)).allowed) return new NextResponse("Too many requests.", { status: 429, headers: { "retry-after": "600" } });

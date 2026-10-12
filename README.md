@@ -8,7 +8,9 @@ attendance and export data. One deployment is one team, and any team can run its
 
 - Installable PWA with web push (Android, and iPhone via Home Screen), offline clock-in queue
 - Roles: Member, Lead, Admin, and read-only Parent
-- Calendar with RSVPs, rotating-code check-in display, backfill with approval, auto clock-out
+- Calendar with RSVPs, rotating-code check-in display, auto clock-out
+- Optional approval for added time and for time outside build hours (each a toggle in Settings)
+- Optional outreach tracking: tag events as outreach and see each member's outreach count on the Roster
 - Shift sign-ups on any event (see [Sign-ups](#sign-ups)): capacity, waitlist, member-only or parent-only shifts, groups with priority access, reminders, and a private calendar link
 - Season-based leaderboard (switch it off with an env var), CSV exports, audit log
 - Google sign-in (optional) plus email and password; team-set allowed email domains are auto-approved
@@ -70,6 +72,8 @@ proxy can reach the app. With Nginx, use `proxy_pass http://127.0.0.1:3000;` and
 1. In Google Cloud Console, create an **OAuth client ID** of type *Web application*.
 2. Authorized redirect URI: `https://YOUR-APP-URL/auth/google/callback`.
 3. Put the client ID and secret in `.env` as `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET`, then `docker compose up -d`.
+4. On the OAuth consent screen, use `https://YOUR-APP-URL/about` as the application home page (the site itself opens on
+   the sign-in page), and `/privacy` and `/terms` for the policy links.
 
 Only Google accounts with a **verified email** are trusted, and approval is by the email's domain (an exact match
 against the allowed domains you set in Settings). People on other domains, and everyone who signs up with a
@@ -114,7 +118,7 @@ members, leads, admins and approved parents. There is no public link.
 - Admins can download every sign-up as a CSV under Exports.
 
 Sign-up jobs (reminders, "now open" notices) run in the same in-app scheduler as the other reminders, so there is nothing extra to
-configure. They pause while the instance is read-only.
+configure.
 
 ## Backups
 
@@ -138,8 +142,9 @@ Database migrations run automatically at start-up. Take a backup first. Read the
 
 ## License check and registry
 
-Command is a proprietary, source-available product, and running it is conditional on a **required, disclosed** check-in
-with its owner's registry. This is stated in the [LICENSE](LICENSE), shown in the setup wizard, listed in Settings (with
+Command is a proprietary, source-available product with a **disclosed** daily check-in with its owner's registry. It is on
+by default and an admin can turn it off under **Settings → License check** (nothing is sent while it's off). It never
+limits what the app can do. This is stated in the [LICENSE](LICENSE), shown in the setup wizard, listed in Settings (with
 the exact fields), and described here. All of the code for it lives in **`src/lib/registry/`**:
 
 - **What is sent** (when the app is set up, at each start-up, and about every 24 hours): a random install ID, the Command
@@ -148,16 +153,13 @@ the exact fields), and described here. All of the code for it lives in **`src/li
   The registry keeps a salted one-way hash of your server's IP address for at most 30 days, only to detect misuse.
 - **Trust:** responses are signed (Ed25519, keys embedded in `src/lib/registry/config.ts`) and echo a per-request one-time
   code, so forged or replayed responses are never believed.
-- **If it can't check in:** after 24 hours without a success, admins are warned (push, in-app and email, with a daily
-  reminder and an urgent one with 48 hours left). After **7 days** of failed attempts the instance becomes **read-only**:
-  everyone can still view their data, **CSV export always works**, but nobody can clock in or out or change anything. The
-  next successful check-in restores normal operation by itself. A registry outage, network errors and clock problems never
-  count as tampering and can't stop an instance early.
-- **Owner actions:** the owner can revoke an installation. Admins see the owner's message and a countdown (default 7 days),
-  then it goes read-only like above (export still works); the owner can restore it any time.
+- **If it can't check in:** after 24 hours without a success, admins get one notice (push, in-app and email) and a banner.
+  Everything keeps working. A registry outage, network errors and clock problems never count as tampering.
+- **Owner actions:** the owner can revoke an installation or send a message. Admins see the owner's message; nothing is
+  restricted. The owner can restore it any time.
 - **Integrity:** a manifest of hashes of the files in `src/lib/registry/` is written at build time. If the files on disk
-  differ from it at two start-ups at least an hour apart, or a verified registry response says so, the instance goes
-  read-only with a calm notice explaining what was detected. A *missing* manifest (for example a copy that wasn't built as a
+  differ from it at two start-ups at least an hour apart, or a verified registry response says so, admins see a notice
+  explaining what was detected. A *missing* manifest (for example a copy that wasn't built as a
   release) is not treated as tampering: admins are told, and it is reported in the next check-in.
 
 Be clear about what this is: a license-compliance mechanism, not copy protection. It cannot make a source-available app

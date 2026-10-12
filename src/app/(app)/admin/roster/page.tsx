@@ -20,6 +20,8 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
   const [settings, seasons, current] = await Promise.all([getSettings(), listSeasons(), getCurrentSeason()]);
   const season = (sp ? await getSeason(sp) : undefined) ?? current;
   const rows = await rosterForSeason(season.id, settings.timezone);
+  const outreach = settings.outreachTrackingEnabled;
+  const cols = outreach ? "md:grid-cols-[1fr_90px_80px_80px_80px_170px]" : "md:grid-cols-[1fr_90px_80px_80px_170px]";
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -37,17 +39,18 @@ export default async function RosterPage({ searchParams }: { searchParams: Promi
         ) : null}
       </div>
       <Card className="overflow-hidden">
-        <div className="hidden grid-cols-[1fr_90px_80px_80px_170px] gap-4 border-b bg-surface px-4 py-2 text-[13px] md:text-[12px] font-medium text-muted md:grid">
-          <span>Member</span><span className="text-right">Hours</span><span className="text-right">Days</span><span className="text-right">Events</span><span>Needs attention</span>
+        <div className={`hidden gap-4 border-b bg-surface px-4 py-2 text-[13px] md:text-[12px] font-medium text-muted md:grid ${cols}`}>
+          <span>Member</span><span className="text-right">Hours</span><span className="text-right">Days</span><span className="text-right">Events</span>{outreach ? <span className="text-right">Outreach</span> : null}<span>Needs attention</span>
         </div>
         <ul className="divide-y">
           {rows.map((r) => (
             <li key={r.userId}>
-              <Link href={`/admin/roster/${r.userId}?season=${season.id}`} className="grid gap-1 px-4 py-3 transition-colors duration-150 hover:bg-surface md:grid-cols-[1fr_90px_80px_80px_170px] md:items-center md:gap-4">
+              <Link href={`/admin/roster/${r.userId}?season=${season.id}`} className={`grid gap-1 px-4 py-3 transition-colors duration-150 hover:bg-surface md:items-center md:gap-4 ${cols}`}>
                 <span className="font-medium">{r.name} <span className="text-[13px] md:text-[12px] font-normal capitalize text-muted">{r.role}</span></span>
                 <span className="font-mono text-sm md:text-right"><span className="text-muted md:hidden">Hours </span>{r.hours.toFixed(1)}</span>
                 <span className="font-mono text-sm md:text-right"><span className="text-muted md:hidden">Days </span>{r.days}</span>
                 <span className="font-mono text-sm md:text-right"><span className="text-muted md:hidden">Events </span>{r.eventsAttended}</span>
+                {outreach ? <span className="font-mono text-sm md:text-right"><span className="text-muted md:hidden">Outreach </span>{r.outreachAttended}</span> : null}
                 <span className="flex flex-wrap gap-1">
                   {r.needsReview ? <Badge tone="warning">{r.needsReview} auto-closed</Badge> : null}
                   {r.pendingApproval ? <Badge tone="warning">{r.pendingApproval} to approve</Badge> : null}

@@ -8,7 +8,7 @@ import type { LegalDoc } from "./types";
  */
 export const PRIVACY: LegalDoc = {
   title: "Privacy Policy",
-  updated: "2026-10-01",
+  updated: "2026-10-11",
   intro:
     "Command is team-management software that each robotics team runs on its own server. This policy explains what information Command handles, who can see it, and the choices you have. Many Command users are under 18, so we collect as little as we can.",
   sections: [
@@ -56,7 +56,7 @@ export const PRIVACY: LegalDoc = {
       heading: "Who can see what",
       bullets: [
         "Members see their own hours, sign-ups and history, the calendar, and the leaderboard (display names and totals). On a sign-up sheet they also see the names of the teammates and parents signed up for each shift.",
-        "Leads and admins see the roster, attendance, who is coming to each event, sign-ups with their notes, and who is currently clocked in. Only admins see shop orders (who ordered what, with the text to print), and they are emailed when an order is placed. You see only your own orders.",
+        "Leads and admins see the roster, attendance (including, if the Team tracks outreach, how many outreach events each member attended), who is coming to each event, sign-ups with their notes, and who is currently clocked in. Only admins see shop orders (who ordered what, with the text to print), and they are emailed when an order is placed. You see only your own orders.",
         "Admins also manage accounts, approvals, groups and who is in them, settings, exports (including who signed up for which shift) and the audit log. Members see which groups a shift is reserved for, but not who is in a group.",
         "Parents see only the calendar and the hours, attendance and event changes of a student they are approved to view. They cannot see other members. Parents can sign up for shifts that are open to parents; they see how many places are filled but not who filled them.",
       ],
@@ -81,7 +81,7 @@ export const PRIVACY: LegalDoc = {
     {
       heading: "Registry and license check",
       paragraphs: [
-        "Command contacts a registry run by the software owner when it is set up and about once a day. It sends only: a random install ID, the software version, the team name, team number and region, the number of active members, and a build integrity value. It sends no names, emails, attendance or member lists. The registry keeps a one-way hash of the connecting IP address for at most 30 days, used only to detect misuse of the license. This is a condition of the software license.",
+        "Unless the Team's admins turn it off in Settings, Command contacts a registry run by the software owner when it is set up and about once a day. It sends only: a random install ID, the software version, the team name, team number and region, the number of active members, and a build integrity value. It sends no names, emails, attendance or member lists. The registry keeps a one-way hash of the connecting IP address for at most 30 days, used only to detect misuse of the license. While the check-in is off, nothing is sent to the registry.",
       ],
     },
     {

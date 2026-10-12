@@ -28,6 +28,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ even
         tz={settings.timezone}
         verificationOnly={event.source === "imported"}
         teamDefault={settings.defaultCheckinVerification === "code" ? "code" : "none"}
+        outreachEnabled={settings.outreachTrackingEnabled}
         defaults={{
           id: event.id,
           title: event.title,
@@ -37,6 +38,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ even
           endsAt: toDatetimeLocal(event.endsAt, settings.timezone),
           verification: event.verification,
           rsvpEnabled: event.rsvpEnabled,
+          isOutreach: event.isOutreach,
         }}
       />
     </div>

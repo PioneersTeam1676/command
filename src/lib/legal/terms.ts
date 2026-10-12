@@ -3,7 +3,7 @@ import type { LegalDoc } from "./types";
 /** KEEP IN SYNC with LICENSE, README and behaviour. Bump `updated` on every change. */
 export const TERMS: LegalDoc = {
   title: "Terms of Service",
-  updated: "2026-10-01",
+  updated: "2026-10-11",
   intro:
     "These terms apply to everyone who uses this copy of Command, a team-management app run by your robotics team. By creating an account or signing in you agree to them.",
   sections: [
@@ -48,9 +48,9 @@ export const TERMS: LegalDoc = {
       ],
     },
     {
-      heading: "Availability and read-only mode",
+      heading: "Availability",
       paragraphs: [
-        "The Team runs Command on its own infrastructure, so availability is not guaranteed. As a condition of the software license, if a copy cannot reach the license registry for 7 days or its license-check code has been altered, it switches to a read-only mode. In that mode you can still view your data and export it, but cannot clock in or out, sign up for events or shifts, or edit.",
+        "The Team runs Command on its own infrastructure, so availability is not guaranteed.",
       ],
     },
     {

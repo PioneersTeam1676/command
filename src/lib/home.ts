@@ -84,7 +84,7 @@ export async function getHomeData(userId: string, now: Date = new Date()): Promi
     today,
     buildDay,
     workday: isBuildWorkday(today, season),
-    offHours: !buildDay || now >= cutoff,
+    offHours: settings.offHoursRequiresApproval && (!buildDay || now >= cutoff),
     showOffHoursNotice: settings.showOffHoursNotice,
     clockoutNote: !settings.clockoutNoteEnabled ? "off" : settings.clockoutNoteRequired ? "required" : "optional",
     openSession: stillOpen ? { id: stillOpen.id, clockInAt: stillOpen.clockInAt } : null,

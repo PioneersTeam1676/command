@@ -12,6 +12,7 @@ export type EventFormDefaults = {
   endsAt: string;
   verification?: string;
   rsvpEnabled?: boolean;
+  isOutreach?: boolean;
 };
 
 export function EventForm({
@@ -20,6 +21,7 @@ export function EventForm({
   tz,
   verificationOnly = false,
   teamDefault,
+  outreachEnabled = false,
 }: {
   action: (prev: FormState, fd: FormData) => Promise<FormState>;
   defaults: EventFormDefaults;
@@ -27,6 +29,8 @@ export function EventForm({
   /** Imported events: everything but the check-in method is read-only. */
   verificationOnly?: boolean;
   teamDefault: "none" | "code";
+  /** Team setting: show the "outreach event" box. */
+  outreachEnabled?: boolean;
 }) {
   const ro = verificationOnly;
   return (
@@ -71,6 +75,16 @@ export function EventForm({
           <span className="block text-sm md:text-[13px] text-muted">Adds an “I&apos;m going” button so you can see who&apos;s coming, and only they get reminders. Turn off for mandatory events: everyone is then reminded.</span>
         </span>
       </label>
+      {outreachEnabled ? (
+        <label className="flex items-start gap-3 text-sm">
+          <input type="hidden" name="outreachShown" value="1" />
+          <input type="checkbox" name="isOutreach" defaultChecked={defaults.isOutreach ?? false} className="mt-1 size-4 accent-foreground" />
+          <span>
+            <span className="font-medium">Outreach event</span>
+            <span className="block text-sm md:text-[13px] text-muted">Checking in counts toward each member&apos;s outreach total on the Roster.</span>
+          </span>
+        </label>
+      ) : null}
       <SubmitButton size="lg" pendingText="Saving…">{defaults.id ? "Save changes" : "Create event"}</SubmitButton>
     </ActionForm>
   );

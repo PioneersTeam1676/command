@@ -1,4 +1,5 @@
-import { AlertTriangle, Info, Lock } from "lucide-react";
+import Link from "next/link";
+import { AlertTriangle, Info } from "lucide-react";
 import { OWNER_CONTACT, getEffectiveState } from "@/lib/registry";
 import { cn } from "@/lib/utils";
 
@@ -17,55 +18,39 @@ function Bar({ tone, icon, children }: { tone: "warning" | "error" | "info"; ico
 }
 
 /**
- * Full-width notice about the license check (spec 9.3). Admins get exactly what happened and how to fix
- * it; everyone else just learns that the app is read-only. Nothing is shown while things are healthy.
+ * Admin-only notice about the license check (spec 9.3). It never limits the app; it just tells admins
+ * what happened. Nothing is shown while things are healthy or when the check-in is turned off.
  */
 export async function RegistryBanner({ isAdmin }: { isAdmin: boolean }) {
+  if (!isAdmin) return null;
   const s = await getEffectiveState();
 
-  if (s.readOnly) {
-    if (!isAdmin) {
-      return (
-        <Bar tone="error" icon={<Lock className="size-4" />}>
-          <p><strong>Command is read-only right now.</strong> You can still see your data and download it, but clocking in and out and changes are paused. Please tell a team admin.</p>
-        </Bar>
-      );
-    }
-    return (
-      <Bar tone="error" icon={<Lock className="size-4" />}>
-        <p className="font-semibold">Command is read-only.</p>
-        {s.state === "stopped_unreachable" ? (
-          <p>It hasn&apos;t been able to reach the license registry for 7 days. Everyone can still view data and download exports, but nobody can clock in or out or change anything. <strong>To fix it:</strong> restore this server&apos;s internet access to the registry (Command recovers by itself at the next check), or contact {OWNER_CONTACT}.</p>
-        ) : s.state === "stopped_integrity" ? (
-          <p>It detected that its license-check code was changed, or that responses from the registry couldn&apos;t be trusted. Everyone can still view data and download exports. <strong>To fix it:</strong> restore the original files, or contact {OWNER_CONTACT}.</p>
-        ) : (
-          <p>The owner revoked this installation and the deadline has passed.{s.message ? ` Message from the owner: “${s.message}”` : ""} Everyone can still view data and download exports. Contact {OWNER_CONTACT}.</p>
-        )}
-      </Bar>
-    );
-  }
-
-  if (!isAdmin) return null;
-
   if (s.state === "warning") {
-    const left = day(s.msUntilStop ?? 0);
+    const since = day(s.msSinceSuccess);
     return (
       <Bar tone="warning" icon={<AlertTriangle className="size-4" />}>
         <p className="font-semibold">Command can&apos;t reach the license registry.</p>
-        <p>It has been {day(s.msSinceSuccess)} day{day(s.msSinceSuccess) === 1 ? "" : "s"} since the last successful check. Make sure this server can reach the internet. In {left} day{left === 1 ? "" : "s"} Command will become read-only (nobody could clock in or out; exports still work).</p>
+        <p>It has been {since} day{since === 1 ? "" : "s"} since the last successful check. Everything keeps working. Make sure this server can reach the internet, or turn the check-in off in <Link href="/admin/settings#license-check" className="underline underline-offset-4">Settings</Link>.</p>
+      </Bar>
+    );
+  }
+  if (s.state === "integrity") {
+    return (
+      <Bar tone="warning" icon={<AlertTriangle className="size-4" />}>
+        <p className="font-semibold">License check problem.</p>
+        <p>The license-check code was changed, or responses from the registry couldn&apos;t be trusted. Everything keeps working. Contact {OWNER_CONTACT} if you didn&apos;t expect this.</p>
       </Bar>
     );
   }
   if (s.state === "revoked") {
-    const left = day(s.msUntilStop ?? 0);
     return (
       <Bar tone="warning" icon={<AlertTriangle className="size-4" />}>
-        <p className="font-semibold">Action needed: this installation was revoked by the owner.</p>
-        <p>{s.message ? `“${s.message}” ` : ""}Command becomes read-only on {s.revokeDeadline?.toISOString().slice(0, 10)} ({left} day{left === 1 ? "" : "s"} left). Contact {OWNER_CONTACT}.</p>
+        <p className="font-semibold">This installation was revoked by the owner.</p>
+        <p>{s.message ? `“${s.message}” ` : ""}Contact {OWNER_CONTACT}.</p>
       </Bar>
     );
   }
-  if (s.message) {
+  if (s.message && s.state !== "disabled") {
     return (
       <Bar tone="info" icon={<Info className="size-4" />}>
         <p><strong>Message from the Command owner:</strong> {s.message}</p>

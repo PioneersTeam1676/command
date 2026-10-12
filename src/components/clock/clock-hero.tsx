@@ -19,10 +19,6 @@ function fmt(ms: number) {
 export type HeroProps = {
   /** ISO start of the currently running open session, if any. */
   runningSince: string | null;
-  /** Clocking in is possible (false only while Command is read-only). */
-  canClockIn: boolean;
-  /** Plain-language status line when there's nothing to tap. */
-  idleMessage: string;
   cutoffLabel: string;
   /** Outside build season or past the cutoff: a lead has to approve the time. */
   offHours?: boolean;
@@ -32,7 +28,7 @@ export type HeroProps = {
   noteMode?: "off" | "optional" | "required";
 };
 
-export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, offHours = false, showOffHoursNotice = false, noteMode = "off" }: HeroProps) {
+export function ClockHero({ runningSince, cutoffLabel, offHours = false, showOffHoursNotice = false, noteMode = "off" }: HeroProps) {
   const { tap, busy, queue } = useClock();
   const [noteOpen, setNoteOpen] = useState(false);
   const [note, setNote] = useState("");
@@ -49,7 +45,7 @@ export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, 
   const running = Boolean(localRunning);
   const pending = pendingOpen.length > 0;
   const elapsed = localRunning ? now - new Date(localRunning).getTime() : 0;
-  const disabled = busy || (!running && !canClockIn && !pending);
+  const disabled = busy;
 
   function onTap() {
     if (running && noteMode !== "off") setNoteOpen(true);
@@ -74,7 +70,7 @@ export function ClockHero({ runningSince, canClockIn, idleMessage, cutoffLabel, 
             {running ? <span className="clock-dot absolute inline-flex size-full rounded-full bg-success" /> : null}
             <span className={cn("relative inline-flex size-2 rounded-full", running ? "bg-success" : "bg-muted/50")} />
           </span>
-          {running ? "Clocked in" : canClockIn ? "Clocked out" : idleMessage}
+          {running ? "Clocked in" : "Clocked out"}
         </p>
         <p className={cn("font-mono text-6xl font-light tabular-nums tracking-tight transition-colors duration-300", running ? "text-foreground" : "text-muted")}>
           {fmt(elapsed)}

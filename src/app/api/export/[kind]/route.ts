@@ -13,8 +13,8 @@ export const dynamic = "force-dynamic";
 const ADMIN_KINDS = new Set(["hours", "attendance", "rsvps", "signups", "shop", "audit"]);
 
 /**
- * CSV downloads. `my-hours` is for the signed-in member and (by design) is never blocked, even when the
- * instance is read-only. The rest are admin-only and are themselves written to the audit log.
+ * CSV downloads. `my-hours` is for the signed-in member. The rest are admin-only and are themselves
+ * written to the audit log.
  */
 export async function GET(req: Request, { params }: { params: Promise<{ kind: string }> }) {
   const user = await getCurrentUser();
@@ -37,7 +37,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
   const tz = settings.timezone;
   const res =
     kind === "hours"
-      ? await exportHours(seasonId, tz)
+      ? await exportHours(seasonId, tz, settings.outreachTrackingEnabled)
       : kind === "attendance"
         ? await exportAttendance(seasonId, tz)
         : kind === "rsvps"

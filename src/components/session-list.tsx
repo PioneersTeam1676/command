@@ -58,12 +58,12 @@ export function SessionList({ sessions, tz }: { sessions: SessionRowData[]; tz: 
   );
 }
 
-export function HoursSummary({ sessions, tz, seasonLabel }: { sessions: SessionRowData[]; tz: string; seasonLabel: string }) {
+export function HoursSummary({ sessions, tz, seasonLabel, outreach }: { sessions: SessionRowData[]; tz: string; seasonLabel: string; /** Outreach events attended; shown to staff when tracking is on. */ outreach?: number }) {
   const hs = sessions.map((s) => ({ clockInAt: s.clockInAt, clockOutAt: s.clockOutAt, status: s.status, reviewState: s.reviewState }));
   const total = totalMs(hs);
   const days = msByLocalDate(hs, tz).size;
   return (
-    <dl className="grid grid-cols-2 gap-3">
+    <dl className={`grid grid-cols-2 gap-3 ${outreach !== undefined ? "sm:grid-cols-3" : ""}`}>
       <div className="rounded-lg border p-4">
         <dt className="text-sm md:text-[13px] text-muted">Hours in {seasonLabel}</dt>
         <dd className="mt-1 font-mono text-[28px] font-medium">{(total / 3_600_000).toFixed(1)}</dd>
@@ -72,6 +72,12 @@ export function HoursSummary({ sessions, tz, seasonLabel }: { sessions: SessionR
         <dt className="text-sm md:text-[13px] text-muted">Days with time</dt>
         <dd className="mt-1 font-mono text-[28px] font-medium">{days}</dd>
       </div>
+      {outreach !== undefined ? (
+        <div className="rounded-lg border p-4">
+          <dt className="text-sm md:text-[13px] text-muted">Outreach events</dt>
+          <dd className="mt-1 font-mono text-[28px] font-medium">{outreach}</dd>
+        </div>
+      ) : null}
     </dl>
   );
 }

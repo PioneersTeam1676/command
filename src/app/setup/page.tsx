@@ -177,11 +177,11 @@ export default async function SetupPage({ searchParams }: { searchParams: Promis
                     <Link href="/license" className="underline underline-offset-4">license</Link> for what is and isn&apos;t allowed.
                   </p>
                   <div className="rounded-lg border bg-surface p-3">
-                    <p className="font-medium text-foreground">The registry check (required)</p>
+                    <p className="font-medium text-foreground">The registry check</p>
                     <p className="mt-1">
-                      As a condition of the license, Command registers with the owner&apos;s registry now and about once a day afterwards. It sends <em>only</em>: a random install ID, the Command version, your team name, team number and region, how many active members you have, and a build integrity value. It never sends names, emails, attendance or member lists. The registry keeps a one-way hash of your server&apos;s IP address for up to 30 days to detect misuse.
+                      Command registers with the owner&apos;s registry now and about once a day afterwards, so the owner can count the teams using it. It sends <em>only</em>: a random install ID, the Command version, your team name, team number and region, how many active members you have, and a build integrity value. It never sends names, emails, attendance or member lists. The registry keeps a one-way hash of your server&apos;s IP address for up to 30 days to detect misuse.
                     </p>
-                    <p className="mt-1">If Command can&apos;t reach the registry for 7 days it becomes read-only (data export still works).</p>
+                    <p className="mt-1">It never limits what Command can do, and an admin can turn it off any time in Settings.</p>
                   </div>
                 </div>
                 <ActionForm action={finishSetupAction} className="mt-5 space-y-4">

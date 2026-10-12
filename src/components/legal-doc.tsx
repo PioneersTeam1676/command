@@ -30,6 +30,8 @@ export function LegalDocView({ doc }: { doc: LegalDoc }) {
 export function LegalLinks({ className }: { className?: string }) {
   return (
     <p className={className}>
+      <Link href="/about" className="underline-offset-4 hover:underline">About</Link>
+      {" · "}
       <Link href="/terms" className="underline-offset-4 hover:underline">Terms</Link>
       {" · "}
       <Link href="/privacy" className="underline-offset-4 hover:underline">Privacy</Link>

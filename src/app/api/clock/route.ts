@@ -3,7 +3,6 @@ import { z } from "zod";
 import { clockInEvent, clockInOpen, clockOutEvent, clockOutOpen, runOnce, type Origin } from "@/lib/attendance";
 import { hit } from "@/lib/auth/rate-limit";
 import { isSameOrigin } from "@/lib/auth/request";
-import { isReadOnly, ReadOnlyError } from "@/lib/registry";
 import { getCurrentUser, roleAtLeast } from "@/lib/auth/current-user";
 
 export const dynamic = "force-dynamic";
@@ -28,8 +27,6 @@ export async function POST(req: Request) {
   if (!user || user.status !== "active" || user.mustChangePassword) return NextResponse.json({ ok: false, error: "Please sign in again." }, { status: 401 });
   if (!roleAtLeast(user.role, "member")) return NextResponse.json({ ok: false, error: "Not allowed." }, { status: 403 });
   if (!(await hit(`clock:${user.id}`, 60, 60)).allowed) return NextResponse.json({ ok: false, error: "Slow down a little and try again." }, { status: 429 });
-
-  if (await isReadOnly()) return NextResponse.json({ ok: false, error: new ReadOnlyError().message, readOnly: true }, { status: 423 });
 
   const parsed = body.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ ok: false, error: "Bad request." }, { status: 400 });

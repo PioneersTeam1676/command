@@ -5,9 +5,7 @@ import { EventClockCard } from "@/components/clock/event-clock-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Landing } from "@/components/landing/landing";
-import { getCurrentUser, requireUser } from "@/lib/auth/current-user";
-import { isReadOnly } from "@/lib/registry";
+import { requireUser } from "@/lib/auth/current-user";
 import { getHomeData, type EventCard } from "@/lib/home";
 import { myShifts, openShiftsFor } from "@/lib/my-shifts";
 import { pickGreeting } from "@/lib/greetings";
@@ -17,15 +15,12 @@ import { attendQuickAction } from "./calendar/actions";
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  if (!(await getCurrentUser())) return <Landing />;
   const user = await requireUser();
-  const [home, readOnly, shifts, openShifts] = await Promise.all([getHomeData(user.id), isReadOnly(), myShifts(user.id), openShiftsFor({ id: user.id, role: user.role })]);
+  const [home, shifts, openShifts] = await Promise.all([getHomeData(user.id), myShifts(user.id), openShiftsFor({ id: user.id, role: user.role })]);
   const tz = home.tz;
   const first = user.name.split(" ")[0];
   const greeting = pickGreeting(Number(formatInTz(new Date(), tz, "H")));
   const cutoffLabel = formatInTz(home.cutoffLabelAt, tz, "h:mm a");
-
-  const idle = readOnly ? "Clocking in is paused while Command is read-only" : "Clock in any time";
 
   const eventProps = (c: EventCard) => ({
     eventId: c.event.id,
@@ -53,11 +48,9 @@ export default async function HomePage() {
         <div className="mt-6">
           <ClockHero
             runningSince={home.openSession?.clockInAt.toISOString() ?? null}
-            canClockIn={!readOnly}
             offHours={home.offHours}
             showOffHoursNotice={home.showOffHoursNotice}
             noteMode={home.clockoutNote}
-            idleMessage={idle}
             cutoffLabel={cutoffLabel}
           />
         </div>

@@ -8,9 +8,8 @@ import { pushEventToGoogle } from "@/lib/gcal/api";
 import { runIcsSync } from "@/lib/gcal/ics";
 import { readSettings } from "@/lib/settings";
 import type { EventChangeKind } from "@/lib/gcal-sync";
-import { isReadOnly } from "@/lib/registry";
 import { refresh, runHeartbeatIfDue } from "@/lib/registry/client";
-import { registerJob, RescheduleError } from "./scheduler";
+import { registerJob } from "./scheduler";
 
 let registered = false;
 
@@ -19,9 +18,8 @@ export function registerAllJobs() {
   if (registered) return;
   registered = true;
   registerJob("attendance.sweep", async (_job, now) => void (await sweepAutoClose(now)), { everySeconds: 60 });
-  // Read-only instances pause reminders and calendar syncing (nobody can clock in or change anything).
-  registerJob("reminders.tick", async (_job, now) => void ((await isReadOnly()) || (await runReminders(now))), { everySeconds: 60 });
-  registerJob("signups.tick", async (_job, now) => void ((await isReadOnly()) || (await runSignupNotices(now))), { everySeconds: 60 });
+  registerJob("reminders.tick", async (_job, now) => void (await runReminders(now)), { everySeconds: 60 });
+  registerJob("signups.tick", async (_job, now) => void (await runSignupNotices(now)), { everySeconds: 60 });
   registerJob(
     "registry.heartbeat",
     async () => {
@@ -33,7 +31,6 @@ export function registerAllJobs() {
     "gcal.push",
     async (job) => {
       const { eventId, kind } = job.payload as { eventId: string; kind: EventChangeKind };
-      if (await isReadOnly()) throw new RescheduleError(3_600_000); // try again after the instance is restored
       await pushEventToGoogle(eventId, kind); // throws on failure, so the scheduler retries with backoff
     },
   );
@@ -41,7 +38,7 @@ export function registerAllJobs() {
     "gcal.ics",
     async (_job, now) => {
       const env = getEnv();
-      if (env.GOOGLE_CALENDAR_MODE !== "ics" || (await isReadOnly())) return;
+      if (env.GOOGLE_CALENDAR_MODE !== "ics") return;
       const settings = await readSettings();
       await runIcsSync(settings.googleIcsUrl ?? env.GOOGLE_CALENDAR_ICS_URL, now);
     },

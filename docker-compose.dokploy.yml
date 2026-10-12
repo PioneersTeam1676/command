@@ -6,7 +6,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      DATABASE_URL: postgres://command:${POSTGRES_PASSWORD}@db:5432/command
+      DATABASE_URL: ${DATABASE_URL:-postgres://command:${POSTGRES_PASSWORD}@db:5432/command}
       APP_URL: ${APP_URL}
       TZ: ${TZ:-UTC}
       LEADERBOARD_ENABLED: ${LEADERBOARD_ENABLED:-true}

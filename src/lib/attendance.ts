@@ -67,8 +67,9 @@ export async function clockInOpen(userId: string, t: Timing, origin: Origin = "l
   const settings = await getSettings();
   const localDate = localDateOf(time.at, settings.timezone);
   const season = await seasonForDate(localDate);
-  // Anyone can clock in at any time. Outside build season, or after the daily cutoff, the time waits for a lead's approval.
-  const offHours = !inBuildSeason(localDate, season) || time.at >= autoCloseAt(localDate, settings);
+  // Anyone can clock in at any time. Outside build season, or after the daily cutoff, the time waits for a
+  // lead's approval, unless the team turned that off (then it counts right away like any other session).
+  const offHours = settings.offHoursRequiresApproval && (!inBuildSeason(localDate, season) || time.at >= autoCloseAt(localDate, settings));
   try {
     const [row] = await db
       .insert(attendanceSessions)

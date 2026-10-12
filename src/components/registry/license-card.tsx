@@ -7,16 +7,18 @@ import { OWNER_CONTACT, registryOverview } from "@/lib/registry";
 
 type Overview = Awaited<ReturnType<typeof registryOverview>>;
 
-const LABEL = { ok: ["Working", "success"], warning: ["Warning", "warning"], revoked: ["Revoked", "warning"], stopped_unreachable: ["Read-only", "error"], stopped_integrity: ["Read-only", "error"] } as const;
+const LABEL = { ok: ["Working", "success"], warning: ["Can't reach registry", "warning"], revoked: ["Revoked", "warning"], integrity: ["Check problem", "warning"], disabled: ["Off", "neutral"] } as const;
 
 /** The plain-language disclosure of the required license check (spec 9), with its current status. */
-export function LicenseCard({ o, action }: { o: Overview; action: (prev: FormState, fd: FormData) => Promise<FormState> }) {
+type Action = (prev: FormState, fd: FormData) => Promise<FormState>;
+
+export function LicenseCard({ o, action, toggleAction }: { o: Overview; action: Action; toggleAction: Action }) {
   const [label, tone] = LABEL[o.effective.state];
   return (
     <Card id="license-check">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">License check <Badge tone={tone}>{label}</Badge></CardTitle>
-        <CardDescription>Command checks in with its owner&apos;s registry when it&apos;s set up and about once a day. This is required by the license so the owner can count the teams using Command.</CardDescription>
+        <CardDescription>When it&apos;s on, Command checks in with its owner&apos;s registry about once a day so the owner can count the teams using it. It never limits what Command can do, on or off.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <dl className="grid gap-3 text-sm sm:grid-cols-2">
@@ -37,12 +39,24 @@ export function LicenseCard({ o, action }: { o: Overview; action: (prev: FormSta
             <li>How many active members you have (a number, not who they are)</li>
             <li>A fingerprint of the license-check files, a random one-time code and the time</li>
           </ul>
-          <p className="mt-2 text-muted">Never sent: names, emails, hours, attendance or member lists. The registry keeps a one-way hash of your server&apos;s IP address for up to 30 days to detect misuse. If Command can&apos;t check in for 7 days it becomes read-only (data can still be viewed and exported). Questions: {OWNER_CONTACT}.</p>
+          <p className="mt-2 text-muted">Never sent: names, emails, hours, attendance or member lists. The registry keeps a one-way hash of your server&apos;s IP address for up to 30 days to detect misuse. Nothing is sent while the check-in is off. Questions: {OWNER_CONTACT}.</p>
         </div>
 
-        <ActionForm action={action} className="space-y-3">
-          <SubmitButton variant="secondary" pendingText="Checking…">Check now</SubmitButton>
+        <ActionForm action={toggleAction} className="space-y-3">
+          <label className="flex items-start gap-3 text-sm">
+            <input type="checkbox" name="registryEnabled" defaultChecked={o.enabled} className="mt-1 size-4 accent-foreground" />
+            <span>
+              <span className="font-medium">Check in with the registry</span>
+              <span className="block text-sm md:text-[13px] text-muted">Turn off to stop sending anything to the registry.</span>
+            </span>
+          </label>
+          <SubmitButton pendingText="Saving…">Save</SubmitButton>
         </ActionForm>
+        {o.enabled ? (
+          <ActionForm action={action} className="space-y-3 border-t pt-4">
+            <SubmitButton variant="secondary" pendingText="Checking…">Check now</SubmitButton>
+          </ActionForm>
+        ) : null}
       </CardContent>
     </Card>
   );

@@ -10,20 +10,9 @@ import { hit } from "@/lib/auth/rate-limit";
 import { clientIp } from "@/lib/auth/request";
 import { createSession } from "@/lib/auth/session";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { assertWritable, ReadOnlyError } from "@/lib/registry";
 import { parseForm, type FormState } from "@/lib/form";
 import { RELATIONSHIPS, resolveInvite, submitParentLink } from "@/lib/parents";
 import { emailSchema, nameSchema, optionalText, passwordSchema } from "@/lib/validation";
-
-async function readOnlyMessage(): Promise<string | null> {
-  try {
-    await assertWritable();
-    return null;
-  } catch (e) {
-    if (e instanceof ReadOnlyError) return e.message;
-    throw e;
-  }
-}
 
 const tokenField = z.string().min(10).max(200);
 
@@ -31,8 +20,6 @@ const signupSchema = z.object({ token: tokenField, name: nameSchema, email: emai
 
 /** Parent accounts may use any email domain. Their access is gated by admin approval of the link, not the address. */
 export async function parentSignupAction(_: FormState, formData: FormData): Promise<FormState> {
-  const ro = await readOnlyMessage();
-  if (ro) return { error: ro };
   const parsed = parseForm(signupSchema, formData, { keepValues: ["name", "email"] });
   if (!parsed.ok) return parsed.state;
   const { token, name, email, password } = parsed.data;
@@ -56,8 +43,6 @@ const detailsSchema = z.object({
 });
 
 export async function submitParentDetailsAction(_: FormState, formData: FormData): Promise<FormState> {
-  const ro = await readOnlyMessage();
-  if (ro) return { error: ro };
   const user = await getCurrentUser();
   if (!user || user.role !== "parent" || user.status !== "active") redirect("/login");
   const parsed = parseForm(detailsSchema, formData, { keepValues: ["fullName", "relationship", "phone", "note"] });
@@ -71,8 +56,6 @@ export async function submitParentDetailsAction(_: FormState, formData: FormData
 
 /** Re-submit after the team asked for more information. */
 export async function resubmitParentLinkAction(_: FormState, formData: FormData): Promise<FormState> {
-  const ro = await readOnlyMessage();
-  if (ro) return { error: ro };
   const user = await getCurrentUser();
   if (!user || user.role !== "parent" || user.status !== "active") redirect("/login");
   const parsed = parseForm(

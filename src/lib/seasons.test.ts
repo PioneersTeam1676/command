@@ -65,6 +65,19 @@ describe.skipIf(!hasTestDb)("new season and the leaderboard", () => {
     expect(Math.round(mine!.hours)).toBe(8);
   });
 
+  it("roster counts outreach events attended, by the same rules as events attended", async () => {
+    const { rosterForSeason } = await import("./roster");
+    const { db } = await import("@/db");
+    const { events } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    await db.update(events).set({ isOutreach: true }).where(eq(events.id, ev.past1!));
+    const rows = await rosterForSeason(oldSeasonId, "UTC");
+    const by = (k: string) => rows.find((r) => r.userId === u[k])!;
+    expect(by("ann")).toMatchObject({ eventsAttended: 2, outreachAttended: 1 });
+    expect(by("bob")).toMatchObject({ eventsAttended: 0, outreachAttended: 0 }); // pending approval doesn't count
+    await db.update(events).set({ isOutreach: false }).where(eq(events.id, ev.past1!));
+  });
+
   it("starting a new season archives the old one, resets the board, and keeps history", async () => {
     const { startNewSeason, getCurrentSeason, listSeasons } = await import("./seasons");
     const { db } = await import("@/db");
