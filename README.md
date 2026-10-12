@@ -4,7 +4,7 @@ A self-hostable team management app for FRC-style robotics teams. Members clock 
 season sessions, see a calendar, RSVP, and get push notifications on their phones. Admins see who is here, review
 attendance and export data. One deployment is one team, and any team can run its own copy on its own server.
 
-> **NOTICE: this is not an open source project.** See [Notice](#notice) and [LICENSE](LICENSE).
+> **NOTICE: this is not an open source project.** Please see [Notice](#notice) and [LICENSE](LICENSE).
 
 - Installable PWA with web push (Android, and iPhone via Home Screen), offline clock-in queue
 - Roles: Member, Lead, Admin, and read-only Parent
