@@ -32,7 +32,7 @@ export const TERMS: LegalDoc = {
     {
       heading: "Attendance records",
       paragraphs: [
-        "Hours are calculated by the rules in the app, which admins and leads may review, edit, approve or reject. Automatically closed and self-reported entries may be adjusted. Records are for the Team's own use and are provided as is.",
+        "Hours are calculated by the rules in the app, which admins and leads may review, edit, approve or reject. Automatically closed and manually added entries may be adjusted, and time you add yourself only counts once an admin or lead approves it. Overlapping entries may be merged or removed, and admins may permanently delete an entry. Records are for the Team's own use and are provided as is.",
       ],
     },
     {

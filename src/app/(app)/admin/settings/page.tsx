@@ -98,13 +98,6 @@ export default async function SettingsPage() {
               <TextField name="eventAutocloseGraceMinutes" label="Event grace period (minutes)" type="number" min={0} max={240} defaultValue={s.eventAutocloseGraceMinutes} help="How long after an event ends before people still checked in are clocked out." />
             </div>
             <label className="flex items-start gap-3 text-sm">
-              <input type="checkbox" name="backfillRequiresApproval" defaultChecked={s.backfillRequiresApproval} className="mt-1 size-4 accent-foreground" />
-              <span>
-                <span className="font-medium">Require approval for added time</span>
-                <span className="block text-sm md:text-[13px] text-muted">When someone adds time they forgot to clock, a lead or admin must approve it before it counts. If you turn this off, it counts right away and is marked “self-reported”.</span>
-              </span>
-            </label>
-            <label className="flex items-start gap-3 text-sm">
               <input type="checkbox" name="offHoursRequiresApproval" defaultChecked={s.offHoursRequiresApproval} className="mt-1 size-4 accent-foreground" />
               <span>
                 <span className="font-medium">Require approval for time outside build hours</span>

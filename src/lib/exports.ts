@@ -1,3 +1,4 @@
+import { overlappingIds } from "@/lib/overlaps";
 import { and, asc, desc, eq, gte, lt } from "drizzle-orm";
 import { aliasedTable } from "drizzle-orm";
 import { db } from "@/db";
@@ -33,6 +34,7 @@ export async function exportAttendance(seasonId: string, tz: string) {
     .leftJoin(events, eq(events.id, attendanceSessions.eventId))
     .where(eq(attendanceSessions.seasonId, seasonId))
     .orderBy(asc(attendanceSessions.clockInAt));
+  const flagged = overlappingIds(rows.map((r) => r.s));
   const body = rows.map(({ s, name, eventTitle }) => [
     eventTitle ?? "Build season clock-in",
     formatInTz(s.clockInAt, tz, "yyyy-MM-dd"),
@@ -46,9 +48,11 @@ export async function exportAttendance(seasonId: string, tz: string) {
     s.reviewState,
     s.origin,
     s.selfReported ? "yes" : "no",
+    s.origin === "backfill" ? "yes" : "no",
+    flagged.has(s.id) ? "yes" : "no",
     s.note ?? "",
   ]);
-  return csvResponse(`attendance-${slug(season.name)}.csv`, toCsv(["Event", "Date", "Member", "In", "Out", "Hours", "Counts toward hours", "Kind", "Status", "Review", "Origin", "Self-reported", "Note"], body));
+  return csvResponse(`attendance-${slug(season.name)}.csv`, toCsv(["Event", "Date", "Member", "In", "Out", "Hours", "Counts toward hours", "Kind", "Status", "Review", "Origin", "Self-reported", "Manually added", "Overlaps another entry", "Note"], body));
 }
 
 /** Who signed up to attend each event in a season, with the note they left. Admin only. */
@@ -95,6 +99,7 @@ export async function exportMyHours(userId: string, seasonId: string, tz: string
     .leftJoin(events, eq(events.id, attendanceSessions.eventId))
     .where(and(eq(attendanceSessions.userId, userId), eq(attendanceSessions.seasonId, seasonId)))
     .orderBy(asc(attendanceSessions.clockInAt));
+  const flagged = overlappingIds(rows.map((r) => r.s));
   const body = rows.map(({ s, eventTitle }) => [
     eventTitle ?? "Build season clock-in",
     formatInTz(s.clockInAt, tz, "yyyy-MM-dd HH:mm"),
@@ -102,8 +107,10 @@ export async function exportMyHours(userId: string, seasonId: string, tz: string
     s.clockOutAt ? hoursCell((s.clockOutAt.getTime() - s.clockInAt.getTime()) / 3_600_000) : "",
     countsTowardHours(s) ? "yes" : "no",
     s.reviewState,
+    s.origin === "backfill" ? "yes" : "no",
+    flagged.has(s.id) ? "yes" : "no",
   ]);
-  return csvResponse(`my-hours-${slug(season.name)}.csv`, toCsv(["What", "In", "Out", "Hours", "Counts toward hours", "Review"], body));
+  return csvResponse(`my-hours-${slug(season.name)}.csv`, toCsv(["What", "In", "Out", "Hours", "Counts toward hours", "Review", "Manually added", "Overlaps another entry"], body));
 }
 
 /** Every merch order line, one row each, with the text to print. Admin only. */

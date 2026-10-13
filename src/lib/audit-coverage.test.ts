@@ -90,7 +90,7 @@ describe.skipIf(!hasTestDb)("audit log coverage", () => {
     await expectAudit("season.update", () => updateCurrentSeason(u.admin!, { name: "2026 renamed", buildStart: "2026-01-03", buildEnd: "2026-02-18", workdays: [1, 2, 3] }));
     const { updateTeamSettings } = await import("./settings-admin");
     await expectAudit("settings.team", () => updateTeamSettings(u.admin!, { name: "New Name" }, "settings.team"));
-    await expectAudit("settings.attendance", () => updateTeamSettings(u.admin!, { backfillRequiresApproval: false }, "settings.attendance"));
+    await expectAudit("settings.attendance", () => updateTeamSettings(u.admin!, { offHoursRequiresApproval: false }, "settings.attendance"));
     // No-op saves don't create noise.
     const before = (await actions()).length;
     await updateTeamSettings(u.admin!, { name: "New Name" }, "settings.team");
@@ -106,6 +106,15 @@ describe.skipIf(!hasTestDb)("audit log coverage", () => {
     const other = await a.addSessionForUser(u.lead!, { userId: u.kid!, kind: "open", inAt: new Date("2026-01-07T20:00:00Z"), outAt: new Date("2026-01-07T22:00:00Z") }, new Date("2026-02-01T00:00:00Z"));
     if (!other.ok) throw new Error(other.error);
     expect(seasonId).toBeTruthy();
+    // Resolving an overlap is audited. Permanent delete deliberately is not.
+    const overlapping = await a.addSessionForUser(u.lead!, { userId: u.kid!, kind: "open", inAt: new Date("2026-01-07T21:00:00Z"), outAt: new Date("2026-01-07T23:00:00Z") }, new Date("2026-02-01T00:00:00Z"));
+    if (!overlapping.ok) throw new Error(overlapping.error);
+    await expectAudit("attendance.resolve_overlap", async () => {
+      expect((await a.resolveOverlap(u.lead!, { aId: other.session.id, bId: overlapping.session.id, action: "merge" })).ok).toBe(true);
+    });
+    const countBefore = (await actions()).length;
+    expect((await a.deleteSessionForever(other.session.id)).ok).toBe(true);
+    expect((await actions()).length).toBeLessThanOrEqual(countBefore);
   });
 
   it("scrubs credential-like fields from audit payloads", async () => {

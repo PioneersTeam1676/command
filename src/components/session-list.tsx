@@ -14,6 +14,8 @@ export type SessionRowData = {
   origin: string;
   selfReported: boolean;
   note: string | null;
+  /** True when this entry shares time with another entry of the same member. */
+  overlaps?: boolean;
 };
 
 export function SessionBadges({ s }: { s: SessionRowData }) {
@@ -24,9 +26,9 @@ export function SessionBadges({ s }: { s: SessionRowData }) {
       {s.reviewState === "needs_review" ? <Badge tone="warning">Auto clocked out, under review</Badge> : null}
       {s.reviewState === "rejected" ? <Badge tone="error">Not counted</Badge> : null}
       {s.status === "edited" ? <Badge>Edited</Badge> : null}
-      {s.selfReported ? <Badge>Self-reported</Badge> : null}
+      {s.origin === "backfill" ? <Badge tone="info">Manually added</Badge> : null}
+      {s.overlaps && s.reviewState !== "rejected" ? <Badge tone="warning">Overlaps another entry</Badge> : null}
       {s.origin === "offline_synced" ? <Badge>Saved offline</Badge> : null}
-      {s.origin === "backfill" && !s.selfReported && s.reviewState !== "pending_approval" && s.reviewState !== "rejected" ? <Badge>Added later</Badge> : null}
     </span>
   );
 }

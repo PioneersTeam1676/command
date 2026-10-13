@@ -1,6 +1,6 @@
-import { and, asc, desc, eq, inArray, lte, ne } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, lte, ne, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { attendanceSessions, clientActions, events, seasons, users } from "@/db/schema";
+import { attendanceSessions, auditLog, clientActions, events, notificationLog, seasons, users } from "@/db/schema";
 import { audit } from "@/lib/audit";
 import { verifyCode } from "@/lib/checkin-code";
 import { validateClientTime } from "@/lib/client-time";
@@ -8,6 +8,7 @@ import { isUniqueViolation } from "@/lib/db-errors";
 import { hit } from "@/lib/auth/rate-limit";
 import { getCheckinSecret } from "@/lib/checkin";
 import { overlaps } from "@/lib/hours";
+import { findOverlapPairs } from "@/lib/overlaps";
 import { notify } from "@/lib/notify";
 import { seasonForDate, type Season } from "@/lib/seasons";
 import { getSettings, type TeamSettings } from "@/lib/settings";
@@ -329,7 +330,7 @@ export async function addBackfill(userId: string, input: BackfillInput, now: Dat
     if (overlaps([inAt, outAt], [e.clockInAt, end])) return fail("That overlaps time you've already recorded.");
   }
 
-  const needsApproval = settings.backfillRequiresApproval;
+  // Member-added time never counts until a lead or admin approves it, and stays marked as manually added.
   try {
     const [row] = await db
       .insert(attendanceSessions)
@@ -343,14 +344,14 @@ export async function addBackfill(userId: string, input: BackfillInput, now: Dat
         clockOutAt: outAt,
         status: "closed",
         origin: "backfill",
-        reviewState: needsApproval ? "pending_approval" : "none",
-        selfReported: !needsApproval,
+        reviewState: "pending_approval",
+        selfReported: false,
         note: input.note?.trim().slice(0, 300) || null,
         serverTimeIn: now,
         serverTimeOut: now,
       })
       .returning();
-    return { ok: true, session: row!, pending: needsApproval };
+    return { ok: true, session: row!, pending: true };
   } catch (e) {
     if (isUniqueViolation(e)) return fail(input.kind === "event" ? "You already have time recorded for that event." : "You already have an open-session entry for that day.");
     throw e;
@@ -462,6 +463,91 @@ export async function addSessionForUser(
     if (isUniqueViolation(e)) return fail("They already have an entry for that day or event. Edit it instead.");
     throw e;
   }
+}
+
+// ---------------------------------------------------------------- overlaps (clock-in + event check-in for the same time)
+
+/**
+ * Every pair of overlapping entries (same member), for the review page. Entries whose end hasn't happened yet are
+ * included, flagged `running`, because the usual cause is clocking in and then checking in to an event.
+ */
+export async function overlapQueue(now: Date = new Date()) {
+  const rows = await db
+    .select({ session: attendanceSessions, userName: users.name, eventTitle: events.title })
+    .from(attendanceSessions)
+    .innerJoin(users, eq(users.id, attendanceSessions.userId))
+    .leftJoin(events, eq(events.id, attendanceSessions.eventId))
+    .where(ne(attendanceSessions.reviewState, "rejected"));
+  const flat = rows.map((r) => ({ ...r.session, userName: r.userName, eventTitle: r.eventTitle }));
+  return findOverlapPairs(flat, now).map(({ a, b }) => ({ a, b, running: a.status === "open" || b.status === "open" }));
+}
+
+export type OverlapAction = "merge" | "keep_a" | "keep_b";
+
+/**
+ * Settle one overlapping pair. `merge` keeps a single entry from the earliest in to the latest out (the event entry
+ * survives so attendance counts stay right), `keep_a` / `keep_b` keep one as is. The other entry is removed, and the
+ * survivor counts (it's reviewed by a lead). Runs in one transaction.
+ */
+export async function resolveOverlap(actorId: string, input: { aId: string; bId: string; action: OverlapAction }): Promise<Res> {
+  if (input.aId === input.bId) return fail("Pick two different entries.");
+  const settings = await getSettings();
+  return db.transaction(async (tx): Promise<Res> => {
+    const rows = await tx.select().from(attendanceSessions).where(inArray(attendanceSessions.id, [input.aId, input.bId])).for("update");
+    const a = rows.find((r) => r.id === input.aId);
+    const b = rows.find((r) => r.id === input.bId);
+    if (!a || !b) return fail("One of those entries no longer exists.");
+    if (a.userId !== b.userId) return fail("Those entries belong to different people.");
+    if (a.status === "open" || b.status === "open") return fail("One of them is still running. Clock them out first.");
+    if (a.reviewState === "rejected" || b.reviewState === "rejected") return fail("One of those entries isn't counted anymore.");
+    if (!a.clockOutAt || !b.clockOutAt || !overlaps([a.clockInAt, a.clockOutAt], [b.clockInAt, b.clockOutAt])) return fail("Those entries don't overlap anymore.");
+
+    let keep: Session;
+    let drop: Session;
+    let after: Record<string, unknown>;
+    if (input.action === "merge") {
+      if (a.kind === "event" && b.kind === "event") return fail("These are two different events. Keep one instead of merging.");
+      keep = a.kind === "event" ? a : b.kind === "event" ? b : a.clockInAt <= b.clockInAt ? a : b;
+      drop = keep === a ? b : a;
+      const inAt = a.clockInAt < b.clockInAt ? a.clockInAt : b.clockInAt;
+      const outAt = a.clockOutAt > b.clockOutAt ? a.clockOutAt : b.clockOutAt;
+      await tx.delete(attendanceSessions).where(eq(attendanceSessions.id, drop.id));
+      await tx
+        .update(attendanceSessions)
+        .set({ clockInAt: inAt, clockOutAt: outAt, localDate: localDateOf(inAt, settings.timezone), status: "edited", reviewState: "approved", note: keep.note ?? drop.note })
+        .where(eq(attendanceSessions.id, keep.id));
+      after = { clockInAt: inAt, clockOutAt: outAt, status: "edited", reviewState: "approved" };
+    } else {
+      keep = input.action === "keep_a" ? a : b;
+      drop = keep === a ? b : a;
+      await tx.delete(attendanceSessions).where(eq(attendanceSessions.id, drop.id));
+      const reviewState = keep.reviewState === "pending_approval" || keep.reviewState === "needs_review" ? "approved" : keep.reviewState;
+      await tx.update(attendanceSessions).set({ reviewState }).where(eq(attendanceSessions.id, keep.id));
+      after = { reviewState };
+    }
+    await audit(
+      { actorId, action: "attendance.resolve_overlap", targetType: "attendance", targetId: keep.id, before: { keep: snapshot(keep), removed: { id: drop.id, kind: drop.kind, ...snapshot(drop) } }, after: { resolution: input.action, ...after } },
+      tx,
+    );
+    return { ok: true };
+  });
+}
+
+// ---------------------------------------------------------------- permanent delete (admin)
+
+/**
+ * Remove an entry with no trace: the row, every audit entry about it, the cached result of any queued tap that
+ * carried it, and its auto clock-out notice record. Writes no audit entry of its own, on purpose. Cannot be undone.
+ */
+export async function deleteSessionForever(id: string): Promise<Res> {
+  return db.transaction(async (tx): Promise<Res> => {
+    const gone = await tx.delete(attendanceSessions).where(eq(attendanceSessions.id, id)).returning({ id: attendanceSessions.id });
+    if (gone.length === 0) return fail("That entry doesn't exist.");
+    await tx.delete(auditLog).where(and(eq(auditLog.targetType, "attendance"), eq(auditLog.targetId, id)));
+    await tx.delete(clientActions).where(sql`${clientActions.result} -> 'session' ->> 'id' = ${id}`);
+    await tx.delete(notificationLog).where(and(eq(notificationLog.type, "auto_clockout"), eq(notificationLog.dedupeKey, `auto:${id}`)));
+    return { ok: true };
+  });
 }
 
 // ---------------------------------------------------------------- queries

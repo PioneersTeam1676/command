@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { addSessionForUser, editSessionTimes, forceClockOut } from "@/lib/attendance";
+import { addSessionForUser, deleteSessionForever, editSessionTimes, forceClockOut } from "@/lib/attendance";
 import { requireActionUser } from "@/lib/auth/current-user";
 import { parseForm, type FormState } from "@/lib/form";
 import { getSettings } from "@/lib/settings";
@@ -46,4 +46,14 @@ export async function addTimeAction(_: FormState, formData: FormData): Promise<F
   if (!r.ok) return { error: r.error, values: { inAt: p.data.inAt, outAt: p.data.outAt, note: p.data.note ?? "" } };
   refresh(p.data.userId);
   return { success: "Added. It counts toward their hours now." };
+}
+
+/** Admin only. Removes the entry and everything that mentions it. Deliberately not audited. */
+export async function deleteSessionAction(formData: FormData) {
+  await requireActionUser("admin");
+  const p = z.object({ id: uuidSchema, userId: uuidSchema }).safeParse(Object.fromEntries(formData));
+  if (!p.success) return;
+  await deleteSessionForever(p.data.id);
+  refresh(p.data.userId);
+  revalidatePath("/me/hours");
 }

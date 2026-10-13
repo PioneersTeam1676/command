@@ -294,7 +294,7 @@ describe.skipIf(!hasTestDb)("attendance: clock in/out, sweeps, backfill, review"
       expect((await a.addBackfill(userId, { kind: "open", date: "2026-01-05", inAt: "2026-01-05T15:00", outAt: "2026-01-05T14:00" }, now)).ok).toBe(false);
     });
 
-    it("counts immediately and is flagged self-reported when approval is switched off", async () => {
+    it("always waits for approval, even if the old team setting is off", async () => {
       const a = await import("./attendance");
       const { db } = await import("@/db");
       const { teamSettings } = await import("@/db/schema");
@@ -304,9 +304,9 @@ describe.skipIf(!hasTestDb)("attendance: clock in/out, sweeps, backfill, review"
       await db.update(teamSettings).set({ backfillRequiresApproval: true });
       expect(r.ok).toBe(true);
       if (r.ok) {
-        expect(r.pending).toBe(false);
-        expect(r.session).toMatchObject({ reviewState: "none", selfReported: true });
-        expect(countsTowardHours(r.session)).toBe(true);
+        expect(r.pending).toBe(true);
+        expect(r.session).toMatchObject({ reviewState: "pending_approval", origin: "backfill" });
+        expect(countsTowardHours(r.session)).toBe(false);
       }
     });
 

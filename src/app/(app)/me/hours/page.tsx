@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { EmptyState } from "@/components/ui/empty-state";
 import { backfillableEvents, listMySessions } from "@/lib/attendance";
 import { requireUser } from "@/lib/auth/current-user";
+import { overlappingIds } from "@/lib/overlaps";
 import { SeasonPicker } from "@/components/season-picker";
 import { getCurrentSeason, getSeason, listSeasons } from "@/lib/seasons";
 import { getSettings } from "@/lib/settings";
@@ -27,7 +28,8 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
   const season = (seasonParam ? await getSeason(seasonParam) : undefined) ?? current;
   const isCurrent = season.id === current.id;
   const rows = await listMySessions(user.id, season.id);
-  const list = rows.map((r) => ({ ...r.session, eventTitle: r.eventTitle }));
+  const flagged = overlappingIds(rows.map((r) => r.session));
+  const list = rows.map((r) => ({ ...r.session, eventTitle: r.eventTitle, overlaps: flagged.has(r.session.id) }));
   const missed = isCurrent ? await backfillableEvents(user.id, season.id) : [];
 
   return (
@@ -51,9 +53,7 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
           <CardHeader>
             <CardTitle>Forgot to clock in?</CardTitle>
             <CardDescription>
-              {settings.backfillRequiresApproval
-                ? "Add time for something you attended. It counts after a lead or admin approves it."
-                : "Add time for something you attended. It counts right away and is marked as self-reported."}
+              Add time for something you attended. It&apos;s marked as manually added and counts after a lead or admin approves it.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">

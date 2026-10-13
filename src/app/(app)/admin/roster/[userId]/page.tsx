@@ -21,7 +21,7 @@ import { getSettings } from "@/lib/settings";
 import { formatInTz, toDatetimeLocal } from "@/lib/time";
 import { uuidSchema } from "@/lib/validation";
 import { acceptSessionAction, rejectSessionAction } from "../../review/attendance-actions";
-import { addTimeAction, editTimesAction, forceClockOutAction } from "../actions";
+import { addTimeAction, deleteSessionAction, editTimesAction, forceClockOutAction } from "../actions";
 import { Clock } from "lucide-react";
 import { Textarea } from "@/components/ui/input";
 
@@ -102,6 +102,9 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
                       <ConfirmAction label="Don't count" danger title="Stop counting this entry?" description="It stays in the history but won't count toward their hours." confirmLabel="Don't count" action={rejectSessionAction} fields={{ id: s.id }}>
                         <Textarea name="reason" maxLength={200} aria-label="Reason (optional)" placeholder="Reason (optional)" />
                       </ConfirmAction>
+                    ) : null}
+                    {isAdmin ? (
+                      <ConfirmAction label="Delete" danger title="Delete this entry permanently?" description="It's removed completely, along with its history. It leaves no record anywhere and can't be undone." confirmLabel="Delete permanently" action={deleteSessionAction} fields={{ id: s.id, userId }} />
                     ) : null}
                   </div>
                 </li>

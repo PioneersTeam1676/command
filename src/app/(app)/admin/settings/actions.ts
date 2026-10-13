@@ -81,7 +81,6 @@ export async function saveAttendanceAction(_: FormState, formData: FormData): Pr
     admin.id,
     {
       defaultCheckinVerification: p.data.defaultCheckinVerification,
-      backfillRequiresApproval: formData.get("backfillRequiresApproval") === "on",
       offHoursRequiresApproval: formData.get("offHoursRequiresApproval") === "on",
       outreachTrackingEnabled: formData.get("outreachTrackingEnabled") === "on",
       showOffHoursNotice: formData.get("showOffHoursNotice") === "on",

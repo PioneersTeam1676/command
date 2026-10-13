@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Select, Textarea } from "@/components/ui/input";
 import { requireUser, roleAtLeast } from "@/lib/auth/current-user";
 import { approveAccessAction, decideParentAction, denyAccessAction } from "../actions";
-import { acceptSessionAction, editSessionEndAction, rejectSessionAction } from "./attendance-actions";
-import { reviewQueue } from "@/lib/attendance";
+import { acceptSessionAction, editSessionEndAction, rejectSessionAction, resolveOverlapAction } from "./attendance-actions";
+import { overlapQueue, reviewQueue } from "@/lib/attendance";
 import { getSettings } from "@/lib/settings";
 import { formatDuration } from "@/lib/hours";
 import { formatInTz, toDatetimeLocal } from "@/lib/time";
@@ -27,7 +27,7 @@ export default async function ReviewPage() {
   const isAdmin = roleAtLeast(user.role, "admin");
   const settings = await getSettings();
   const tz = settings.timezone;
-  const attendance = await reviewQueue();
+  const [attendance, overlapPairs] = await Promise.all([reviewQueue(), overlapQueue()]);
   const student = aliasedTable(users, "student");
   const [access, parents] = isAdmin ? await Promise.all([
     db
@@ -52,10 +52,10 @@ export default async function ReviewPage() {
       .where(eq(parentLinks.status, "pending")),
   ]) : [[], []];
 
-  if (access.length === 0 && parents.length === 0 && attendance.length === 0) {
+  if (access.length === 0 && parents.length === 0 && attendance.length === 0 && overlapPairs.length === 0) {
     return (
       <EmptyState icon={<Inbox />} title="You're all caught up">
-        New join requests and parent link requests will show up here, and we&apos;ll send you a notification.
+        New join requests, parent link requests, and overlapping time entries will show up here, and we&apos;ll send you a notification.
       </EmptyState>
     );
   }
@@ -79,7 +79,7 @@ export default async function ReviewPage() {
                         {formatInTz(a.clockInAt, tz, "EEE MMM d, h:mm a")} – {a.clockOutAt ? formatInTz(a.clockOutAt, tz, "h:mm a") : "?"} · {formatDuration(ms)}
                       </p>
                       <p className="mt-1.5">
-                        {pendingBackfill ? <Badge tone="warning">Added by the member, needs approval</Badge> : <Badge tone="warning">Automatically clocked out, please check the end time</Badge>}
+                        {pendingBackfill ? <><Badge tone="info">Manually added</Badge> <Badge tone="warning">Needs approval</Badge></> : <Badge tone="warning">Automatically clocked out, please check the end time</Badge>}
                       </p>
                       {a.note ? <p className="mt-2">“{a.note}”</p> : null}
                     </div>
@@ -103,6 +103,55 @@ export default async function ReviewPage() {
                         <Textarea name="reason" maxLength={200} aria-label="Reason (optional)" placeholder="Reason (optional)" />
                       </ConfirmAction>
                     </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {overlapPairs.length > 0 ? (
+        <section aria-labelledby="ovl-h">
+          <h2 id="ovl-h" className="text-base font-semibold tracking-tight">Overlapping time</h2>
+          <p className="mb-3 mt-1 text-sm md:text-[13px] text-muted">The same person has two entries for the same stretch, usually a clock-in plus an event check-in. Hours are never counted twice, but pick how to tidy it up.</p>
+          <div className="space-y-3">
+            {overlapPairs.map(({ a, b, running }) => {
+              const merge = !(a.kind === "event" && b.kind === "event");
+              const entry = (e: typeof a, tag: string) => (
+                <div className="min-w-0 rounded-lg border p-3">
+                  <p className="text-[13px] md:text-[12px] font-medium uppercase tracking-wide text-muted">{tag}</p>
+                  <p className="mt-1 truncate text-sm font-medium">{e.kind === "event" ? (e.eventTitle ?? "Event") : "Build season clock-in"}</p>
+                  <p className="font-mono text-[13px] md:text-[12px] text-muted">
+                    {formatInTz(e.clockInAt, tz, "EEE MMM d, h:mm a")} – {e.clockOutAt ? formatInTz(e.clockOutAt, tz, "h:mm a") : "now"}
+                  </p>
+                  <p className="mt-1.5 flex flex-wrap gap-1">
+                    {e.status === "open" ? <Badge tone="info">In progress</Badge> : null}
+                    {e.origin === "backfill" ? <Badge tone="info">Manually added</Badge> : null}
+                    {e.reviewState === "pending_approval" ? <Badge tone="warning">Needs approval</Badge> : null}
+                  </p>
+                </div>
+              );
+              const base = { aId: a.id, bId: b.id };
+              return (
+                <Card key={`${a.id}:${b.id}`}>
+                  <CardContent className="space-y-4 p-5">
+                    <p className="text-[15px] font-medium">{a.userName}</p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {entry(a, "Entry A")}
+                      {entry(b, "Entry B")}
+                    </div>
+                    {running ? (
+                      <p className="text-sm md:text-[13px] text-muted">One of these is still running. You can tidy it up once they clock out.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {merge ? (
+                          <ConfirmAction label="Merge" variant="primary" title="Merge into one entry?" description="One entry from the earliest start to the latest end. The event entry is kept if there is one. The other is removed." confirmLabel="Merge" action={resolveOverlapAction} fields={{ ...base, action: "merge" }} />
+                        ) : null}
+                        <ConfirmAction label="Keep A" title="Keep entry A?" description="Entry B is removed. Entry A counts as it is." confirmLabel="Keep A" action={resolveOverlapAction} fields={{ ...base, action: "keep_a" }} />
+                        <ConfirmAction label="Keep B" title="Keep entry B?" description="Entry A is removed. Entry B counts as it is." confirmLabel="Keep B" action={resolveOverlapAction} fields={{ ...base, action: "keep_b" }} />
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               );

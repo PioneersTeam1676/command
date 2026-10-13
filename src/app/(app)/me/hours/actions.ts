@@ -20,7 +20,7 @@ export async function backfillEventAction(_: FormState, formData: FormData): Pro
   const r = await addBackfill(user.id, { kind: "event", ...p.data });
   if (!r.ok) return { error: r.error, values: { eventId: p.data.eventId, inAt: p.data.inAt, outAt: p.data.outAt, note: p.data.note ?? "" } };
   revalidatePath("/me/hours");
-  return { success: r.pending ? "Sent. It will count once a lead or admin approves it." : "Added. It counts now and is marked as self-reported." };
+  return { success: "Sent, marked as manually added. It will count once a lead or admin approves it." };
 }
 
 export async function backfillDayAction(_: FormState, formData: FormData): Promise<FormState> {
@@ -30,5 +30,5 @@ export async function backfillDayAction(_: FormState, formData: FormData): Promi
   const r = await addBackfill(user.id, { kind: "open", ...p.data });
   if (!r.ok) return { error: r.error, values: { date: p.data.date, inAt: p.data.inAt, outAt: p.data.outAt, note: p.data.note ?? "" } };
   revalidatePath("/me/hours");
-  return { success: r.pending ? "Sent. It will count once a lead or admin approves it." : "Added. It counts now and is marked as self-reported." };
+  return { success: "Sent, marked as manually added. It will count once a lead or admin approves it." };
 }

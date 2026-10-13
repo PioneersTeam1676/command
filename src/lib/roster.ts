@@ -2,6 +2,7 @@ import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { attendanceSessions, events, users } from "@/db/schema";
 import { totalMs, msByLocalDate, type HoursSession } from "@/lib/hours";
+import { overlappingIds } from "@/lib/overlaps";
 
 export type HereRow = {
   sessionId: string;
@@ -74,5 +75,6 @@ export async function memberSessions(userId: string, seasonId: string) {
     .leftJoin(events, eq(events.id, attendanceSessions.eventId))
     .where(and(eq(attendanceSessions.userId, userId), eq(attendanceSessions.seasonId, seasonId)))
     .orderBy(desc(attendanceSessions.clockInAt));
-  return rows.map((r) => ({ ...r.session, eventTitle: r.eventTitle, isOutreach: r.isOutreach ?? false }));
+  const flagged = overlappingIds(rows.map((r) => r.session));
+  return rows.map((r) => ({ ...r.session, eventTitle: r.eventTitle, isOutreach: r.isOutreach ?? false, overlaps: flagged.has(r.session.id) }));
 }
