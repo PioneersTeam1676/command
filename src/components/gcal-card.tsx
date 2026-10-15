@@ -54,7 +54,7 @@ export function GcalCard({
                   ? `Saved (${icsSaved}). Paste a new address to replace it, or clear the box and save to remove it.`
                   : icsFromEnv
                     ? "Using the address from your server settings. Paste one here to override it."
-                    : "In Google Calendar: Settings → your calendar → Integrate calendar → “Secret address in iCal format”. Anyone with this address can read your calendar, so keep it private."
+                    : "In Google Calendar: Settings → your calendar → Integrate calendar → “Secret address in iCal format”, or, if the calendar is public, “Public address in iCal format” (ends in /public/basic.ics). Anyone with a secret address can read your calendar, so keep it private."
               }
             />
             <SubmitButton variant="secondary" pendingText="Saving…">Save address</SubmitButton>

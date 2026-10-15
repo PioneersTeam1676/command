@@ -103,7 +103,7 @@ export const fetchIcsText: FetchText = async (url) => {
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   try {
     const res = await fetch(url, { signal: ctrl.signal, headers: { accept: "text/calendar, text/plain, */*", "user-agent": "Command-Calendar-Sync" }, redirect: "follow" });
-    if (!res.ok) throw new Error(res.status === 404 ? "Google says that address doesn't exist (404). Copy the secret address again." : `The calendar server answered ${res.status}.`);
+    if (!res.ok) throw new Error(res.status === 404 ? "Google says that address doesn't exist (404). Copy the iCal address again." : `The calendar server answered ${res.status}.`);
     const reader = res.body?.getReader();
     if (!reader) return await res.text();
     const chunks: Uint8Array[] = [];
@@ -137,7 +137,7 @@ export async function syncIcs(opts: { url: string; now?: Date; fetchText?: Fetch
   const now = opts.now ?? new Date();
   const url = await assertPublicHttpUrl(opts.url, { allowPrivate: opts.allowPrivate ?? getEnv().ICS_ALLOW_PRIVATE_NETWORKS });
   const text = await (opts.fetchText ?? fetchIcsText)(url);
-  if (!/BEGIN:VCALENDAR/i.test(text)) throw new Error("That address didn't return a calendar. Make sure you copied the “Secret address in iCal format”.");
+  if (!/BEGIN:VCALENDAR/i.test(text)) throw new Error("That address didn't return a calendar. Make sure you copied the secret or public “address in iCal format”.");
   const { timezone } = await readSettings();
   const window = icsWindow(now);
   const occurrences = parseIcs(text, window, timezone);

@@ -52,11 +52,11 @@ export async function testConnectionAction(_: FormState, __: FormData): Promise<
     return r.ok ? { success: `Connected to “${r.name}”.` } : { error: r.error };
   }
   const url = await currentIcsUrl();
-  if (!url) return { error: "Paste your calendar's secret address first." };
+  if (!url) return { error: "Paste your calendar's iCal address first." };
   try {
     const safe = await assertPublicHttpUrl(url, { allowPrivate: getEnv().ICS_ALLOW_PRIVATE_NETWORKS });
     const text = await fetchIcsText(safe);
-    if (!/BEGIN:VCALENDAR/i.test(text)) return { error: "That address didn't return a calendar. Copy the “Secret address in iCal format”." };
+    if (!/BEGIN:VCALENDAR/i.test(text)) return { error: "That address didn't return a calendar. Copy the secret or public “address in iCal format”." };
     const { timezone } = await readSettings();
     const occ = parseIcs(text, icsWindow(new Date()), timezone);
     return { success: `Connected. We can read ${occ.length} event${occ.length === 1 ? "" : "s"} (from 2 months ago to 6 months ahead).` };
@@ -70,7 +70,7 @@ export async function syncNowAction(_: FormState, __: FormData): Promise<FormSta
   if (!(await hit(`gcal-sync:${admin.id}`, 6, 600)).allowed) return { error: TOO_MANY };
   if (getEnv().GOOGLE_CALENDAR_MODE !== "ics") return { error: "Syncing applies to ICS mode." };
   const url = await currentIcsUrl();
-  if (!url) return { error: "Paste your calendar's secret address first." };
+  if (!url) return { error: "Paste your calendar's iCal address first." };
   try {
     const r = await runIcsSync(url);
     await audit({ actorId: admin.id, action: "gcal.sync", targetType: "calendar", after: r ?? {} });
