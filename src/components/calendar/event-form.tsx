@@ -43,7 +43,7 @@ export function EventForm({
           <input type="hidden" name="startsAt" value={defaults.startsAt} />
           <input type="hidden" name="endsAt" value={defaults.endsAt} />
           <p className="rounded-lg border bg-surface p-3 text-sm md:text-[13px] text-muted">
-            This event was imported from Google Calendar, so its title and times are edited there. You can still choose how members check in.
+            This event was imported from Google Calendar, so its title and times are edited there. You can still choose how members check in and whether people can sign up.
           </p>
         </>
       ) : (

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { acceptSession, editSessionTimes, rejectSession, resolveOverlap } from "@/lib/attendance";
+import { approveRequest, markReviewed, revertRequest } from "@/lib/attendance-requests";
 import { requireActionUser } from "@/lib/auth/current-user";
 import { getSettings } from "@/lib/settings";
 import { fromDatetimeLocal } from "@/lib/time";
@@ -43,5 +44,29 @@ export async function resolveOverlapAction(formData: FormData) {
   const p = z.object({ aId: uuidSchema, bId: uuidSchema, action: z.enum(["merge", "keep_a", "keep_b"]) }).safeParse(Object.fromEntries(formData));
   if (!p.success) return;
   await resolveOverlap(actor.id, p.data);
+  refresh();
+}
+
+export async function approveRequestAction(formData: FormData) {
+  const actor = await requireActionUser("lead");
+  const id = uuidSchema.safeParse(formData.get("id"));
+  if (!id.success) return;
+  await approveRequest(actor.id, id.data);
+  refresh();
+}
+
+export async function revertRequestAction(formData: FormData) {
+  const actor = await requireActionUser("lead");
+  const id = uuidSchema.safeParse(formData.get("id"));
+  if (!id.success) return;
+  await revertRequest(actor.id, id.data);
+  refresh();
+}
+
+export async function markReviewedAction(formData: FormData) {
+  const actor = await requireActionUser("lead");
+  const id = uuidSchema.safeParse(formData.get("id"));
+  if (!id.success) return;
+  await markReviewed(actor.id, id.data);
   refresh();
 }

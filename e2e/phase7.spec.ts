@@ -63,7 +63,11 @@ test("ICS mode imports, updates and cancels events without duplicating, and impo
   await page.getByRole("link", { name: /Robot Demo \(updated\)/ }).click();
   await expect(page.getByText("Check-in: rotating code")).toBeVisible();
 
-  // Members can sign up to attend imported events like any other.
+  // Synced events start without RSVP; an admin opts in per event, then members can sign up like on any other.
+  await expect(page.getByRole("button", { name: "I'm going" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Edit" }).click();
+  await page.getByLabel(/Let people sign up to come/).check();
+  await page.getByRole("button", { name: "Save changes" }).click();
   await page.getByRole("button", { name: "I'm going" }).click();
   await expect(page.getByText("You're signed up.")).toBeVisible();
 });

@@ -11,7 +11,7 @@ import { calendarShiftInfo } from "@/lib/my-shifts";
 import { getCurrentSeason } from "@/lib/seasons";
 import { getSettings } from "@/lib/settings";
 
-export const metadata: Metadata = { title: "Calendar" };
+export const metadata: Metadata = { title: "Team calendar" };
 export const dynamic = "force-dynamic";
 
 export default async function CalendarPage({ searchParams }: { searchParams: Promise<{ view?: string; date?: string }> }) {
@@ -27,7 +27,7 @@ export default async function CalendarPage({ searchParams }: { searchParams: Pro
   return (
     <div>
       <div className="mb-6 flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Calendar</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Team calendar</h1>
         {roleAtLeast(user.role, "lead") ? (
           <Button asChild><Link href="/calendar/new"><Plus aria-hidden />New event</Link></Button>
         ) : null}

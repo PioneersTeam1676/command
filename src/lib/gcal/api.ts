@@ -210,6 +210,7 @@ export async function importPastEvents(range: { from: string; to: string }): Pro
           endsAt,
           source: "imported",
           gcalEventId: item.id,
+          rsvpEnabled: false,
         })
         .onConflictDoNothing()
         .returning({ id: events.id });

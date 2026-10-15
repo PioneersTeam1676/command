@@ -6,7 +6,8 @@ import { Ellipsis, LogOut, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { logoutAction } from "@/app/(auth)/actions";
 import { cn } from "@/lib/utils";
-import { adminItem, mobileNav, navItems, type NavItem } from "./nav";
+import { adminItem, isMePath, isNavActive, mobileNav, navItems, type NavItem } from "./nav";
+import { UserAvatar } from "./user-avatar";
 
 type Props = {
   teamName: string;
@@ -15,11 +16,12 @@ type Props = {
   isStaff: boolean;
   isParent?: boolean;
   shopOpen?: boolean;
+  me?: { name: string; avatarUrl: string | null };
+  /** Things waiting on a lead or admin; shown on the Admin entry. */
+  adminCount?: number;
   banner?: React.ReactNode;
   children: React.ReactNode;
 };
-
-const isActive = (pathname: string, href: string) => (href === "/" ? pathname === "/" : href === "/me" ? pathname === "/me" || (pathname.startsWith("/me/") && !pathname.startsWith("/me/shifts")) : href === "/parent" ? pathname === "/parent" || /^\/parent\/(?!calendar)/.test(pathname) : pathname.startsWith(href));
 
 const KEY = "sidebar-collapsed";
 const FULL = 240;
@@ -54,26 +56,57 @@ function Brand({ teamName, logoUrl, href = "/" }: { teamName: string; logoUrl?: 
   );
 }
 
-function SidebarLink({ item, active, rail }: { item: NavItem; active: boolean; rail: boolean }) {
+function SidebarLink({ item, active, rail, count = 0 }: { item: NavItem; active: boolean; rail: boolean; count?: number }) {
   return (
     <Link
       href={item.href}
       aria-current={active ? "page" : undefined}
       title={item.label}
       className={cn(
-        "flex min-h-9 items-center gap-2.5 whitespace-nowrap rounded-md text-[13px] transition-colors duration-150",
+        "relative flex min-h-9 items-center gap-2.5 whitespace-nowrap rounded-md text-[13px] transition-colors duration-150",
         rail ? "justify-center px-0" : "px-2.5",
         active ? "bg-hover font-medium text-foreground" : "text-muted hover:bg-hover hover:text-foreground",
       )}
     >
       <item.Icon className="size-4 shrink-0" aria-hidden />
       <span className={rail ? "sr-only" : undefined}>{item.label}</span>
+      {count && !rail ? <CountPill n={count} className="ml-auto" /> : null}
+      {count && rail ? (
+        <>
+          <span aria-hidden className="absolute right-1.5 top-1.5 size-2 rounded-full bg-foreground" />
+          <span className="sr-only">, {count} waiting for review</span>
+        </>
+      ) : null}
+    </Link>
+  );
+}
+
+function CountPill({ n, className }: { n: number; className?: string }) {
+  if (!n) return null;
+  return (
+    <span className={cn("rounded-full bg-foreground px-1.5 font-mono text-[11px] leading-[18px] text-background", className)}>
+      {n > 99 ? "99+" : n}
+      <span className="sr-only"> waiting for review</span>
+    </span>
+  );
+}
+
+function MeLink({ me, active, className }: { me: { name: string; avatarUrl: string | null }; active: boolean; className?: string }) {
+  return (
+    <Link
+      href="/me"
+      aria-label="Me"
+      aria-current={active ? "page" : undefined}
+      title={me.name}
+      className={cn("inline-grid size-11 place-items-center rounded-full transition-colors duration-150 md:size-9", active ? "bg-hover" : "hover:bg-hover", className)}
+    >
+      <UserAvatar name={me.name} avatarUrl={me.avatarUrl} />
     </Link>
   );
 }
 
 /** Phone: bottom tab bar. Desktop: 240px sidebar with the same items plus Admin. */
-export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isParent, shopOpen, banner, children }: Props) {
+export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isParent, shopOpen, me, adminCount = 0, banner, children }: Props) {
   const pathname = usePathname();
   const stored = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
   const shell = useRef<HTMLDivElement>(null);
@@ -121,7 +154,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
     }
   };
   const items = navItems({ leaderboardEnabled, isStaff, isParent, shopOpen });
-  const all = isStaff ? [...items.slice(0, -1), adminItem, ...items.slice(-1)] : items;
+  const all = isStaff ? [...items, adminItem] : items;
   const { bar, more } = mobileNav(items);
   const slots = bar.length + (more.length ? 1 : 0);
 
@@ -135,21 +168,24 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
         Skip to content
       </a>
       <aside className="sticky top-0 hidden h-dvh min-w-0 flex-col gap-5 overflow-hidden border-r bg-surface px-2 py-3 md:flex">
-        <div className={cn("flex items-center gap-2", stored ? "justify-center" : "justify-between pl-2.5")}>
+        <div className={cn("flex items-center gap-2", stored ? "flex-col" : "justify-between pl-2.5")}>
           {stored ? null : <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />}
-          <button
-            type="button"
-            onClick={toggle}
-            aria-label={stored ? "Expand sidebar" : "Collapse sidebar"}
-            title={stored ? "Expand sidebar" : "Collapse sidebar"}
-            className="grid size-7 shrink-0 place-items-center rounded-md text-muted transition-colors duration-150 hover:bg-hover hover:text-foreground"
-          >
-            {stored ? <PanelLeftOpen className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
-          </button>
+          <div className={cn("flex items-center gap-1", stored && "flex-col")}>
+            {me ? <MeLink me={me} active={isMePath(pathname)} /> : null}
+            <button
+              type="button"
+              onClick={toggle}
+              aria-label={stored ? "Expand sidebar" : "Collapse sidebar"}
+              title={stored ? "Expand sidebar" : "Collapse sidebar"}
+              className="grid size-7 shrink-0 place-items-center rounded-md text-muted transition-colors duration-150 hover:bg-hover hover:text-foreground"
+            >
+              {stored ? <PanelLeftOpen className="size-4" aria-hidden /> : <PanelLeftClose className="size-4" aria-hidden />}
+            </button>
+          </div>
         </div>
         <nav aria-label="Main" className="flex flex-col gap-1">
           {all.map((item) => (
-            <SidebarLink key={item.href} item={item} active={isActive(pathname, item.href)} rail={stored} />
+            <SidebarLink key={item.href} item={item} active={isNavActive(pathname, item.href)} rail={stored} count={item.href === "/admin" ? adminCount : 0} />
           ))}
         </nav>
         {isParent ? (
@@ -182,20 +218,24 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
 
 
       <div className="flex min-w-0 flex-col">
-        <header className="pt-safe sticky top-0 z-30 flex h-[calc(3rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background/90 px-4 backdrop-blur md:hidden">
+        <header className="pt-safe sticky top-0 z-30 flex h-[calc(3rem+env(safe-area-inset-top))] items-center justify-between border-b bg-background px-4 md:hidden">
           <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />
-          {isStaff ? (
-            <Link href="/admin" className="inline-flex min-h-[44px] items-center px-2 text-[13px] font-medium text-muted hover:text-foreground">
-              Admin
-            </Link>
-          ) : null}
-          {isParent ? (
-            <form action={logoutAction}>
-              <button type="submit" className="inline-flex min-h-[44px] items-center px-2 text-[13px] font-medium text-muted hover:text-foreground">
-                Sign out
-              </button>
-            </form>
-          ) : null}
+          <div className="flex items-center gap-1">
+            {isStaff ? (
+              <Link href="/admin" className="inline-flex min-h-[44px] items-center gap-1.5 px-2 text-[13px] font-medium text-muted hover:text-foreground">
+                Admin
+                <CountPill n={adminCount} />
+              </Link>
+            ) : null}
+            {me ? <MeLink me={me} active={isMePath(pathname)} /> : null}
+            {isParent ? (
+              <form action={logoutAction}>
+                <button type="submit" className="inline-flex min-h-[44px] items-center px-2 text-[13px] font-medium text-muted hover:text-foreground">
+                  Sign out
+                </button>
+              </form>
+            ) : null}
+          </div>
         </header>
         {banner}
         <main id="main" tabIndex={-1} className="mx-auto w-full max-w-4xl flex-1 px-4 pb-28 pt-5 md:px-8 md:pb-16 md:pt-10">{children}</main>
@@ -203,11 +243,11 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
 
       <nav
         aria-label="Main"
-        className="pb-safe fixed inset-x-0 bottom-0 z-40 grid border-t bg-background/95 backdrop-blur md:hidden"
+        className="pb-safe fixed inset-x-0 bottom-0 z-40 grid border-t bg-background md:hidden"
         style={{ gridTemplateColumns: `repeat(${slots}, minmax(0, 1fr))` }}
       >
         {bar.map((item) => {
-          const active = isActive(pathname, item.href);
+          const active = isNavActive(pathname, item.href);
           return (
             <Link
               key={item.href}
@@ -228,7 +268,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
             <DialogTrigger asChild>
               <button
                 type="button"
-                className={cn("flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] transition-colors duration-150", more.some((m) => isActive(pathname, m.href)) ? "font-medium text-foreground" : "text-muted")}
+                className={cn("flex min-h-[56px] flex-col items-center justify-center gap-1 text-[11px] transition-colors duration-150", more.some((m) => isNavActive(pathname, m.href)) ? "font-medium text-foreground" : "text-muted")}
               >
                 <Ellipsis className="size-5" aria-hidden />
                 More

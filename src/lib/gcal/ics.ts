@@ -158,7 +158,7 @@ export async function syncIcs(opts: { url: string; now?: Date; fetchText?: Fetch
       const season = await seasonForDate(new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(o.startsAt));
       const [row] = await db
         .insert(events)
-        .values({ seasonId: season.id, title: o.title, description: o.description, locationText: o.location, startsAt: o.startsAt, endsAt: o.endsAt, cancelledAt: o.cancelled ? now : null, source: "imported", icsUid: o.uid })
+        .values({ seasonId: season.id, title: o.title, description: o.description, locationText: o.location, startsAt: o.startsAt, endsAt: o.endsAt, cancelledAt: o.cancelled ? now : null, source: "imported", icsUid: o.uid, rsvpEnabled: false })
         .onConflictDoNothing()
         .returning();
       if (row) {

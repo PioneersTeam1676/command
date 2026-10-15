@@ -16,12 +16,16 @@ export type MyShift = {
   locationText: string | null;
   /** Members can leave until the shift starts, and not at all once a lead has closed the sheet. */
   canLeave: boolean;
+  /** A few of the others holding a place, so friends can pick the same shift. */
+  withNames: string[];
+  /** How many others hold a place in all. */
+  others: number;
 };
 
 const PAST_LIMIT = 20;
 
 /** Everything one person holds or is queued for. Cancelled shifts and cancelled events aren't listed. */
-export async function myShifts(userId: string, now: Date = new Date()): Promise<{ upcoming: MyShift[]; past: MyShift[] }> {
+export async function myShifts(userId: string, now: Date = new Date(), viewerRole: Role = "member"): Promise<{ upcoming: MyShift[]; past: MyShift[] }> {
   const rows = await db
     .select({ entry: signupEntries, slot: signupSlots, sheetClosedAt: signupSheets.closedAt, eventId: events.id, eventTitle: events.title, locationText: events.locationText, eventCancelledAt: events.cancelledAt })
     .from(signupEntries)
@@ -41,6 +45,10 @@ export async function myShifts(userId: string, now: Date = new Date()): Promise<
         .orderBy(asc(signupEntries.createdAt), asc(signupEntries.id))
     : [];
 
+  const upcomingIds = live.filter((r) => r.slot.endsAt > now && r.entry.status === "confirmed").map((r) => r.slot.id);
+  const heldBy = await holders(upcomingIds);
+  const othersOn = (slotId: string) => (heldBy.get(slotId) ?? []).filter((h) => h.userId !== userId);
+
   const shape = (r: (typeof live)[number]): MyShift => ({
     entryId: r.entry.id,
     status: r.entry.status === "waitlisted" ? "waitlisted" : "confirmed",
@@ -50,6 +58,9 @@ export async function myShifts(userId: string, now: Date = new Date()): Promise<
     eventTitle: r.eventTitle,
     locationText: r.locationText,
     canLeave: !r.sheetClosedAt && r.slot.startsAt > now,
+    // Parents only ever see how many are signed up, never who.
+    withNames: viewerRole === "parent" ? [] : othersOn(r.slot.id).slice(0, NAMES_SHOWN).map((h) => h.name),
+    others: othersOn(r.slot.id).length,
   });
   return {
     upcoming: live.filter((r) => r.slot.endsAt > now).map(shape),
@@ -57,7 +68,34 @@ export async function myShifts(userId: string, now: Date = new Date()): Promise<
   };
 }
 
-export type OpenShift = { slot: SlotRow; eventId: string; eventTitle: string; spotsLeft: number; waitlist: boolean };
+export type OpenShift = {
+  slot: SlotRow;
+  eventId: string;
+  eventTitle: string;
+  spotsLeft: number;
+  waitlist: boolean;
+  /** People already signed up. */
+  filled: number;
+  /** A few of their names. Empty for parents, who only see counts. */
+  names: string[];
+};
+
+/** How many names to show on a shift before saying "and N more". */
+export const NAMES_SHOWN = 4;
+
+/** Names of the people holding a place on each slot, oldest first. Deactivated accounts aren't listed. */
+async function holders(slotIds: string[]): Promise<Map<string, { userId: string; name: string }[]>> {
+  const out = new Map<string, { userId: string; name: string }[]>();
+  if (slotIds.length === 0) return out;
+  const rows = await db
+    .select({ slotId: signupEntries.slotId, userId: signupEntries.userId, name: users.name })
+    .from(signupEntries)
+    .innerJoin(users, eq(users.id, signupEntries.userId))
+    .where(and(inArray(signupEntries.slotId, slotIds), eq(signupEntries.status, "confirmed"), eq(users.status, "active")))
+    .orderBy(asc(signupEntries.createdAt), asc(signupEntries.id));
+  for (const r of rows) out.set(r.slotId, [...(out.get(r.slotId) ?? []), { userId: r.userId, name: r.name }]);
+  return out;
+}
 
 /**
  * Shifts this person could take right now: on an open sheet for a live event, not over or cancelled,
@@ -97,22 +135,24 @@ export async function openShiftsFor(viewer: { id: string; role: Role }, now: Dat
   const slotGroups = await db.select({ slotId: signupSlotGroups.slotId, groupId: signupSlotGroups.groupId }).from(signupSlotGroups).where(inArray(signupSlotGroups.slotId, ids));
   const myGroups = slotGroups.length ? await groupIdsForUser(viewer.id) : [];
 
+  const names = viewer.role === "parent" ? new Map<string, { userId: string; name: string }[]>() : await holders(ids);
   const out: OpenShift[] = [];
   for (const r of fits) {
     if (mine.some((m) => m.slotId === r.slot.id)) continue;
     if (r.slot.kind === "shift" && mine.some((m) => m.kind === "shift" && m.sheetId === r.sheetId && slotsOverlap(m, r.slot))) continue;
     const gate = claimGate({ slotGroupIds: slotGroups.filter((g) => g.slotId === r.slot.id).map((g) => g.groupId), opensToAllAt: r.slot.opensToAllAt, userGroupIds: myGroups, now });
     if (gate.state !== "open") continue;
-    const spotsLeft = Math.max(r.slot.capacity - (counts.find((c) => c.slotId === r.slot.id)?.n ?? 0), 0);
+    const filled = counts.find((c) => c.slotId === r.slot.id)?.n ?? 0;
+    const spotsLeft = Math.max(r.slot.capacity - filled, 0);
     if (spotsLeft === 0 && !r.slot.waitlistEnabled) continue;
-    out.push({ slot: r.slot, eventId: r.eventId, eventTitle: r.eventTitle, spotsLeft, waitlist: spotsLeft === 0 });
+    out.push({ slot: r.slot, eventId: r.eventId, eventTitle: r.eventTitle, spotsLeft, waitlist: spotsLeft === 0, filled, names: (names.get(r.slot.id) ?? []).slice(0, NAMES_SHOWN).map((h) => h.name) });
   }
   return out;
 }
 
 /** Per-event badges for the calendar: shifts you can take, and shifts you hold. */
 export async function calendarShiftInfo(viewer: { id: string; role: Role }, now: Date = new Date()): Promise<Map<string, { open: number; mine: number }>> {
-  const [open, mine] = await Promise.all([openShiftsFor(viewer, now), myShifts(viewer.id, now)]);
+  const [open, mine] = await Promise.all([openShiftsFor(viewer, now), myShifts(viewer.id, now, viewer.role)]);
   const out = new Map<string, { open: number; mine: number }>();
   const at = (id: string) => out.get(id) ?? { open: 0, mine: 0 };
   for (const o of open) out.set(o.eventId, { ...at(o.eventId), open: at(o.eventId).open + 1 });

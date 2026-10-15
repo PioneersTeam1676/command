@@ -13,7 +13,13 @@ import { activeInvites as loadActiveInvites, linksForStudent } from "@/lib/paren
 import { logoutAction } from "../../(auth)/actions";
 import { PrefSwitch } from "@/components/pref-switch";
 import { getEnv } from "@/lib/env";
+import { UserAvatar } from "@/components/shell/user-avatar";
+import { FeedCard } from "@/components/signups/feed-card";
+import { feedStatus } from "@/lib/calendar-feed";
+import { getSettings } from "@/lib/settings";
+import { formatInTz } from "@/lib/time";
 import { createInviteAction, revokeInviteAction, setLeaderboardVisibilityAction, studentRevokeLinkAction } from "./actions";
+import { resetFeedAction, revokeFeedAction } from "./shifts/actions";
 
 export const metadata: Metadata = { title: "Me" };
 export const dynamic = "force-dynamic";
@@ -23,14 +29,17 @@ const label = { pending: "Waiting for review", needs_info: "Needs more info", ap
 
 export default async function MePage() {
   const user = await requireUser();
-  const [activeInvites, links] = await Promise.all([loadActiveInvites(user.id), linksForStudent(user.id)]);
+  const [activeInvites, links, feed, settings] = await Promise.all([loadActiveInvites(user.id), linksForStudent(user.id), feedStatus(user.id), getSettings()]);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">{user.name}</h1>
-        <p className="mt-1 font-mono text-sm md:text-[13px] text-muted"><EmailText email={user.email} /></p>
-        <p className="mt-2"><Badge tone="accent" className="capitalize">{user.role}</Badge></p>
+      <div className="flex items-center gap-4">
+        <UserAvatar name={user.name} avatarUrl={user.avatarUrl} className="size-14 text-lg" />
+        <div className="min-w-0">
+          <h1 className="truncate text-2xl font-semibold tracking-tight">{user.name}</h1>
+          <p className="mt-1 truncate font-mono text-sm md:text-[13px] text-muted"><EmailText email={user.email} /></p>
+          <p className="mt-2"><Badge tone="accent" className="capitalize">{user.role}</Badge></p>
+        </div>
       </div>
 
       <Card>
@@ -70,13 +79,13 @@ export default async function MePage() {
         <CardContent><Button asChild variant="secondary"><Link href="/me/notifications">Notification settings</Link></Button></CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>My hours</CardTitle>
-          <CardDescription>See your time this season, and add time if you forgot to clock in.</CardDescription>
-        </CardHeader>
-        <CardContent><Button asChild variant="secondary"><Link href="/me/hours">View my hours</Link></Button></CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-2 md:items-start">
+      <FeedCard
+        exists={feed.exists}
+        lastUsedLabel={feed.exists && feed.lastFetchedAt ? formatInTz(feed.lastFetchedAt, settings.timezone, "MMM d, h:mm a") : null}
+        reset={resetFeedAction}
+        revoke={revokeFeedAction}
+      />
 
       <Card>
         <CardHeader>
@@ -125,6 +134,7 @@ export default async function MePage() {
           ) : null}
         </CardContent>
       </Card>
+      </div>
 
       <Card>
         <CardHeader><CardTitle>Account</CardTitle></CardHeader>

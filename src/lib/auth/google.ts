@@ -1,6 +1,7 @@
 import { decodeIdToken, generateCodeVerifier, generateState, Google } from "arctic";
 import { getEnv, googleAuthEnabled } from "@/lib/env";
 import type { GoogleClaims } from "@/lib/accounts";
+import { safeAvatarUrl } from "@/lib/avatar-url";
 
 /** Google OAuth via `arctic`. Kept in one file so the library is easy to swap. */
 function client() {
@@ -28,6 +29,7 @@ export async function finishGoogleAuth(code: string, verifier: string): Promise<
       email: claims.email,
       emailVerified: claims.email_verified === true,
       name: typeof claims.name === "string" ? claims.name : claims.email,
+      picture: safeAvatarUrl(claims.picture),
     };
   } catch {
     return null;

@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ParentShiftsPage() {
   const user = await requireParent();
-  const [mine, open, feed, settings] = await Promise.all([myShifts(user.id), openShiftsFor({ id: user.id, role: user.role }), feedStatus(user.id), getSettings()]);
+  const [mine, open, feed, settings] = await Promise.all([myShifts(user.id, new Date(), user.role), openShiftsFor({ id: user.id, role: user.role }), feedStatus(user.id), getSettings()]);
   const tz = settings.timezone;
   return (
     <div className="space-y-8">

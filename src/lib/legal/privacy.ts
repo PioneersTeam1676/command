@@ -8,7 +8,7 @@ import type { LegalDoc } from "./types";
  */
 export const PRIVACY: LegalDoc = {
   title: "Privacy Policy",
-  updated: "2026-10-11",
+  updated: "2026-10-14",
   intro:
     "Command is team-management software that each robotics team runs on its own server. This policy explains what information Command handles, who can see it, and the choices you have. Many Command users are under 18, so we collect as little as we can.",
   sections: [
@@ -22,10 +22,10 @@ export const PRIVACY: LegalDoc = {
     {
       heading: "What Command collects",
       bullets: [
-        "Account details: your name, email address, and either a password (stored only as a one-way hash) or a link to your Google account (we keep Google's account ID and your verified email, nothing else).",
+        "Account details: your name, email address, and either a password (stored only as a one-way hash) or a link to your Google account (we keep Google's account ID, your verified email, and the web address of your Google profile photo, which is shown only as your avatar inside Command; nothing else).",
         "Role and status: whether you are a member, lead, admin or parent, and whether your account is approved.",
-        "Attendance: when you clock in and out (using the server's clock, plus your device's clock time for taps made offline), the events or days they relate to, notes you or an admin add, and whether entries were edited, manually added, merged, or automatically closed. Admins can permanently delete an attendance entry, which also removes its edit history. For events that use rotating codes, wrong-code attempts are counted briefly to prevent guessing.",
-        "Sign-ups: whether you said you are coming to an event, the shifts and things to bring you sign up for or queue for on a waitlist, when, whether a lead placed you there, and any short note you add (for example \"I'll be late\"). Only leads and admins can see your notes. Leads and admins can place people on or remove them from shifts, and you are notified when they do.",
+        "Attendance: when you clock in and out (using the server's clock, plus your device's clock time for taps made offline), the events or days they relate to, notes you or an admin add, and whether entries were edited, manually added, merged, or automatically closed. Admins can permanently delete an attendance entry, which also removes its edit history. If you ask to change or remove one of your own entries, Command keeps the original times, the new times and the reason you wrote until a lead decides, and deletes that reason if your personal data is erased. For events that use rotating codes, wrong-code attempts are counted briefly to prevent guessing.",
+        "Sign-ups: whether you said you are coming to an event, the shifts and things to bring you sign up for or queue for on a waitlist, when, whether a lead placed you there, and any short note you add (for example \"I'll be late\"). Only leads and admins can see your notes. Anyone with an event's shareable link can see the event's name, time and place, and the name, time and number of places taken on each shift open to everyone, but never who signed up, and they have to sign in to sign up. Leads and admins can place people on or remove them from shifts, and you are notified when they do.",
         "Shop orders: if the team opens its merch shop and you order, what you ordered (item, size, quantity), any text you asked to have printed on it (for example a name), your name and email at the time, the total, and whether it has been paid and handed over. No card or payment details are collected; you pay a mentor in person. Item photos are uploaded by admins.",
         "Calendar link: if you turn on your private calendar link, a one-way hash of its secret and when it was last used (the link itself is shown once and never stored). Anyone who has the link can see the names, times and places of your shifts until you make a new link or turn it off.",
         "Groups: if an admin puts you in a named group (for example a scouting group), that membership, so shifts can be reserved for or offered first to that group.",
@@ -70,8 +70,8 @@ export const PRIVACY: LegalDoc = {
     {
       heading: "Service providers",
       bullets: [
-        "Google, if you choose Google sign-in (sign-in only; Google's own privacy policy applies to your Google account) and if your team connects Google Calendar (event titles, times, locations and descriptions are read from, or sent to, the team's calendar; the team's secret calendar link or service-account key is stored on the team's own server, never with member data).",
-        "Command's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements. Data from Google is used only to sign you in and to sync your team's calendar, and is never sold, used for advertising, or shared with anyone else.",
+        "Google, if you choose Google sign-in (sign-in only; Google's own privacy policy applies to your Google account, and your browser loads your profile photo directly from Google's image servers) and if your team connects Google Calendar (event titles, times, locations and descriptions are read from, or sent to, the team's calendar; the team's secret calendar link or service-account key is stored on the team's own server, never with member data).",
+        "Command's use and transfer of information received from Google APIs adheres to the Google API Services User Data Policy, including the Limited Use requirements. Data from Google is used only to sign you in, show your profile photo as your avatar, and sync your team's calendar, and is never sold, used for advertising, or shared with anyone else.",
         "Your device's push service (for example Google, Apple or Mozilla) delivers push notifications. Notification text may pass through it.",
         "Your calendar app or provider (for example Google, Apple or Microsoft), if you subscribe to your private calendar link: it fetches your shift names, times and places from Command on a schedule and keeps its own copy under its own privacy policy.",
         "Your team's email provider, if the team configures email.",

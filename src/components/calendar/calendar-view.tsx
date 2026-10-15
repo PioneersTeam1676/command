@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CalendarDays } from "lucide-react";
 import type { EventRow } from "@/lib/events";
-import { calendarRange, VIEWS } from "@/lib/calendar-view";
+import { agendaEntries, calendarRange, VIEWS } from "@/lib/calendar-view";
 import { addDaysLocal, daysBetween, formatInTz, inBuildSeason, isBuildWorkday, localDateOf, startOfWeekLocal, todayLocal, type SeasonDays } from "@/lib/time";
 import { cn } from "@/lib/utils";
 
@@ -48,11 +48,16 @@ function Nav({ range, basePath, tz }: { range: Props["range"]; basePath: string;
       ? formatInTz(new Date(`${range.date}T12:00:00Z`), "UTC", "MMMM yyyy")
       : range.view === "week"
         ? `Week of ${formatInTz(new Date(`${range.gridStart}T12:00:00Z`), "UTC", "MMM d")}`
-        : "Upcoming";
+        : range.date === todayLocal(tz)
+          ? "Upcoming"
+          : `From ${formatInTz(new Date(`${range.date}T12:00:00Z`), "UTC", "EEE, MMM d")}`;
   return (
     <div className="mb-4 flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-xl font-semibold tracking-tight">{heading}</h2>
+        {range.view === "agenda" && range.date !== todayLocal(tz) ? (
+          <Button asChild variant="ghost"><Link href={q("agenda", todayLocal(tz))}>Today</Link></Button>
+        ) : null}
         {range.view !== "agenda" ? (
           <div className="flex items-center gap-1">
             <Button asChild variant="ghost"><Link href={q(range.view, todayLocal(tz))}>Today</Link></Button>
@@ -92,9 +97,6 @@ export function CalendarView({ events, range, tz, season, basePath, mine, shifts
   return (
     <div>
       <Nav range={range} basePath={basePath} tz={tz} />
-      <p className="mb-4 text-xs text-muted">
-        Team timezone · {tz.replaceAll("_", " ")}
-      </p>
 
       {range.view === "month" ? (
         <div className="overflow-hidden md:rounded-lg md:border">
@@ -121,7 +123,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine, shifts
                   )}
                 >
                   <Link
-                    href={`${basePath}?view=week&date=${d}`}
+                    href={`${basePath}?view=agenda&date=${d}`}
                     aria-label={`${formatInTz(new Date(`${d}T12:00:00Z`), "UTC", "EEEE, MMMM d")}${list.length ? `, ${list.length} ${list.length === 1 ? "event" : "events"}` : ""}${inSeason ? workday ? ", build workday" : ", build season, no workday" : ""}`}
                     aria-current={d === today ? "date" : undefined}
                     className="flex min-h-12 flex-col items-center justify-center gap-0.5 rounded-md transition-colors hover:bg-surface md:mb-1 md:inline-flex md:min-h-0"
@@ -138,7 +140,7 @@ export function CalendarView({ events, range, tz, season, basePath, mine, shifts
                       <EventPill key={e.id} e={e} tz={tz} basePath={basePath} mine={mine?.has(e.id)} compact />
                     ))}
                     {list.length > 3 ? (
-                      <Link href={`${basePath}?view=week&date=${d}`} className="block px-1 text-xs md:text-[11px] text-muted underline-offset-2 hover:underline">
+                      <Link href={`${basePath}?view=agenda&date=${d}`} className="block px-1 text-xs md:text-[11px] text-muted underline-offset-2 hover:underline">
                         +{list.length - 3} more
                       </Link>
                     ) : null}
@@ -193,11 +195,14 @@ export function CalendarView({ events, range, tz, season, basePath, mine, shifts
       ) : null}
 
       {range.view === "agenda" ? (
-        events.length === 0 ? (
-          <EmptyState icon={<CalendarDays />} title="Nothing coming up">When events are added, they&apos;ll show up here in order.</EmptyState>
-        ) : (
-          <EventList entries={[...byDay.entries()]} today={today} tz={tz} basePath={basePath} mine={mine} shifts={shifts} />
-        )
+        (() => {
+          const entries = agendaEntries(byDay, range.date, today, events, tz);
+          return entries.length === 0 ? (
+            <EmptyState icon={<CalendarDays />} title="Nothing coming up">When events are added, they&apos;ll show up here in order.</EmptyState>
+          ) : (
+            <EventList entries={entries} today={today} tz={tz} basePath={basePath} mine={mine} shifts={shifts} />
+          );
+        })()
       ) : null}
     </div>
   );
@@ -209,6 +214,7 @@ function EventList({ entries, today, tz, basePath, mine, shifts }: Pick<Props, "
       {entries.map(([d, list]) => (
         <li key={d}>
           <h3 className="mb-2 text-sm md:text-[13px] font-medium text-muted">{d === today ? "Today · " : ""}{formatInTz(new Date(`${d}T12:00:00Z`), "UTC", "EEEE, MMMM d")}</h3>
+          {list.length === 0 ? <p className="rounded-lg border border-dashed p-3 text-sm text-muted">Nothing scheduled.</p> : null}
           <ul className="space-y-2">
             {list.map((e) => {
               const r = mine?.has(e.id);

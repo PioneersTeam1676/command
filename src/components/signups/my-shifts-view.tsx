@@ -7,6 +7,14 @@ import { leaveSlotAction } from "@/app/(app)/calendar/signup-actions";
 import type { MyShift, OpenShift } from "@/lib/my-shifts";
 import { formatInTz } from "@/lib/time";
 
+/** "With Ada, Ben and 2 more" or "Signed up: ...". When names aren't shown (parents), just the count. */
+export function whoText(label: "With" | "Signed up", names: string[], total: number): string {
+  if (names.length === 0) return label === "With" ? `${total} ${total === 1 ? "other" : "others"} signed up` : `${total} signed up`;
+  const rest = total - names.length;
+  const list = rest > 0 ? `${names.join(", ")} and ${rest} more` : names.join(", ");
+  return label === "With" ? `With ${list}` : `Signed up: ${list}`;
+}
+
 export function shiftWhen(s: { startsAt: Date; endsAt: Date }, tz: string) {
   const sameDay = formatInTz(s.startsAt, tz, "yyyy-MM-dd") === formatInTz(s.endsAt, tz, "yyyy-MM-dd");
   return `${formatInTz(s.startsAt, tz, "EEE MMM d, h:mm a")} – ${sameDay ? formatInTz(s.endsAt, tz, "h:mm a") : formatInTz(s.endsAt, tz, "EEE MMM d, h:mm a")}`;
@@ -32,6 +40,7 @@ export function MyShiftsView({ upcoming, past, open, tz, eventHref }: { upcoming
                     <Link href={eventHref(m.eventId)} className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">{m.eventTitle}</Link>
                     <p className="font-mono text-sm md:text-[13px] text-muted">{shiftWhen(m.slot, tz)}</p>
                     {m.locationText ? <p className="flex items-center gap-1.5 text-sm md:text-[13px] text-muted"><MapPin className="size-3.5" aria-hidden />{m.locationText}</p> : null}
+                    {m.others > 0 ? <p className="text-sm md:text-[13px] text-muted">{whoText("With", m.withNames, m.others)}</p> : null}
                   </div>
                   {m.status === "waitlisted" ? <Badge tone="warning">Waitlist · number {m.position}</Badge> : <Badge tone="success">You&apos;re on it</Badge>}
                 </div>
@@ -56,6 +65,7 @@ export function MyShiftsView({ upcoming, past, open, tz, eventHref }: { upcoming
                   <span className="min-w-0">
                     <span className="block font-medium">{o.slot.title} <span className="font-normal text-muted">· {o.eventTitle}</span></span>
                     <span className="block font-mono text-[13px] md:text-xs text-muted">{shiftWhen(o.slot, tz)}</span>
+                    {o.filled > 0 ? <span className="block text-[13px] text-muted md:text-xs">{whoText("Signed up", o.names, o.filled)}</span> : null}
                   </span>
                   <Badge tone={o.waitlist ? "warning" : "info"}>{o.waitlist ? "Full · waitlist" : `${o.spotsLeft} ${o.spotsLeft === 1 ? "place" : "places"} left`}</Badge>
                 </Link>

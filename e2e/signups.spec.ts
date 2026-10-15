@@ -225,11 +225,12 @@ test("my shifts: Home and calendar show them, and the private calendar link work
   await expect(member.getByText(/Your shift|\d shifts$/).first()).toBeVisible();
 
   await member.goto("/me/shifts");
-  await expect(member.getByRole("heading", { name: "My shifts", exact: true })).toBeVisible();
+  await expect(member.getByRole("heading", { name: "Sign-ups", exact: true })).toBeVisible();
   const mine = member.getByRole("list").filter({ hasText: "Booth" }).first();
   await expect(mine).toContainText("Regional");
   await expect(mine).toContainText("You're on it");
 
+  await member.goto("/me");
   // Make a private link and actually read it back the way a calendar app would (no cookies, no sign-in).
   await member.getByRole("button", { name: "Make my calendar link" }).click();
   const field = member.getByLabel("Your private calendar link");

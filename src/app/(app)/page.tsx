@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const user = await requireUser();
-  const [home, shifts, openShifts] = await Promise.all([getHomeData(user.id), myShifts(user.id), openShiftsFor({ id: user.id, role: user.role })]);
+  const [home, shifts, openShifts] = await Promise.all([getHomeData(user.id), myShifts(user.id, new Date(), user.role), openShiftsFor({ id: user.id, role: user.role })]);
   const tz = home.tz;
   const first = user.name.split(" ")[0];
   const greeting = pickGreeting(Number(formatInTz(new Date(), tz, "H")));

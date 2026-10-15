@@ -47,9 +47,10 @@ describe.skipIf(!hasTestDb)("user management guards", () => {
     const { db } = await import("@/db");
     const { users } = await import("@/db/schema");
     const { eq } = await import("drizzle-orm");
+    await db.update(users).set({ avatarUrl: "https://lh3.googleusercontent.com/a/photo=s96-c" }).where(eq(users.id, member));
     expect((await erasePersonalData(admin, member)).ok).toBe(true);
     const [u] = await db.select().from(users).where(eq(users.id, member));
-    expect(u).toMatchObject({ name: "Former member", status: "deactivated", passwordHash: null, googleSub: null });
+    expect(u).toMatchObject({ name: "Former member", status: "deactivated", passwordHash: null, googleSub: null, avatarUrl: null });
     expect(u!.email).toContain("deleted.invalid");
   });
 });

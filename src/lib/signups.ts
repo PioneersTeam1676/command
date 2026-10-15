@@ -464,3 +464,57 @@ export async function getSignupView(eventId: string, viewer: Viewer, now: Date =
     }),
   };
 }
+
+// ---------- Public, read-only view (shareable link) ----------
+
+export type PublicShift = { id: string; title: string; kind: "shift" | "item"; startsAt: Date; endsAt: Date; capacity: number; filled: number; full: boolean; waitlist: boolean };
+export type PublicShiftView = {
+  event: { title: string; startsAt: Date; endsAt: Date; locationText: string | null; cancelled: boolean };
+  /** Leads closed the sheet: nobody can claim or leave on their own. */
+  closed: boolean;
+  slots: PublicShift[];
+};
+
+/**
+ * What anyone with the link may see: the event's name, time and place, and for each upcoming shift or item that is open to
+ * everyone, how many places are taken. Never names, descriptions or notes. Shifts reserved for a group, or only for
+ * members or parents, are left out. Null when the event has no sheet.
+ */
+export async function getPublicShiftView(eventId: string, now: Date = new Date()): Promise<PublicShiftView | null> {
+  const sheet = await getSheetByEvent(eventId);
+  if (!sheet) return null;
+  const [event] = await db.select({ title: events.title, startsAt: events.startsAt, endsAt: events.endsAt, locationText: events.locationText, cancelledAt: events.cancelledAt }).from(events).where(eq(events.id, eventId));
+  if (!event) return null;
+  const head = { title: event.title, startsAt: event.startsAt, endsAt: event.endsAt, locationText: event.locationText, cancelled: Boolean(event.cancelledAt) };
+  const closed = Boolean(sheet.closedAt);
+
+  const rows = await db
+    .select({ id: signupSlots.id, title: signupSlots.title, kind: signupSlots.kind, startsAt: signupSlots.startsAt, endsAt: signupSlots.endsAt, capacity: signupSlots.capacity, waitlistEnabled: signupSlots.waitlistEnabled, opensToAllAt: signupSlots.opensToAllAt })
+    .from(signupSlots)
+    .where(and(eq(signupSlots.sheetId, sheet.id), isNull(signupSlots.cancelledAt), ne(signupSlots.kind, "attend"), eq(signupSlots.audience, "anyone")))
+    .orderBy(asc(signupSlots.startsAt), asc(signupSlots.position));
+  if (rows.length === 0) return null;
+  const gates = await db.select({ slotId: signupSlotGroups.slotId, groupId: signupSlotGroups.groupId }).from(signupSlotGroups).where(inArray(signupSlotGroups.slotId, rows.map((r) => r.id)));
+  // A person outside every group: reserved shifts stay hidden until they open to everyone.
+  const shared = rows.filter((r) => claimGate({ slotGroupIds: gates.filter((g) => g.slotId === r.id).map((g) => g.groupId), opensToAllAt: r.opensToAllAt, userGroupIds: [], now }).state === "open");
+  // An event that isn't sharing anything with everyone has no public page.
+  if (shared.length === 0) return null;
+  if (event.cancelledAt) return { event: head, closed, slots: [] };
+  const open = shared.filter((r) => r.endsAt > now);
+  if (open.length === 0) return { event: head, closed, slots: [] };
+
+  const counts = await db
+    .select({ slotId: signupEntries.slotId, n: sql<number>`count(*)::int` })
+    .from(signupEntries)
+    .where(and(inArray(signupEntries.slotId, open.map((r) => r.id)), eq(signupEntries.status, "confirmed")))
+    .groupBy(signupEntries.slotId);
+  return {
+    event: head,
+    closed,
+    slots: open.map((r) => {
+      const filled = counts.find((c) => c.slotId === r.id)?.n ?? 0;
+      const full = filled >= r.capacity;
+      return { id: r.id, title: r.title, kind: r.kind === "item" ? "item" : "shift", startsAt: r.startsAt, endsAt: r.endsAt, capacity: r.capacity, filled, full, waitlist: full && r.waitlistEnabled };
+    }),
+  };
+}

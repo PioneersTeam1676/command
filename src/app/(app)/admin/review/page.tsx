@@ -12,7 +12,9 @@ import { Label } from "@/components/ui/label";
 import { Select, Textarea } from "@/components/ui/input";
 import { requireUser, roleAtLeast } from "@/lib/auth/current-user";
 import { approveAccessAction, decideParentAction, denyAccessAction } from "../actions";
-import { acceptSessionAction, editSessionEndAction, rejectSessionAction, resolveOverlapAction } from "./attendance-actions";
+import { acceptSessionAction, approveRequestAction, editSessionEndAction, markReviewedAction, rejectSessionAction, resolveOverlapAction, revertRequestAction } from "./attendance-actions";
+import { pendingRequests, unusualEntries } from "@/lib/attendance-requests";
+import { FLAG_LABEL } from "@/lib/attendance-flags";
 import { overlapQueue, reviewQueue } from "@/lib/attendance";
 import { getSettings } from "@/lib/settings";
 import { formatDuration } from "@/lib/hours";
@@ -27,7 +29,7 @@ export default async function ReviewPage() {
   const isAdmin = roleAtLeast(user.role, "admin");
   const settings = await getSettings();
   const tz = settings.timezone;
-  const [attendance, overlapPairs] = await Promise.all([reviewQueue(), overlapQueue()]);
+  const [attendance, overlapPairs, changeRequests, unusual] = await Promise.all([reviewQueue(), overlapQueue(), pendingRequests(), unusualEntries()]);
   const student = aliasedTable(users, "student");
   const [access, parents] = isAdmin ? await Promise.all([
     db
@@ -52,7 +54,7 @@ export default async function ReviewPage() {
       .where(eq(parentLinks.status, "pending")),
   ]) : [[], []];
 
-  if (access.length === 0 && parents.length === 0 && attendance.length === 0 && overlapPairs.length === 0) {
+  if (access.length === 0 && parents.length === 0 && attendance.length === 0 && overlapPairs.length === 0 && changeRequests.length === 0 && unusual.length === 0) {
     return (
       <EmptyState icon={<Inbox />} title="You're all caught up">
         New join requests, parent link requests, and overlapping time entries will show up here, and we&apos;ll send you a notification.
@@ -60,8 +62,67 @@ export default async function ReviewPage() {
     );
   }
 
+  const span = (a: Date, b: Date | null) => `${formatInTz(a, tz, "EEE MMM d, h:mm a")} – ${b ? formatInTz(b, tz, "h:mm a") : "?"}`;
   return (
     <div className="space-y-8">
+      {changeRequests.length > 0 ? (
+        <section aria-labelledby="req-h">
+          <h2 id="req-h" className="text-base font-semibold tracking-tight">Changes to check</h2>
+          <p className="mb-3 mt-1 text-sm md:text-[13px] text-muted">Members fixed their own entries. Their hours already changed. Approve to keep it, or put it back the way it was.</p>
+          <div className="space-y-3">
+            {changeRequests.map(({ request: r, userName, eventTitle, session: a }) => (
+              <Card key={r.id}>
+                <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0 space-y-1 text-sm md:text-[13px]">
+                    <p className="text-[15px] font-medium">{userName}</p>
+                    <p className="text-muted">{a.kind === "event" ? (eventTitle ?? "Event") : "Build season clock-in"}</p>
+                    <p className="font-mono text-muted">Was: {span(r.prevClockInAt, r.prevClockOutAt)}</p>
+                    {r.kind === "edit" ? <p className="font-mono">Now: {span(r.newClockInAt!, r.newClockOutAt)}</p> : <p><Badge tone="warning">Asked to remove this entry</Badge></p>}
+                    <p>“{r.reason}”</p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <ConfirmAction label="Approve" variant="primary" title={`Keep ${userName}'s ${r.kind === "edit" ? "change" : "removal"}?`} description={r.kind === "edit" ? "Their hours stay as they are now." : "The entry stays out of their hours."} confirmLabel="Approve" action={approveRequestAction} fields={{ id: r.id }} />
+                    <ConfirmAction label="Put it back" danger title="Put this entry back the way it was?" description="Their hours go back to what they were before the request." confirmLabel="Put it back" action={revertRequestAction} fields={{ id: r.id }} />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {unusual.length > 0 ? (
+        <section aria-labelledby="odd-h">
+          <h2 id="odd-h" className="text-base font-semibold tracking-tight">Looks unusual</h2>
+          <p className="mb-3 mt-1 text-sm md:text-[13px] text-muted">Entries from the last 45 days with odd hours or a very long day. They count as normal until you say otherwise.</p>
+          <div className="space-y-3">
+            {unusual.map(({ session: a, userName, eventTitle, flags }) => (
+              <Card key={a.id}>
+                <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+                  <div className="min-w-0 space-y-1 text-sm md:text-[13px]">
+                    <p className="text-[15px] font-medium">{userName}</p>
+                    <p className="text-muted">{a.kind === "event" ? (eventTitle ?? "Event") : "Build season clock-in"}</p>
+                    <p className="font-mono text-muted">{span(a.clockInAt, a.clockOutAt)} · {formatDuration(a.clockOutAt ? a.clockOutAt.getTime() - a.clockInAt.getTime() : 0)}</p>
+                    <p className="flex flex-wrap gap-1">{flags.map((f) => <Badge key={f} tone="warning">{FLAG_LABEL[f]}</Badge>)}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap gap-2">
+                    <ConfirmAction label="Looks fine" variant="primary" title="Mark this as fine?" description="It stays as it is and stops showing up here." confirmLabel="Looks fine" action={markReviewedAction} fields={{ id: a.id }} />
+                    {a.clockOutAt ? (
+                      <ConfirmAction label="Edit end time" title="Set the real end time" description="It's marked as edited." confirmLabel="Save" action={editSessionEndAction} fields={{ id: a.id }}>
+                        <Input type="datetime-local" name="outAt" aria-label="End time" required defaultValue={toDatetimeLocal(a.clockOutAt, tz)} />
+                      </ConfirmAction>
+                    ) : null}
+                    <ConfirmAction label="Reject" danger title="Reject this time?" description="It won't count toward their hours. They can still see it marked as not counted." confirmLabel="Reject" action={rejectSessionAction} fields={{ id: a.id }}>
+                      <Textarea name="reason" maxLength={200} aria-label="Reason (optional)" placeholder="Reason (optional)" />
+                    </ConfirmAction>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {attendance.length > 0 ? (
         <section aria-labelledby="att-h">
           <h2 id="att-h" className="mb-3 text-base font-semibold tracking-tight">Attendance</h2>

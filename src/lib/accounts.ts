@@ -134,7 +134,7 @@ export async function verifyEmailToken(token: string): Promise<{ ok: boolean; st
   return { ok: true, status: "pending" };
 }
 
-export type GoogleClaims = { sub: string; email: string; emailVerified: boolean; name: string };
+export type GoogleClaims = { sub: string; email: string; emailVerified: boolean; name: string; picture: string | null };
 export type GoogleIntent = "login" | "parent";
 
 export async function resolveGoogleLogin(
@@ -153,6 +153,10 @@ export async function resolveGoogleLogin(
     if (intent === "parent" && user.role !== "parent") {
       return { ok: false, error: "That email belongs to a team member account. Use a different Google account for parent access." };
     }
+    if (claims.picture && claims.picture !== user.avatarUrl) {
+      const [updated] = await db.update(users).set({ avatarUrl: claims.picture }).where(eq(users.id, user.id)).returning();
+      if (updated) user = updated;
+    }
     if (!user.googleSub || !user.emailVerifiedAt) {
       [user] = await db
         .update(users)
@@ -166,7 +170,7 @@ export async function resolveGoogleLogin(
   if (intent === "parent") {
     const [created] = await db
       .insert(users)
-      .values({ email, name: claims.name || email, role: "parent", status: "active", googleSub: claims.sub, emailVerifiedAt: new Date() })
+      .values({ email, name: claims.name || email, role: "parent", status: "active", googleSub: claims.sub, emailVerifiedAt: new Date(), avatarUrl: claims.picture })
       .returning();
     return { ok: true, userId: created!.id };
   }
@@ -188,6 +192,7 @@ export async function resolveGoogleLogin(
       status: decision.kind === "auto_approve" ? "active" : "pending",
       googleSub: claims.sub,
       emailVerifiedAt: new Date(),
+      avatarUrl: claims.picture,
     })
     .returning();
   if (decision.kind === "auto_approve") {

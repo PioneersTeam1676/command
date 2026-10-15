@@ -5,6 +5,8 @@ import { ClipboardList, Monitor, Pencil } from "lucide-react";
 import { ConfirmAction } from "@/components/confirm-action";
 import { EventDetails } from "@/components/calendar/event-details";
 import { SignupSection } from "@/components/signups/signup-section";
+import { ShareShifts } from "@/components/signups/share-shifts";
+import { getEnv } from "@/lib/env";
 import { AttendCard } from "@/components/calendar/attend-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,9 @@ export default async function EventPage({ params, searchParams }: { params: Prom
     staff ? listGroups() : [],
     staff ? copySources(event.id) : [],
   ]);
+  const now = new Date();
+  // Only shifts and items open to everyone appear on the public page, so only offer the link when there are some.
+  const sharable = !event.cancelledAt && Boolean(signups?.slots.some((v) => v.slot.audience === "anyone" && v.slot.kind !== "attend" && !v.slot.cancelledAt && v.slot.endsAt > now && (v.groups.length === 0 || (v.slot.opensToAllAt != null && v.slot.opensToAllAt <= now))));
   const over = isOver(event);
   const open = !event.cancelledAt && !over && event.rsvpEnabled;
 
@@ -83,6 +88,9 @@ export default async function EventPage({ params, searchParams }: { params: Prom
           /> : null}
         </div>
       ) : null}
+      {staff && event.source === "imported" && !event.rsvpEnabled && !event.cancelledAt ? (
+        <p className="text-sm text-muted md:text-[13px]">Synced events start without a sign-up button. Use Edit to turn it on, or add shifts below.</p>
+      ) : null}
       {admin && deleteError ? <p role="alert" className="rounded-lg bg-error-subtle p-3 text-sm text-error">{deleteError}</p> : null}
 
       {open ? (
@@ -92,6 +100,8 @@ export default async function EventPage({ params, searchParams }: { params: Prom
       ) : null}
 
       <SignupSection event={event} view={signups} tz={settings.timezone} staff={staff} groups={groups.map((g) => ({ id: g.id, name: g.name }))} copySources={sources.map((e) => ({ value: e.id, label: `${e.title} · ${formatInTz(e.startsAt, settings.timezone, "MMM d")}` }))} />
+
+      {sharable ? <ShareShifts url={`${getEnv().APP_URL.replace(/\/$/, "")}/shifts/${event.id}`} /> : null}
 
       {lists ? (
         <Card>

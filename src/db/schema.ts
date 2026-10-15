@@ -86,6 +86,8 @@ export const users = pgTable(
     googleSub: text("google_sub"),
     emailVerifiedAt: ts("email_verified_at"),
     leaderboardHidden: boolean("leaderboard_hidden").notNull().default(false),
+    /** Google profile photo (https URL on lh3.googleusercontent.com), refreshed on each Google sign-in. */
+    avatarUrl: text("avatar_url"),
     themePreference: text("theme_preference").notNull().default("system"),
     /** What the browser last told us about notification permission: granted | denied | default. */
     pushPermission: text("push_permission"),
@@ -258,6 +260,37 @@ export const attendanceSessions = pgTable(
     // Clock in and out as often as you like, but never two running open sessions at once.
     uniqueIndex("attendance_one_running_open_idx").on(t.userId).where(sql`${t.kind} = 'open' and ${t.status} = 'open'`),
     uniqueIndex("attendance_event_per_user_idx").on(t.userId, t.eventId).where(sql`${t.kind} = 'event'`),
+  ],
+);
+
+/**
+ * A member's request to change or remove one of their own entries. The change applies at once (so their hours stay right)
+ * and is flagged until a lead decides: approve keeps it, revert restores the "prev" values.
+ */
+export const attendanceEditRequests = pgTable(
+  "attendance_edit_requests",
+  {
+    id: id(),
+    sessionId: uuid("session_id").notNull().references(() => attendanceSessions.id, { onDelete: "cascade" }),
+    userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").$type<"edit" | "delete">().notNull(),
+    /** superseded: a lead changed the entry directly after the request, so there is nothing left to decide. */
+    state: text("state").$type<"pending" | "approved" | "reverted" | "superseded">().notNull().default("pending"),
+    reason: text("reason").notNull(),
+    prevClockInAt: ts("prev_clock_in_at").notNull(),
+    prevClockOutAt: ts("prev_clock_out_at"),
+    prevStatus: text("prev_status").notNull(),
+    prevReviewState: text("prev_review_state").notNull(),
+    newClockInAt: ts("new_clock_in_at"),
+    newClockOutAt: ts("new_clock_out_at"),
+    decidedBy: uuid("decided_by").references(() => users.id, { onDelete: "set null" }),
+    decidedAt: ts("decided_at"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("attendance_edit_requests_user_idx").on(t.userId),
+    // One open question per entry at a time.
+    uniqueIndex("attendance_edit_requests_pending_idx").on(t.sessionId).where(sql`${t.state} = 'pending'`),
   ],
 );
 

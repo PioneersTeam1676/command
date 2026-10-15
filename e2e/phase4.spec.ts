@@ -82,13 +82,13 @@ test("the service worker serves recent pages offline and the offline page for un
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /, Olly!$/ })).toBeVisible();
   await page.goto("/calendar");
-  await expect(page.getByRole("heading", { name: "Calendar", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Team calendar", exact: true })).toBeVisible();
 
   await context.setOffline(true);
   await page.goto("/");
   await expect(page.getByRole("heading", { name: /, Olly!$/ })).toBeVisible();
   await page.goto("/calendar");
-  await expect(page.getByRole("heading", { name: "Calendar", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Team calendar", exact: true })).toBeVisible();
   await page.goto("/admin/people").catch(() => undefined);
   await expect(page.getByRole("heading", { name: "You're offline" })).toBeVisible();
   await context.setOffline(false);

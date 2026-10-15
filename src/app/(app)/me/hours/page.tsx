@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { backfillableEvents, listMySessions } from "@/lib/attendance";
+import { pendingRequestsFor } from "@/lib/attendance-requests";
+import { SessionChangeControls } from "@/components/session-change";
 import { requireUser } from "@/lib/auth/current-user";
 import { overlappingIds } from "@/lib/overlaps";
 import { SeasonPicker } from "@/components/season-picker";
@@ -16,7 +18,7 @@ import { getSettings } from "@/lib/settings";
 import { formatInTz, toDatetimeLocal } from "@/lib/time";
 import { backfillDayAction, backfillEventAction } from "./actions";
 
-export const metadata: Metadata = { title: "My hours" };
+export const metadata: Metadata = { title: "Attendance" };
 export const dynamic = "force-dynamic";
 
 export default async function HoursPage({ searchParams }: { searchParams: Promise<{ season?: string }> }) {
@@ -29,15 +31,13 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
   const isCurrent = season.id === current.id;
   const rows = await listMySessions(user.id, season.id);
   const flagged = overlappingIds(rows.map((r) => r.session));
-  const list = rows.map((r) => ({ ...r.session, eventTitle: r.eventTitle, overlaps: flagged.has(r.session.id) }));
+  const pending = await pendingRequestsFor(rows.map((r) => r.session.id));
+  const list = rows.map((r) => ({ ...r.session, eventTitle: r.eventTitle, overlaps: flagged.has(r.session.id), pending: pending.get(r.session.id)?.kind }));
   const missed = isCurrent ? await backfillableEvents(user.id, season.id) : [];
 
   return (
     <div className="space-y-6">
-      <div>
-        <Link href="/me" className="text-sm md:text-[13px] text-muted underline-offset-4 hover:underline">← Me</Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">My hours</h1>
-      </div>
+      <h1 className="text-2xl font-semibold tracking-tight">Attendance</h1>
       <SeasonPicker seasons={allSeasons} selectedId={season.id} />
       <HoursSummary sessions={list} tz={tz} seasonLabel={season.name} />
       <Button asChild variant="secondary" size="sm"><Link href={`/api/export/my-hours?season=${season.id}`}><Download aria-hidden />Download my hours (CSV)</Link></Button>
@@ -45,7 +45,16 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
       {list.length === 0 ? (
         <EmptyState icon={<Clock />} title="No hours yet">Clock in from the Home screen or check in to an event, and your time shows up here.</EmptyState>
       ) : (
-        <SessionList sessions={list} tz={tz} />
+        <SessionList
+          sessions={list}
+          tz={tz}
+          flags
+          actions={(row) =>
+            isCurrent && !row.pending && row.clockOutAt && ["closed", "edited", "auto_closed"].includes(row.status) && row.reviewState !== "rejected" && row.reviewState !== "pending_approval" ? (
+              <SessionChangeControls id={row.id} inAt={toDatetimeLocal(row.clockInAt, tz)} outAt={toDatetimeLocal(row.clockOutAt, tz)} tz={tz} />
+            ) : null
+          }
+        />
       )}
 
       {isCurrent ? (

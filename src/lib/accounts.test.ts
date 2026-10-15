@@ -81,11 +81,11 @@ describe.skipIf(!hasTestDb)("accounts: sign-up, approval, reset", () => {
     const { db } = await import("@/db");
     const { users, accessRequests } = await import("@/db/schema");
     const { eq } = await import("drizzle-orm");
-    expect((await resolveGoogleLogin({ sub: "g1", email: "x@school.edu", emailVerified: false, name: "X" }, "login")).ok).toBe(false);
-    const ok = await resolveGoogleLogin({ sub: "g2", email: "y@school.edu", emailVerified: true, name: "Y" }, "login");
+    expect((await resolveGoogleLogin({ sub: "g1", email: "x@school.edu", emailVerified: false, name: "X", picture: null }, "login")).ok).toBe(false);
+    const ok = await resolveGoogleLogin({ sub: "g2", email: "y@school.edu", emailVerified: true, name: "Y", picture: null }, "login");
     expect(ok.ok).toBe(true);
     if (ok.ok) expect((await db.select().from(users).where(eq(users.id, ok.userId)))[0]!.status).toBe("active");
-    const q = await resolveGoogleLogin({ sub: "g3", email: "z@gmail.com", emailVerified: true, name: "Z" }, "login");
+    const q = await resolveGoogleLogin({ sub: "g3", email: "z@gmail.com", emailVerified: true, name: "Z", picture: null }, "login");
     expect(q.ok).toBe(true);
     if (q.ok) {
       expect((await db.select().from(users).where(eq(users.id, q.userId)))[0]!.status).toBe("pending");
@@ -93,15 +93,33 @@ describe.skipIf(!hasTestDb)("accounts: sign-up, approval, reset", () => {
     }
   });
 
+  it("google: stores the profile photo for new users and refreshes it for returning ones", async () => {
+    const { resolveGoogleLogin } = await import("./accounts");
+    const { db } = await import("@/db");
+    const { users } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const first = "https://lh3.googleusercontent.com/a/one=s96-c";
+    const second = "https://lh3.googleusercontent.com/a/two=s96-c";
+    const r = await resolveGoogleLogin({ sub: "g6", email: "pic@school.edu", emailVerified: true, name: "Pic", picture: first }, "login");
+    expect(r.ok).toBe(true);
+    if (!r.ok) return;
+    expect((await db.select().from(users).where(eq(users.id, r.userId)))[0]!.avatarUrl).toBe(first);
+    await resolveGoogleLogin({ sub: "g6", email: "pic@school.edu", emailVerified: true, name: "Pic", picture: second }, "login");
+    expect((await db.select().from(users).where(eq(users.id, r.userId)))[0]!.avatarUrl).toBe(second);
+    // A login without a usable photo keeps the one we have.
+    await resolveGoogleLogin({ sub: "g6", email: "pic@school.edu", emailVerified: true, name: "Pic", picture: null }, "login");
+    expect((await db.select().from(users).where(eq(users.id, r.userId)))[0]!.avatarUrl).toBe(second);
+  });
+
   it("google parent intent creates an active parent on any domain and refuses team-member emails", async () => {
     const { resolveGoogleLogin } = await import("./accounts");
     const { db } = await import("@/db");
     const { users } = await import("@/db/schema");
     const { eq } = await import("drizzle-orm");
-    const p = await resolveGoogleLogin({ sub: "g4", email: "mom@gmail.com", emailVerified: true, name: "Mom" }, "parent");
+    const p = await resolveGoogleLogin({ sub: "g4", email: "mom@gmail.com", emailVerified: true, name: "Mom", picture: null }, "parent");
     expect(p.ok).toBe(true);
     if (p.ok) expect((await db.select().from(users).where(eq(users.id, p.userId)))[0]).toMatchObject({ role: "parent", status: "active" });
-    const clash = await resolveGoogleLogin({ sub: "g5", email: "admin@school.edu", emailVerified: true, name: "A" }, "parent");
+    const clash = await resolveGoogleLogin({ sub: "g5", email: "admin@school.edu", emailVerified: true, name: "A", picture: null }, "parent");
     expect(clash.ok).toBe(false);
   });
 

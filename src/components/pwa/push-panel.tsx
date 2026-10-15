@@ -4,19 +4,9 @@ import { Bell, BellOff, Share, SquarePlus } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { enablePush, postJson } from "./push-enable";
 
 type Env = { supported: boolean; ios: boolean; standalone: boolean; permission: NotificationPermission | "unsupported"; subscribed: boolean };
-
-const post = (url: string, body: unknown) =>
-  fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
-
-function urlBase64ToUint8Array(base64: string) {
-  const padded = (base64 + "=".repeat((4 - (base64.length % 4)) % 4)).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = atob(padded);
-  const out = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-  return out;
-}
 
 async function readEnv(): Promise<Env> {
   const ua = navigator.userAgent;
@@ -66,12 +56,12 @@ export function PushPanel({ vapidPublicKey, serverPermission, deviceCount }: { v
     const e = await readEnv();
     setEnv(e);
     // Keep the server's picture accurate, and re-register if this browser is subscribed but the server lost it.
-    if (e.supported && e.permission !== "default" && e.permission !== serverPermission) void post("/api/push/state", { permission: e.permission }).catch(() => undefined);
-    if (e.supported && e.permission === "default" && serverPermission !== "default") void post("/api/push/state", { permission: "default" }).catch(() => undefined);
+    if (e.supported && e.permission !== "default" && e.permission !== serverPermission) void postJson("/api/push/state", { permission: e.permission }).catch(() => undefined);
+    if (e.supported && e.permission === "default" && serverPermission !== "default") void postJson("/api/push/state", { permission: "default" }).catch(() => undefined);
     if (e.supported && e.subscribed && deviceCount === 0) {
       const reg = await navigator.serviceWorker.getRegistration();
       const sub = await reg?.pushManager.getSubscription();
-      if (sub) void post("/api/push/subscribe", sub.toJSON()).catch(() => undefined);
+      if (sub) void postJson("/api/push/subscribe", sub.toJSON()).catch(() => undefined);
     }
   }, [deviceCount, serverPermission]);
 
@@ -84,19 +74,9 @@ export function PushPanel({ vapidPublicKey, serverPermission, deviceCount }: { v
   async function enable() {
     setBusy(true);
     try {
-      const permission = await Notification.requestPermission(); // must follow a tap
-      await post("/api/push/state", { permission });
-      if (permission !== "granted") {
-        toast.message(permission === "denied" ? "Notifications are blocked for this site." : "No problem. You can turn them on any time.");
-        return;
-      }
-      const reg = (await navigator.serviceWorker.getRegistration()) ?? (await navigator.serviceWorker.register("/sw.js", { scope: "/" }));
-      await navigator.serviceWorker.ready;
-      const existing = await reg.pushManager.getSubscription();
-      const sub = existing ?? (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapidPublicKey) }));
-      const res = await post("/api/push/subscribe", sub.toJSON());
-      if (!res.ok) throw new Error("save failed");
-      toast.success("Notifications are on for this device.");
+      const permission = await enablePush(vapidPublicKey);
+      if (permission === "granted") toast.success("Notifications are on for this device.");
+      else toast.message(permission === "denied" ? "Notifications are blocked for this site." : "No problem. You can turn them on any time.");
     } catch {
       toast.error("We couldn't turn notifications on. Try again, or check your browser settings.");
     } finally {
@@ -111,7 +91,7 @@ export function PushPanel({ vapidPublicKey, serverPermission, deviceCount }: { v
       const reg = await navigator.serviceWorker.getRegistration();
       const sub = await reg?.pushManager.getSubscription();
       if (sub) {
-        await post("/api/push/unsubscribe", { endpoint: sub.endpoint });
+        await postJson("/api/push/unsubscribe", { endpoint: sub.endpoint });
         await sub.unsubscribe();
       }
       toast.message("Notifications are off for this device.");
@@ -124,7 +104,7 @@ export function PushPanel({ vapidPublicKey, serverPermission, deviceCount }: { v
   async function test() {
     setBusy(true);
     try {
-      const res = await post("/api/push/test", {});
+      const res = await postJson("/api/push/test", {});
       const json = await res.json();
       if (json.ok) toast.success("Sent. It should arrive in a few seconds.");
       else toast.error(json.error ?? "The test didn't go through.");

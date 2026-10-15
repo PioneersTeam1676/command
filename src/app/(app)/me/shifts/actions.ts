@@ -6,6 +6,7 @@ import { feedUrl, resetFeed, revokeFeed } from "@/lib/calendar-feed";
 import type { FormState } from "@/lib/form";
 
 const refresh = () => {
+  revalidatePath("/me");
   revalidatePath("/me/shifts");
   revalidatePath("/parent/shifts");
 };

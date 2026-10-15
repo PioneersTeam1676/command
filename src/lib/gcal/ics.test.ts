@@ -99,6 +99,8 @@ describe.skipIf(!hasTestDb)("syncIcs", () => {
     const first = await run(feed(ev("a@x", "20260210T180000Z", "Practice"), ev("b@x", "20260212T180000Z", "Outreach")));
     expect(first).toMatchObject({ created: 2, updated: 0, cancelled: 0, firstSync: true });
     expect((await db.select().from(inAppNotifications)).length).toBe(0); // first import is silent
+    // Synced events start plain: RSVP is something an admin opts in to per event.
+    expect((await db.select().from(events)).every((e) => e.rsvpEnabled === false)).toBe(true);
 
     // Members set a check-in method on an imported event; it must survive re-syncs.
     await db.update(events).set({ verification: "code" }).where(eq(events.icsUid, "a@x"));
