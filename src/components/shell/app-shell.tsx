@@ -98,9 +98,27 @@ function MeLink({ me, active, className }: { me: { name: string; avatarUrl: stri
       aria-label="Me"
       aria-current={active ? "page" : undefined}
       title={me.name}
-      className={cn("inline-grid size-11 place-items-center rounded-full transition-colors duration-150 md:size-9", active ? "bg-hover" : "hover:bg-hover", className)}
+      className={cn("inline-grid size-11 place-items-center rounded-full transition-colors duration-150", active ? "bg-hover" : "hover:bg-hover", className)}
     >
       <UserAvatar name={me.name} avatarUrl={me.avatarUrl} />
+    </Link>
+  );
+}
+
+function SidebarMe({ me, active, rail }: { me: { name: string; avatarUrl: string | null }; active: boolean; rail: boolean }) {
+  return (
+    <Link
+      href="/me"
+      aria-current={active ? "page" : undefined}
+      title={me.name}
+      className={cn(
+        "flex min-h-9 items-center gap-2.5 whitespace-nowrap rounded-md text-[13px] transition-colors duration-150",
+        rail ? "justify-center px-0" : "px-2.5",
+        active ? "bg-hover font-medium text-foreground" : "text-muted hover:bg-hover hover:text-foreground",
+      )}
+    >
+      <UserAvatar name={me.name} avatarUrl={me.avatarUrl} className="size-5 text-[9px]" />
+      <span className={rail ? "sr-only" : undefined}>Me</span>
     </Link>
   );
 }
@@ -171,7 +189,6 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
         <div className={cn("flex items-center gap-2", stored ? "flex-col" : "justify-between pl-2.5")}>
           {stored ? null : <Brand teamName={teamName} logoUrl={logoUrl} href={isParent ? "/parent" : "/"} />}
           <div className={cn("flex items-center gap-1", stored && "flex-col")}>
-            {me ? <MeLink me={me} active={isMePath(pathname)} /> : null}
             <button
               type="button"
               onClick={toggle}
@@ -187,6 +204,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
           {all.map((item) => (
             <SidebarLink key={item.href} item={item} active={isNavActive(pathname, item.href)} rail={stored} count={item.href === "/admin" ? adminCount : 0} />
           ))}
+          {me ? <SidebarMe me={me} active={isMePath(pathname)} rail={stored} /> : null}
         </nav>
         {isParent ? (
           <form action={logoutAction} className="mt-auto">
