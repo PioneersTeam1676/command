@@ -27,6 +27,8 @@ const schema = z.object({
   GOOGLE_CALENDAR_ICS_URL: z.preprocess(emptyToUndef, z.string().optional()),
   GOOGLE_CALENDAR_ID: z.preprocess(emptyToUndef, z.string().optional()),
   GOOGLE_SERVICE_ACCOUNT_JSON: z.preprocess(emptyToUndef, z.string().optional()),
+  /** Encrypts shared-login passwords and authenticator secrets. Unset turns the feature off. */
+  SHARED_LOGIN_KEY: z.preprocess(emptyToUndef, z.string().min(32, "SHARED_LOGIN_KEY must be at least 32 characters (openssl rand -base64 32)").optional()),
   SETUP_TOKEN: z.preprocess(emptyToUndef, z.string().min(8).optional()),
 });
 

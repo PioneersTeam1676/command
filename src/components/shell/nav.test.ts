@@ -59,3 +59,18 @@ describe("isMePath", () => {
     expect(isMePath("/calendar")).toBe(false);
   });
 });
+
+describe("Logins entry", () => {
+  it("appears only when the person can use a shared login", () => {
+    expect(labels(member)).not.toContain("Logins");
+    expect(labels({ ...member, hasLogins: true })).toContain("Logins");
+  });
+  it("never appears for parents", () => {
+    expect(labels({ ...member, isParent: true, hasLogins: true })).not.toContain("Logins");
+  });
+  it("sits behind More on phones with the other extras", () => {
+    const { bar, more } = mobileNav(navItems({ ...member, hasLogins: true }));
+    expect(bar.map((i) => i.label)).toEqual(["Home", "Attendance", "Sign-ups", "Calendar"]);
+    expect(more.map((i) => i.label)).toEqual(["Logins", "Leaderboard"]);
+  });
+});

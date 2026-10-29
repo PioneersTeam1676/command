@@ -1,8 +1,8 @@
-import { CalendarCheck, CalendarDays, Clock, Home, Shield, ShoppingBag, Trophy, type LucideIcon } from "lucide-react";
+import { CalendarCheck, CalendarDays, Clock, Home, KeyRound, Shield, ShoppingBag, Trophy, type LucideIcon } from "lucide-react";
 
 export type NavItem = { href: string; label: string; Icon: LucideIcon };
 
-export function navItems(opts: { leaderboardEnabled: boolean; isStaff: boolean; isParent?: boolean; shopOpen?: boolean }): NavItem[] {
+export function navItems(opts: { leaderboardEnabled: boolean; isStaff: boolean; isParent?: boolean; shopOpen?: boolean; hasLogins?: boolean }): NavItem[] {
   if (opts.isParent) {
     return [
       { href: "/parent", label: "Home", Icon: Home },
@@ -17,6 +17,7 @@ export function navItems(opts: { leaderboardEnabled: boolean; isStaff: boolean; 
     { href: "/calendar", label: "Calendar", Icon: CalendarDays },
   ];
   if (opts.shopOpen) items.push({ href: "/shop", label: "Shop", Icon: ShoppingBag });
+  if (opts.hasLogins) items.push({ href: "/logins", label: "Logins", Icon: KeyRound });
   if (opts.leaderboardEnabled) items.push({ href: "/leaderboard", label: "Leaderboard", Icon: Trophy });
   return items;
 }

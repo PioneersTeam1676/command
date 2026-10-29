@@ -19,7 +19,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       label: "People",
       tabs: [
         { href: "/admin/roster", label: "Roster" },
-        ...(isAdmin ? [{ href: "/admin/people", label: "Accounts" }, { href: "/admin/groups", label: "Groups" }] : []),
+        ...(isAdmin ? [{ href: "/admin/people", label: "Accounts" }, { href: "/admin/groups", label: "Groups" }, { href: "/admin/shared-logins", label: "Shared logins" }] : []),
       ],
     },
     ...(isAdmin

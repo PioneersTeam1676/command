@@ -547,6 +547,30 @@ export const signupSlotGroups = pgTable(
 );
 
 /**
+ * A login the team shares (email, password and an authenticator-app secret), visible to the groups it is
+ * given to. The password and secret are stored encrypted (see lib/secrets.ts); the browser never gets the secret.
+ */
+export const sharedLogins = pgTable("shared_logins", {
+  id: id(),
+  label: text("label").notNull(),
+  email: text("email").notNull(),
+  passwordEnc: text("password_enc").notNull(),
+  totpSecretEnc: text("totp_secret_enc").notNull(),
+  createdAt: createdAt(),
+  updatedAt: ts("updated_at").notNull().defaultNow(),
+});
+
+/** Which groups can see a shared login. Deleting a group drops its access (nobody gains any). */
+export const sharedLoginGroups = pgTable(
+  "shared_login_groups",
+  {
+    loginId: uuid("login_id").notNull().references(() => sharedLogins.id, { onDelete: "cascade" }),
+    groupId: uuid("group_id").notNull().references(() => groups.id, { onDelete: "cascade" }),
+  },
+  (t) => [uniqueIndex("shared_login_groups_pair_idx").on(t.loginId, t.groupId), index("shared_login_groups_group_idx").on(t.groupId)],
+);
+
+/**
  * A private calendar-feed address for one person's shifts. Only the hash of the secret is kept, so the
  * address can be shown once (when made or reset) and never read back. One per user; resetting replaces it.
  */

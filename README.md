@@ -49,6 +49,7 @@ Everything is in `.env` (see `.env.example`, which documents every variable):
 | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Enables Google sign-in. |
 | `SMTP_*` | Enables email confirmation, password reset links and decision emails. |
 | `GOOGLE_CALENDAR_MODE`, `GOOGLE_CALENDAR_ICS_URL`, `GOOGLE_CALENDAR_ID`, `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Calendar (below). |
+| `SHARED_LOGIN_KEY` | Optional. Turns on Shared logins (a team email account everyone in chosen groups can use, with live codes). Encrypts the stored passwords and secrets; generate with `openssl rand -base64 32` and keep a copy. |
 | `SETUP_TOKEN` | Optional override for the one-time setup token. |
 | `ICS_ALLOW_PRIVATE_NETWORKS` | Advanced: let the ICS address point at your LAN. |
 

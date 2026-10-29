@@ -16,6 +16,8 @@ type Props = {
   isStaff: boolean;
   isParent?: boolean;
   shopOpen?: boolean;
+  /** True when at least one shared login is open to this person. */
+  hasLogins?: boolean;
   me?: { name: string; avatarUrl: string | null };
   /** Things waiting on a lead or admin; shown on the Admin entry. */
   adminCount?: number;
@@ -124,7 +126,7 @@ function SidebarMe({ me, active, rail }: { me: { name: string; avatarUrl: string
 }
 
 /** Phone: bottom tab bar. Desktop: 240px sidebar with the same items plus Admin. */
-export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isParent, shopOpen, me, adminCount = 0, banner, children }: Props) {
+export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isParent, shopOpen, hasLogins, me, adminCount = 0, banner, children }: Props) {
   const pathname = usePathname();
   const stored = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
   const shell = useRef<HTMLDivElement>(null);
@@ -171,7 +173,7 @@ export function AppShell({ teamName, logoUrl, leaderboardEnabled, isStaff, isPar
       save(e.key === "ArrowLeft");
     }
   };
-  const items = navItems({ leaderboardEnabled, isStaff, isParent, shopOpen });
+  const items = navItems({ leaderboardEnabled, isStaff, isParent, shopOpen, hasLogins });
   const all = isStaff ? [...items, adminItem] : items;
   const { bar, more } = mobileNav(items);
   const slots = bar.length + (more.length ? 1 : 0);

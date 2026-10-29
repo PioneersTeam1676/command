@@ -127,6 +127,13 @@
       "when": 1792025967745,
       "tag": "0017_omniscient_doctor_spectrum",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1793232307433,
+      "tag": "0018_wakeful_nekra",
+      "breakpoints": true
     }
   ]
 }

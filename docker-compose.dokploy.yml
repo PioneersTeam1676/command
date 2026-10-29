@@ -21,6 +21,7 @@ services:
       GOOGLE_CALENDAR_ICS_URL: ${GOOGLE_CALENDAR_ICS_URL:-}
       GOOGLE_CALENDAR_ID: ${GOOGLE_CALENDAR_ID:-}
       GOOGLE_SERVICE_ACCOUNT_JSON: ${GOOGLE_SERVICE_ACCOUNT_JSON:-}
+      SHARED_LOGIN_KEY: ${SHARED_LOGIN_KEY:-}
       SETUP_TOKEN: ${SETUP_TOKEN:-}
     # No published ports: Dokploy's Traefik routes to this service via the Domains tab (port 3000).
     expose:

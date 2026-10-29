@@ -8,7 +8,7 @@ import type { LegalDoc } from "./types";
  */
 export const PRIVACY: LegalDoc = {
   title: "Privacy Policy",
-  updated: "2026-10-14",
+  updated: "2026-10-28",
   intro:
     "Command is team-management software that each robotics team runs on its own server. This policy explains what information Command handles, who can see it, and the choices you have. Many Command users are under 18, so we collect as little as we can.",
   sections: [
@@ -27,6 +27,7 @@ export const PRIVACY: LegalDoc = {
         "Attendance: when you clock in and out (using the server's clock, plus your device's clock time for taps made offline), the events or days they relate to, notes you or an admin add, and whether entries were edited, manually added, merged, or automatically closed. Admins can permanently delete an attendance entry, which also removes its edit history. If you ask to change or remove one of your own entries, Command keeps the original times, the new times and the reason you wrote until a lead decides, and deletes that reason if your personal data is erased. For events that use rotating codes, wrong-code attempts are counted briefly to prevent guessing.",
         "Sign-ups: whether you said you are coming to an event, the shifts and things to bring you sign up for or queue for on a waitlist, when, whether a lead placed you there, and any short note you add (for example \"I'll be late\"). Only leads and admins can see your notes. Anyone with an event's shareable link can see the event's name, time and place, and the name, time and number of places taken on each shift open to everyone, but never who signed up, and they have to sign in to sign up. Leads and admins can place people on or remove them from shifts, and you are notified when they do.",
         "Shop orders: if the team opens its merch shop and you order, what you ordered (item, size, quantity), any text you asked to have printed on it (for example a name), your name and email at the time, the total, and whether it has been paid and handed over. No card or payment details are collected; you pay a mentor in person. Item photos are uploaded by admins.",
+        "Shared logins: if your team's admins add one, the account's name, email address, password and authenticator (one-time code) secret. The password and secret are stored encrypted and are shown only to the groups the admins choose and to admins. Each time someone shows a password, Command records who and when in the audit log (the password itself is never logged). Don't use this for personal accounts.",
         "Calendar link: if you turn on your private calendar link, a one-way hash of its secret and when it was last used (the link itself is shown once and never stored). Anyone who has the link can see the names, times and places of your shifts until you make a new link or turn it off.",
         "Groups: if an admin puts you in a named group (for example a scouting group), that membership, so shifts can be reserved for or offered first to that group.",
         "Optional preferences: notification settings, the workdays you personally attend, whether you appear on the leaderboard, and your theme choice.",
@@ -57,6 +58,7 @@ export const PRIVACY: LegalDoc = {
       bullets: [
         "Members see their own hours, sign-ups and history, the calendar, and the leaderboard (display names and totals). On a sign-up sheet they also see the names of the teammates and parents signed up for each shift.",
         "Leads and admins see the roster, attendance (including, if the Team tracks outreach, how many outreach events each member attended), who is coming to each event, sign-ups with their notes, and who is currently clocked in. Only admins see shop orders (who ordered what, with the text to print), and they are emailed when an order is placed. You see only your own orders.",
+        "Shared logins are visible only to admins and to people in the groups an admin picks.",
         "Admins also manage accounts, approvals, groups and who is in them, settings, exports (including who signed up for which shift) and the audit log. Members see which groups a shift is reserved for, but not who is in a group.",
         "Parents see only the calendar and the hours, attendance and event changes of a student they are approved to view. They cannot see other members. Parents can sign up for shifts that are open to parents; they see how many places are filled but not who filled them.",
       ],
@@ -108,7 +110,7 @@ export const PRIVACY: LegalDoc = {
     {
       heading: "Security",
       paragraphs: [
-        "Passwords are hashed with Argon2, sign-in attempts are rate limited, tokens are stored only as hashes and expire, and access is checked on the server for every request. No system is perfectly secure; tell your team's admins and the owner if you suspect a problem.",
+        "Your own password is hashed with Argon2 (shared-login passwords have to be readable by the team, so they are encrypted instead), sign-in attempts are rate limited, tokens are stored only as hashes and expire, and access is checked on the server for every request. No system is perfectly secure; tell your team's admins and the owner if you suspect a problem.",
       ],
     },
     {
