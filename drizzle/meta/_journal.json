@@ -134,6 +134,13 @@
       "when": 1793232307433,
       "tag": "0018_wakeful_nekra",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1795277931119,
+      "tag": "0019_event_source_title",
+      "breakpoints": true
     }
   ]
 }

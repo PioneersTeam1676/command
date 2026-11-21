@@ -199,11 +199,13 @@ export async function importPastEvents(range: { from: string; to: string }): Pro
       } else continue;
       if (Number.isNaN(startsAt.getTime()) || endsAt <= startsAt) endsAt = new Date(startsAt.getTime() + 3_600_000);
       const season = await seasonForDate(localDateOf(startsAt, timezone));
+      const title = (item.summary ?? "(no title)").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 120) || "(no title)";
       const ok = await db
         .insert(events)
         .values({
           seasonId: season.id,
-          title: (item.summary ?? "(no title)").replace(/[\u0000-\u001f\u007f]/g, "").trim().slice(0, 120) || "(no title)",
+          title,
+          sourceTitle: title,
           description: item.description?.trim().slice(0, 2000) || null,
           locationText: item.location?.trim().slice(0, 200) || null,
           startsAt,

@@ -32,6 +32,7 @@ export default async function EditEventPage({ params }: { params: Promise<{ even
         defaults={{
           id: event.id,
           title: event.title,
+          sourceTitle: event.sourceTitle ?? undefined,
           description: event.description ?? "",
           locationText: event.locationText ?? "",
           startsAt: toDatetimeLocal(event.startsAt, settings.timezone),

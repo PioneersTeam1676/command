@@ -110,15 +110,17 @@ describe.skipIf(!hasTestDb)("events, attendance sign-ups, notifications", () => 
     expect((await deleteEvent(ids.lead!, "00000000-0000-4000-8000-000000000000")).ok).toBe(false);
   });
 
-  it("imported events only allow changing the check-in method", async () => {
+  it("imported events allow renaming and changing the check-in method, but not the times", async () => {
     const { updateEvent, getEvent } = await import("./events");
     const { db } = await import("@/db");
     const { events, seasons } = await import("@/db/schema");
     const [season] = await db.select().from(seasons);
-    const [e] = await db.insert(events).values({ seasonId: season!.id, title: "From Google", startsAt: new Date(Date.now() + 86_400_000), endsAt: new Date(Date.now() + 90_000_000), source: "imported", icsUid: "abc" }).returning();
-    expect((await updateEvent(ids.admin!, e!.id, { title: "Hacked", startsAt: future(1), endsAt: future(1, 22), verification: "code" })).ok).toBe(true);
+    const [e] = await db.insert(events).values({ seasonId: season!.id, title: "From Google", sourceTitle: "From Google", startsAt: new Date(Date.now() + 86_400_000), endsAt: new Date(Date.now() + 90_000_000), source: "imported", icsUid: "abc" }).returning();
+    expect((await updateEvent(ids.admin!, e!.id, { title: "Team dinner", startsAt: future(1), endsAt: future(1, 22), verification: "code" })).ok).toBe(true);
     const after = await getEvent(e!.id);
-    expect(after!.title).toBe("From Google");
+    expect(after!.title).toBe("Team dinner");
+    expect(after!.sourceTitle).toBe("From Google");
+    expect(after!.startsAt.getTime()).toBe(e!.startsAt.getTime());
     expect(after!.verification).toBe("code");
   });
 

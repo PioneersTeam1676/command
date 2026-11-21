@@ -158,7 +158,7 @@ export async function syncIcs(opts: { url: string; now?: Date; fetchText?: Fetch
       const season = await seasonForDate(new Intl.DateTimeFormat("en-CA", { timeZone: timezone }).format(o.startsAt));
       const [row] = await db
         .insert(events)
-        .values({ seasonId: season.id, title: o.title, description: o.description, locationText: o.location, startsAt: o.startsAt, endsAt: o.endsAt, cancelledAt: o.cancelled ? now : null, source: "imported", icsUid: o.uid, rsvpEnabled: false })
+        .values({ seasonId: season.id, title: o.title, sourceTitle: o.title, description: o.description, locationText: o.location, startsAt: o.startsAt, endsAt: o.endsAt, cancelledAt: o.cancelled ? now : null, source: "imported", icsUid: o.uid, rsvpEnabled: false })
         .onConflictDoNothing()
         .returning();
       if (row) {
@@ -167,8 +167,12 @@ export async function syncIcs(opts: { url: string; now?: Date; fetchText?: Fetch
       }
       continue;
     }
+    // An admin renamed it in Command: keep their name, but still track what Google calls it.
+    const renamed = cur.sourceTitle !== null && cur.title !== cur.sourceTitle;
+    const title = renamed ? cur.title : o.title;
     const changed =
-      cur.title !== o.title ||
+      cur.title !== title ||
+      cur.sourceTitle !== o.title ||
       cur.description !== o.description ||
       cur.locationText !== o.location ||
       cur.startsAt.getTime() !== o.startsAt.getTime() ||
@@ -180,7 +184,7 @@ export async function syncIcs(opts: { url: string; now?: Date; fetchText?: Fetch
     }
     const [row] = await db
       .update(events)
-      .set({ title: o.title, description: o.description, locationText: o.location, startsAt: o.startsAt, endsAt: o.endsAt, cancelledAt: o.cancelled ? (cur.cancelledAt ?? now) : null })
+      .set({ title, sourceTitle: o.title, description: o.description, locationText: o.location, startsAt: o.startsAt, endsAt: o.endsAt, cancelledAt: o.cancelled ? (cur.cancelledAt ?? now) : null })
       .where(eq(events.id, cur.id))
       .returning();
     result.updated++;

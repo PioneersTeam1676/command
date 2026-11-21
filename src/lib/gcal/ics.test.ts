@@ -128,6 +128,31 @@ describe.skipIf(!hasTestDb)("syncIcs", () => {
     expect((await db.select().from(events).where(eq(events.icsUid, "b@x")))[0]!.cancelledAt).toBeNull();
   });
 
+  it("keeps a name an admin gave an imported event, and follows Google again once it matches", async () => {
+    const { db } = await import("@/db");
+    const { events, users } = await import("@/db/schema");
+    const { eq } = await import("drizzle-orm");
+    const { updateEvent } = await import("@/lib/events");
+    const [admin] = await db.select().from(users);
+    await run(feed(ev("r@x", "20260310T180000Z", "Meeting")));
+    const row = (await db.select().from(events).where(eq(events.icsUid, "r@x")))[0]!;
+    expect(row).toMatchObject({ title: "Meeting", sourceTitle: "Meeting" });
+
+    const keep = { startsAt: "2026-03-10T13:00", endsAt: "2026-03-10T15:00", verification: "inherit" as const };
+    expect((await updateEvent(admin!.id, row.id, { ...keep, title: "Kickoff build meeting" })).ok).toBe(true);
+
+    // Google renames it and moves it: the time follows Google, the name stays the admin's.
+    await run(feed(ev("r@x", "20260310T190000Z", "Weekly meeting")));
+    const after = (await db.select().from(events).where(eq(events.id, row.id)))[0]!;
+    expect(after).toMatchObject({ title: "Kickoff build meeting", sourceTitle: "Weekly meeting" });
+    expect(after.startsAt.toISOString()).toBe("2026-03-10T19:00:00.000Z");
+
+    // Setting it back to Google's name hands naming back to Google.
+    expect((await updateEvent(admin!.id, row.id, { ...keep, title: "Weekly meeting" })).ok).toBe(true);
+    await run(feed(ev("r@x", "20260310T190000Z", "Team meeting")));
+    expect((await db.select().from(events).where(eq(events.id, row.id)))[0]!.title).toBe("Team meeting");
+  });
+
   it("never cancels past events that vanished, and rejects non-calendar responses", async () => {
     const { db } = await import("@/db");
     const { events } = await import("@/db/schema");

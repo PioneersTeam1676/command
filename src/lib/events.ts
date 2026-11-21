@@ -121,12 +121,14 @@ export async function updateEvent(actorId: string, id: string, input: EventFormI
   const settings = await getSettings();
 
   if (before.source === "imported") {
-    // Imported events are read-only in Command except for the check-in verification method.
+    // Imported events: times and details come from Google Calendar. Command can rename them and set
+    // check-in, sign-up and outreach options. A name that differs from Google's survives future syncs.
+    const title = input.title;
     const rsvpEnabled = input.rsvpEnabled ?? before.rsvpEnabled;
     const isOutreach = input.isOutreach ?? before.isOutreach;
-    await db.update(events).set({ verification: input.verification, rsvpEnabled, isOutreach }).where(eq(events.id, id));
+    await db.update(events).set({ title, verification: input.verification, rsvpEnabled, isOutreach }).where(eq(events.id, id));
     if (rsvpEnabled) await ensureAttendSlot(id);
-    await audit({ actorId, action: "event.update_verification", targetType: "event", targetId: id, before: { verification: before.verification, rsvpEnabled: before.rsvpEnabled, isOutreach: before.isOutreach }, after: { verification: input.verification, rsvpEnabled, isOutreach } });
+    await audit({ actorId, action: "event.update_verification", targetType: "event", targetId: id, before: { title: before.title, verification: before.verification, rsvpEnabled: before.rsvpEnabled, isOutreach: before.isOutreach }, after: { title, verification: input.verification, rsvpEnabled, isOutreach } });
     return { ok: true };
   }
   if (before.cancelledAt) return { ok: false, error: "Cancelled events can't be edited." };

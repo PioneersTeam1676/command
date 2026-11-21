@@ -12,7 +12,7 @@ const calendar = (...events: string[]) => `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRO
 const soon = (days: number) => new Date(Date.now() + days * 86_400_000);
 const publish = (request: import("@playwright/test").APIRequestContext, text: string) => request.post(`${ICS}/set`, { data: text });
 
-test("ICS mode imports, updates and cancels events without duplicating, and imported events stay read-only", async ({ page, request }) => {
+test("ICS mode imports, updates and cancels events without duplicating, and imported events keep their times read-only", async ({ page, request }) => {
   await publish(request, calendar(vevent("gcal-a", soon(3), "Robot Demo"), vevent("gcal-b", soon(4), "Sponsor Visit")));
   await signIn(page, "admin@school.edu");
 
@@ -35,12 +35,13 @@ test("ICS mode imports, updates and cancels events without duplicating, and impo
   await expect(page.getByRole("link", { name: /Robot Demo/ })).toBeVisible();
   await expect(page.getByRole("link", { name: /Sponsor Visit/ })).toBeVisible();
 
-  // Imported events are read-only, except how members check in.
+  // Imported events: times come from Google; admins can rename them and choose how members check in.
   await page.getByRole("link", { name: /Robot Demo/ }).click();
   await expect(page.getByText("From Google Calendar")).toBeVisible();
   await page.getByRole("link", { name: "Edit" }).click();
   await expect(page.getByText(/imported from Google Calendar/)).toBeVisible();
-  await expect(page.getByLabel("Title")).toHaveCount(0);
+  await expect(page.getByLabel("Name")).toHaveValue("Robot Demo");
+  await expect(page.getByLabel("Starts")).toHaveCount(0);
   await page.getByLabel("How do members check in?").selectOption("code");
   await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByRole("heading", { name: "Robot Demo" })).toBeVisible();

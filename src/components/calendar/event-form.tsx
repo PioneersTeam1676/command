@@ -6,6 +6,8 @@ import type { FormState } from "@/lib/form";
 export type EventFormDefaults = {
   id?: string;
   title?: string;
+  /** Imported events: the name Google Calendar uses. */
+  sourceTitle?: string;
   description?: string;
   locationText?: string;
   startsAt: string;
@@ -39,12 +41,23 @@ export function EventForm({
       {ro ? (
         <>
           {/* Read-only fields still submit so validation passes; the server ignores them for imported events. */}
-          <input type="hidden" name="title" value={defaults.title ?? ""} />
           <input type="hidden" name="startsAt" value={defaults.startsAt} />
           <input type="hidden" name="endsAt" value={defaults.endsAt} />
           <p className="rounded-lg border bg-surface p-3 text-sm md:text-[13px] text-muted">
-            This event was imported from Google Calendar, so its title and times are edited there. You can still choose how members check in and whether people can sign up.
+            This event was imported from Google Calendar, so its times and details are edited there. You can still rename it here, choose how members check in, and whether people can sign up.
           </p>
+          <TextField
+            name="title"
+            label="Name"
+            defaultValue={defaults.title}
+            required
+            maxLength={120}
+            help={
+              defaults.sourceTitle && defaults.sourceTitle !== defaults.title
+                ? `Google Calendar calls it “${defaults.sourceTitle}”. Change it back to that to follow Google’s name again.`
+                : "A new name here stays even when Google Calendar syncs."
+            }
+          />
         </>
       ) : (
         <>

@@ -208,6 +208,11 @@ export const events = pgTable(
     id: id(),
     seasonId: uuid("season_id").notNull().references(() => seasons.id),
     title: text("title").notNull(),
+    /**
+     * Imported events only: the title Google Calendar last sent. When `title` differs from it, an admin renamed
+     * the event in Command and syncs leave `title` alone.
+     */
+    sourceTitle: text("source_title"),
     description: text("description"),
     locationText: text("location_text"),
     startsAt: ts("starts_at").notNull(),

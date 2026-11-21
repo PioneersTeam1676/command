@@ -88,7 +88,7 @@ Set `GOOGLE_CALENDAR_MODE` to one of:
 1. In Google Calendar: Settings → your calendar → *Integrate calendar* → **Secret address in iCal format**. Copy it.
 2. Admin → Settings → Google Calendar: paste it and use **Test connection**, then **Sync now**.
 Recurring events become individual occurrences (from 2 months back to 6 months ahead) and are updated or cancelled
-when the calendar changes. Imported events are read-only in Command except for how members check in.
+when the calendar changes. Imported events keep their times and details from Google, but admins can rename them in Command (a new name survives syncs) and choose how members check in.
 
 **`api`** (Command is the source of truth): events you create, edit or cancel in Command are pushed to Google Calendar.
 1. In Google Cloud Console, enable the **Google Calendar API**, create a **service account**, and download its JSON key.
