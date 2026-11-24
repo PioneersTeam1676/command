@@ -582,6 +582,12 @@ export async function openSessionsFor(userId: string) {
 
 
 /** Ended, non-cancelled events in a season the member has no time recorded for: candidates for backfill. */
+/** The team-local day an event starts on. Manually added event time is placed on this day. */
+export async function eventDay(eventId: string): Promise<string | undefined> {
+  const [event] = await db.select({ startsAt: events.startsAt }).from(events).where(eq(events.id, eventId));
+  return event ? localDateOf(event.startsAt, (await getSettings()).timezone) : undefined;
+}
+
 export async function backfillableEvents(userId: string, seasonId: string, now: Date = new Date()) {
   const rows = await db
     .select()

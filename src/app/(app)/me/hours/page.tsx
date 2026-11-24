@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock, Download } from "lucide-react";
 import { ActionForm, SubmitButton } from "@/components/form";
-import { SelectField, TextAreaField, TextField } from "@/components/form-fields";
+import { TextAreaField, TextField } from "@/components/form-fields";
+import { EventTimeFields, TimeRangeFields } from "@/components/manual-time-fields";
 import { HoursSummary, SessionList } from "@/components/session-list";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,7 +16,7 @@ import { overlappingIds } from "@/lib/overlaps";
 import { SeasonPicker } from "@/components/season-picker";
 import { getCurrentSeason, getSeason, listSeasons } from "@/lib/seasons";
 import { getSettings } from "@/lib/settings";
-import { formatInTz, toDatetimeLocal } from "@/lib/time";
+import { formatInTz, toDatetimeLocal, toTimeLocal } from "@/lib/time";
 import { backfillDayAction, backfillEventAction } from "./actions";
 
 export const metadata: Metadata = { title: "Attendance" };
@@ -72,15 +73,16 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
                 <p className="text-sm md:text-[13px] text-muted">No past events are waiting for your time.</p>
               ) : (
                 <ActionForm action={backfillEventAction} resetOnSuccess className="space-y-4">
-                  <SelectField
-                    name="eventId"
-                    label="Event"
-                    options={missed.map((e) => ({ value: e.id, label: `${e.title} · ${formatInTz(e.startsAt, tz, "MMM d")}` }))}
+                  <EventTimeFields
+                    tz={tz}
+                    events={missed.map((e) => ({
+                      id: e.id,
+                      label: `${e.title} · ${formatInTz(e.startsAt, tz, "MMM d")}`,
+                      dayLabel: formatInTz(e.startsAt, tz, "EEE MMM d"),
+                      inTime: toTimeLocal(e.startsAt, tz),
+                      outTime: toTimeLocal(e.endsAt, tz),
+                    }))}
                   />
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <TextField name="inAt" label="In" type="datetime-local" defaultValue={toDatetimeLocal(missed[0]!.startsAt, tz)} required help={`In ${tz}`} />
-                    <TextField name="outAt" label="Out" type="datetime-local" defaultValue={toDatetimeLocal(missed[0]!.endsAt, tz)} required />
-                  </div>
                   <TextAreaField name="note" label="Note (optional)" maxLength={300} rows={2} />
                   <SubmitButton pendingText="Sending…">Add time</SubmitButton>
                 </ActionForm>
@@ -90,10 +92,7 @@ export default async function HoursPage({ searchParams }: { searchParams: Promis
               <h3 className="mb-3 text-sm font-medium">A build season day</h3>
               <ActionForm action={backfillDayAction} resetOnSuccess className="space-y-4">
                 <TextField name="date" label="Day" type="date" required help="A day that already happened, during build season." />
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <TextField name="inAt" label="In" type="datetime-local" required help={`In ${tz}`} />
-                  <TextField name="outAt" label="Out" type="datetime-local" required />
-                </div>
+                <TimeRangeFields tz={tz} />
                 <TextAreaField name="note" label="Note (optional)" maxLength={300} rows={2} />
                 <SubmitButton pendingText="Sending…">Add time</SubmitButton>
               </ActionForm>

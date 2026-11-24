@@ -50,6 +50,8 @@ export function formatInTz(instant: Date, tz: string, pattern: string): string {
 
 /** Value for `<input type="datetime-local">` in the team timezone. */
 export const toDatetimeLocal = (instant: Date, tz: string) => formatInTimeZone(instant, tz, "yyyy-MM-dd'T'HH:mm");
+/** Wall-clock `HH:mm` of an instant in `tz`, for `<input type="time">`. */
+export const toTimeLocal = (instant: Date, tz: string) => formatInTimeZone(instant, tz, "HH:mm");
 
 /** Parse a `datetime-local` value typed in the team timezone. */
 export function fromDatetimeLocal(value: string, tz: string): Date {

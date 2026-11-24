@@ -6,7 +6,8 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { users } from "@/db/schema";
 import { ActionForm, SubmitButton } from "@/components/form";
-import { TextAreaField, TextField } from "@/components/form-fields";
+import { TextAreaField } from "@/components/form-fields";
+import { AdminTimeFields } from "@/components/manual-time-fields";
 import { ConfirmAction } from "@/components/confirm-action";
 import { HoursSummary, SessionBadges } from "@/components/session-list";
 import { Badge } from "@/components/ui/badge";
@@ -18,7 +19,8 @@ import { countsTowardHours, formatDuration } from "@/lib/hours";
 import { memberSessions } from "@/lib/roster";
 import { getCurrentSeason, getSeason } from "@/lib/seasons";
 import { getSettings } from "@/lib/settings";
-import { formatInTz, toDatetimeLocal } from "@/lib/time";
+import { backfillableEvents } from "@/lib/attendance";
+import { formatInTz, toDatetimeLocal, toTimeLocal } from "@/lib/time";
 import { uuidSchema } from "@/lib/validation";
 import { acceptSessionAction, rejectSessionAction } from "../../review/attendance-actions";
 import { addTimeAction, deleteSessionAction, editTimesAction, forceClockOutAction } from "../actions";
@@ -40,6 +42,7 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
   const season = (sp ? await getSeason(sp) : undefined) ?? (await getCurrentSeason());
   const sessions = await memberSessions(userId, season.id);
   const isAdmin = roleAtLeast(me.role, "admin");
+  const missed = await backfillableEvents(userId, season.id);
 
   return (
     <div className="space-y-6">
@@ -122,10 +125,16 @@ export default async function MemberPage({ params, searchParams }: { params: Pro
         <CardContent>
           <ActionForm action={addTimeAction} resetOnSuccess className="space-y-4">
             <input type="hidden" name="userId" value={userId} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <TextField name="inAt" label="In" type="datetime-local" required help={`In ${tz}`} />
-              <TextField name="outAt" label="Out" type="datetime-local" required />
-            </div>
+            <AdminTimeFields
+              tz={tz}
+              events={missed.map((e) => ({
+                id: e.id,
+                label: `${e.title} · ${formatInTz(e.startsAt, tz, "MMM d")}`,
+                dayLabel: formatInTz(e.startsAt, tz, "EEE MMM d"),
+                inTime: toTimeLocal(e.startsAt, tz),
+                outTime: toTimeLocal(e.endsAt, tz),
+              }))}
+            />
             <TextAreaField name="note" label="Note (optional)" maxLength={300} rows={2} />
             <SubmitButton pendingText="Adding…">Add time</SubmitButton>
           </ActionForm>
