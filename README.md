@@ -51,6 +51,7 @@ Everything is in `.env` (see `.env.example`, which documents every variable):
 | `GOOGLE_CALENDAR_MODE`, `GOOGLE_CALENDAR_ICS_URL`, `GOOGLE_CALENDAR_ID`, `GOOGLE_SERVICE_ACCOUNT_JSON` | Google Calendar (below). |
 | `SHARED_LOGIN_KEY` | Optional. Turns on Shared logins (a team email account everyone in chosen groups can use, with live codes). Encrypts the stored passwords and secrets; generate with `openssl rand -base64 32` and keep a copy. |
 | `SETUP_TOKEN` | Optional override for the one-time setup token. |
+| `TECH_LEAD_EMAIL` | Optional. The tech lead, who can rename anyone under Admin → Accounts. Must be an active Lead or Admin. Claimed once (on start, sign-in or promotion) and permanent after that: later changes to this value are ignored, the role can't be transferred, and the account can't be demoted below Lead, deactivated, erased or deleted. |
 | `ICS_ALLOW_PRIVATE_NETWORKS` | Advanced: let the ICS address point at your LAN. |
 
 ### HTTPS

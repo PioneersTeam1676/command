@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  type AnyPgColumn,
   boolean,
   check,
   date,
@@ -70,6 +71,12 @@ export const teamSettings = pgTable("team_settings", {
   shopClosesAt: ts("shop_closes_at"),
   /** Shown above the items (pickup details, who to pay, etc.). */
   shopNote: text("shop_note"),
+  /**
+   * The tech lead: claimed once from TECH_LEAD_EMAIL and permanent after that. A database trigger
+   * rejects any later change, and the foreign key stops the account from being deleted.
+   */
+  techLeadUserId: uuid("tech_lead_user_id").references((): AnyPgColumn => users.id, { onDelete: "restrict" }),
+  techLeadClaimedAt: ts("tech_lead_claimed_at"),
   createdAt: createdAt(),
 });
 

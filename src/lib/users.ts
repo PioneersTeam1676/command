@@ -7,6 +7,9 @@ import { sendMail } from "@/lib/mail";
 import { anonymizeOrders } from "@/lib/shop";
 import { readSettings } from "@/lib/settings";
 import { buildAdminWelcome } from "@/lib/team-emails";
+import { getTechLeadId, tryClaimTechLead } from "@/lib/tech-lead";
+
+const TECH_LEAD_LOCKED = "This is the tech lead's account. The tech lead is permanent, so it can't be removed.";
 
 export async function listUsers() {
   return db
@@ -35,6 +38,9 @@ export async function changeRole(actorId: string, userId: string, role: Role): P
   if (!u) return { ok: false, error: "User not found." };
   if (u.role === "parent") return { ok: false, error: "Parent accounts can't be given a team role." };
   if (role === "parent") return { ok: false, error: "Choose Member, Lead or Admin." };
+  if (role === "member" && (await getTechLeadId()) === userId) {
+    return { ok: false, error: "The tech lead has to stay a Lead or Admin." };
+  }
   if (u.role === "admin" && role !== "admin" && u.status === "active" && (await activeAdminCount()) <= 1) {
     return { ok: false, error: "Every team needs at least one admin. Make someone else an admin first." };
   }
@@ -46,6 +52,7 @@ export async function changeRole(actorId: string, userId: string, role: Role): P
     const mail = await buildAdminWelcome(team, u, actor?.name);
     await sendMail(u.email, mail.subject, mail.text, mail.html, mail.attachments); // best effort: never blocks the role change
   }
+  if (role !== "member") await tryClaimTechLead(); // TECH_LEAD_EMAIL may have just become eligible
   return { ok: true };
 }
 
@@ -53,6 +60,7 @@ export async function deactivateUser(actorId: string, userId: string): Promise<R
   const [u] = await db.select().from(users).where(eq(users.id, userId));
   if (!u) return { ok: false, error: "User not found." };
   if (u.status === "deactivated") return { ok: true };
+  if ((await getTechLeadId()) === userId) return { ok: false, error: TECH_LEAD_LOCKED };
   if (u.role === "admin" && u.status === "active" && (await activeAdminCount()) <= 1) {
     return { ok: false, error: "You can't deactivate the only admin." };
   }
@@ -81,6 +89,7 @@ export async function erasePersonalData(actorId: string, userId: string): Promis
   const [u] = await db.select().from(users).where(eq(users.id, userId));
   if (!u) return { ok: false, error: "User not found." };
   if (userId === actorId) return { ok: false, error: "You can't erase your own account." };
+  if ((await getTechLeadId()) === userId) return { ok: false, error: TECH_LEAD_LOCKED };
   if (u.role === "admin" && u.status === "active" && (await activeAdminCount()) <= 1) {
     return { ok: false, error: "You can't erase the only admin." };
   }
@@ -125,6 +134,7 @@ export async function deleteUser(actorId: string, userId: string): Promise<Resul
   const [u] = await db.select().from(users).where(eq(users.id, userId));
   if (!u) return { ok: false, error: "User not found." };
   if (userId === actorId) return { ok: false, error: "You can't delete your own account." };
+  if ((await getTechLeadId()) === userId) return { ok: false, error: TECH_LEAD_LOCKED };
   if (u.role === "admin" && u.status === "active" && (await activeAdminCount()) <= 1) {
     return { ok: false, error: "You can't delete the only admin." };
   }

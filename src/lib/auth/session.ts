@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { sessions, users } from "@/db/schema";
 import { hashToken, randomToken } from "./tokens";
+import { tryClaimTechLead } from "@/lib/tech-lead";
 import { clientIp, ipHash, isSecureDeployment } from "./request";
 
 export const SESSION_COOKIE = "cmd_session";
@@ -32,6 +33,7 @@ export async function createSession(userId: string): Promise<void> {
     ipHash: await ipHash(await clientIp()),
   });
   (await cookies()).set(SESSION_COOKIE, token, cookieOptions(expiresAt));
+  await tryClaimTechLead(); // no-op once claimed; picks up TECH_LEAD_EMAIL when that person first signs in
 }
 
 export type SessionUser = typeof users.$inferSelect;

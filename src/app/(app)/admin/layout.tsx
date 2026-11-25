@@ -1,11 +1,12 @@
 import { AdminTabs, type AdminGroup } from "@/components/admin-tabs";
 import { pendingReviewCount } from "@/lib/admin-pending";
 import { requireUser, roleAtLeast } from "@/lib/auth/current-user";
+import { isTechLead } from "@/lib/tech-lead";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser({ min: "lead" });
   const isAdmin = roleAtLeast(user.role, "admin");
-  const pending = await pendingReviewCount(isAdmin);
+  const [pending, techLead] = await Promise.all([pendingReviewCount(isAdmin), isTechLead(user.id)]);
   const groups: AdminGroup[] = [
     {
       label: "Today",
@@ -19,7 +20,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       label: "People",
       tabs: [
         { href: "/admin/roster", label: "Roster" },
-        ...(isAdmin ? [{ href: "/admin/people", label: "Accounts" }, { href: "/admin/groups", label: "Groups" }, { href: "/admin/shared-logins", label: "Shared logins" }] : []),
+        ...(isAdmin || techLead ? [{ href: "/admin/people", label: "Accounts" }] : []),
+        ...(isAdmin ? [{ href: "/admin/groups", label: "Groups" }, { href: "/admin/shared-logins", label: "Shared logins" }] : []),
       ],
     },
     ...(isAdmin

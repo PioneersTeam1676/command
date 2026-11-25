@@ -5,6 +5,8 @@ export async function register() {
   await runMigrations();
   const { ensureSetupToken } = await import("./lib/setup");
   await ensureSetupToken();
+  const { tryClaimTechLead } = await import("./lib/tech-lead");
+  await tryClaimTechLead();
   const { registerAllJobs } = await import("./lib/jobs/handlers");
   const { startScheduler } = await import("./lib/jobs/scheduler");
   registerAllJobs();

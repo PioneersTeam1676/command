@@ -6,6 +6,7 @@ import { z } from "zod";
 import { adminResetPassword, approveAccessRequest, denyAccessRequest } from "@/lib/accounts";
 import { requireActionUser } from "@/lib/auth/current-user";
 import { decideParentLink, revokeParentLink } from "@/lib/parents";
+import { renameUser } from "@/lib/tech-lead";
 import { changeRole, deactivateUser, deleteUser, erasePersonalData, reactivateUser } from "@/lib/users";
 import { optionalText, uuidSchema } from "@/lib/validation";
 import type { FormState } from "@/lib/form";
@@ -58,12 +59,24 @@ export async function changeRoleAction(formData: FormData) {
   if (!r.ok) redirect(`/admin/people?error=${encodeURIComponent(r.error)}`);
 }
 
+/** Tech lead only (checked in renameUser). Leads pass the action guard; the designation is the real gate. */
+export async function renameAction(formData: FormData) {
+  const actor = await requireActionUser("lead");
+  const p = z.object({ id: uuidSchema, name: z.string() }).safeParse(Object.fromEntries(formData));
+  if (!p.success) return;
+  const r = await renameUser(actor.id, p.data.id, p.data.name);
+  refresh();
+  revalidatePath("/", "layout"); // names show everywhere
+  if (!r.ok) redirect(`/admin/people?error=${encodeURIComponent(r.error)}`);
+}
+
 export async function deactivateAction(formData: FormData) {
   const admin = await requireActionUser("admin");
   const id = uuidSchema.safeParse(formData.get("id"));
   if (!id.success) return;
-  await deactivateUser(admin.id, id.data);
+  const r = await deactivateUser(admin.id, id.data);
   refresh();
+  if (!r.ok) redirect(`/admin/people?error=${encodeURIComponent(r.error)}`);
 }
 
 export async function reactivateAction(formData: FormData) {
@@ -78,16 +91,18 @@ export async function eraseAction(formData: FormData) {
   const admin = await requireActionUser("admin");
   const id = uuidSchema.safeParse(formData.get("id"));
   if (!id.success) return;
-  await erasePersonalData(admin.id, id.data);
+  const r = await erasePersonalData(admin.id, id.data);
   refresh();
+  if (!r.ok) redirect(`/admin/people?error=${encodeURIComponent(r.error)}`);
 }
 
 export async function deleteUserAction(formData: FormData) {
   const admin = await requireActionUser("admin");
   const id = uuidSchema.safeParse(formData.get("id"));
   if (!id.success) return;
-  await deleteUser(admin.id, id.data);
+  const r = await deleteUser(admin.id, id.data);
   refresh();
+  if (!r.ok) redirect(`/admin/people?error=${encodeURIComponent(r.error)}`);
 }
 
 export async function resetPasswordAction(_: FormState, formData: FormData): Promise<FormState> {

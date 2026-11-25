@@ -8,7 +8,7 @@ import type { LegalDoc } from "./types";
  */
 export const PRIVACY: LegalDoc = {
   title: "Privacy Policy",
-  updated: "2026-10-28",
+  updated: "2026-11-24",
   intro:
     "Command is team-management software that each robotics team runs on its own server. This policy explains what information Command handles, who can see it, and the choices you have. Many Command users are under 18, so we collect as little as we can.",
   sections: [
@@ -92,7 +92,7 @@ export const PRIVACY: LegalDoc = {
         "Account and attendance data is kept while your team uses Command so seasons and history stay complete.",
         "When an account is deactivated, sign-in and notifications stop but past attendance is kept for reporting.",
         "Sessions expire after 30 days of inactivity. Password reset and invite links expire (1 hour and 7 days). Rate-limit counters are deleted within a day.",
-        "An admin can permanently erase a person's personal data on request. Attendance rows remain, no longer linked to a name, email, login or device, sign-up entries stay under the anonymised name with their notes removed, and shop orders stay (for the team's records) with your name and email removed.",
+        "Your team's tech lead (one person, set when Command is installed) can correct the name on any account; each change is recorded in the audit log with the old and new name. An admin can permanently erase a person's personal data on request. Attendance rows remain, no longer linked to a name, email, login or device, sign-up entries stay under the anonymised name with their notes removed, and shop orders stay (for the team's records) with your name and email removed.",
       ],
     },
     {
